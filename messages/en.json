@@ -26,8 +26,16 @@
     "dashboard": "Dashboard",
     "logout": "Log out"
   },
-  "theme": { "light": "Light", "dark": "Dark", "toggle": "Toggle theme" },
-  "lang": { "switch": "Switch language", "ar": "العربية", "en": "English" },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "toggle": "Toggle theme"
+  },
+  "lang": {
+    "switch": "Switch language",
+    "ar": "العربية",
+    "en": "English"
+  },
   "home": {
     "badge": "The Arabic reference for archery & equestrian",
     "heroTitle": "Knight of the Nile",
@@ -36,7 +44,12 @@
     "ctaExplore": "Explore tournaments",
     "sports": "Our sports",
     "sportsSub": "Three authentic sports, one integrated system",
-    "stats": { "athletes": "Athletes", "tournaments": "Tournaments", "coaches": "Coaches", "countries": "Countries" },
+    "stats": {
+      "athletes": "Athletes",
+      "tournaments": "Tournaments",
+      "coaches": "Coaches",
+      "countries": "Countries"
+    },
     "featuredTournaments": "Featured tournaments",
     "featuredTournamentsSub": "Register, track your results and ranking",
     "latestNews": "Latest news",
@@ -54,7 +67,36 @@
     "ctaBannerTitle": "Ready to enter the field?",
     "ctaBannerSub": "Create your account and begin your journey in archery and equestrian.",
     "noTournaments": "No published tournaments yet.",
-    "noNews": "No news yet."
+    "noNews": "No news yet.",
+    "heroKicker": "Heritage Archery · Egypt",
+    "heroArtTitle": "The art of archery, the spirit of the knight.",
+    "heroArtEn": "The art of precision. The spirit of the knight.",
+    "heroArtPara": "From the banks of the Nile and the heritage of knights, we host ground and horseback archery competitions, alongside the elite Black Knight tier — with precise standards and official 60×60 cm targets.",
+    "exploreCategories": "Explore categories",
+    "learnDistances": "View distances",
+    "catKicker": "Competition categories",
+    "catTitle": "Three categories. One discipline.",
+    "catSub": "From static discipline to speed on horseback, up to the elite challenge.",
+    "groundTitle": "Ground Archery",
+    "groundEn": "Ground Archery",
+    "groundDesc": "Static precision across six certified distances. From learning the basics to mastering long range.",
+    "hbaTitle": "Horseback Archery",
+    "hbaEn": "Horseback Archery",
+    "hbaDesc": "Balance under speed. A test of harmony between knight and horse, loosing arrows in motion.",
+    "hbaTag": "Advanced only",
+    "blackTitle": "Black Knight Tier",
+    "blackEn": "Black Knight Tier",
+    "blackDesc": "The elite tier. Combines long-range ground mastery with horseback challenges. By invitation only.",
+    "distKicker": "Distance ladder",
+    "distTitle": "From ten to one hundred.",
+    "distSub": "Six stages that progress with the competitor from beginnings to legend.",
+    "specKicker": "Technical specs",
+    "specTitle": "Official 60×60 target",
+    "specPara": "A square target 60 cm on each side, high-density straw core with a water- and heat-resistant face, certified for all competition distances from 10m to 100m.",
+    "galleryKicker": "From the field",
+    "galleryTitle": "Moments of archery.",
+    "journeyTitle": "Begin your journey as a knight",
+    "journeyEn": "Draw the bow. Begin the journey."
   },
   "sports": {
     "archery": "Archery",

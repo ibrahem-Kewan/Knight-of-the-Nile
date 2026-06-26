@@ -15,6 +15,8 @@ const nextConfig = {
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "*.supabase.co" },
+      { protocol: "https", hostname: "nil-knight-championships.lovable.app" },
+      { protocol: "https", hostname: "pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev" },
     ],
   },
   experimental: {
