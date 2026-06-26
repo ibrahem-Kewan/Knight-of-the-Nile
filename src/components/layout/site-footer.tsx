@@ -16,6 +16,7 @@ export function SiteFooter() {
     { href: "/login", label: tn("login") },
     { href: "/register", label: tn("register") },
     { href: "/about", label: tn("about") },
+    { href: "/contact", label: tn("contact") },
   ] as const;
 
   return (

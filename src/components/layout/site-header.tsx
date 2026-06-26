@@ -13,6 +13,7 @@ export function SiteHeader() {
     { href: "/courses", label: t("courses") },
     { href: "/news", label: t("news") },
     { href: "/about", label: t("about") },
+    { href: "/contact", label: t("contact") },
   ] as const;
 
   return (

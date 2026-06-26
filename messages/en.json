@@ -24,7 +24,8 @@
     "login": "Log in",
     "register": "Sign up",
     "dashboard": "Dashboard",
-    "logout": "Log out"
+    "logout": "Log out",
+    "contact": "Contact"
   },
   "theme": {
     "light": "Light",
@@ -130,5 +131,42 @@
     "rights": "All rights reserved",
     "explore": "Explore",
     "account": "Account"
+  },
+  "about": {
+    "kicker": "About",
+    "title": "Egyptian equestrian heritage in archery",
+    "lead": "Knight of the Nile is an Arabic and global platform for archery, horseback archery and equestrian, uniting athletes, coaches, judges and clubs in one integrated system for tournaments, rankings and training.",
+    "missionTitle": "Our mission",
+    "mission": "To be the official reference for tournaments, training and rankings across governorates and countries, reviving Egyptian equestrian heritage with modern world standards.",
+    "visionTitle": "Our vision",
+    "vision": "A platform connecting the Knights of the Nile to the world: certified tournaments, automatic ranking, digital certificates and professional courses — in Arabic and English.",
+    "valuesTitle": "Our values",
+    "v1Title": "Mastery",
+    "v1": "Precise standards and official 60×60 cm targets for all distances.",
+    "v2Title": "Authenticity",
+    "v2": "Inspired by Egyptian equestrian heritage and the knight's spirit.",
+    "v3Title": "Fairness",
+    "v3": "Transparent judging, certified results and neutral automatic ranking.",
+    "v4Title": "Community",
+    "v4": "Clubs, coaches and athletes from many governorates and countries.",
+    "sportsTitle": "Our three sports",
+    "ctaTitle": "Join the Knights of the Nile",
+    "ctaSub": "Create your account and begin your journey."
+  },
+  "contact": {
+    "kicker": "Contact",
+    "title": "Begin your journey as a knight",
+    "sub": "For any question about tournaments, joining or partnerships, write to us and we'll get back to you.",
+    "name": "Name",
+    "email": "Email",
+    "subject": "Subject",
+    "message": "Your message",
+    "send": "Send",
+    "sending": "Sending...",
+    "success": "Your message was received, thank you for reaching out!",
+    "infoTitle": "Contact info",
+    "emailLabel": "Email",
+    "citiesLabel": "Cities",
+    "followLabel": "Follow us"
   }
 }
