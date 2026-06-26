@@ -1,4 +1,4 @@
--- 0017 — Enable RLS + baseline policies for remaining tables (see specs/04 §4)
+-- 0017 - Enable RLS + baseline policies for remaining tables (see specs/04)
 -- Pattern: public read for published reference data; writes via admin/owner; RLS is last line of defense.
 
 -- Reference data: public read, admin write
@@ -61,13 +61,13 @@ create policy "results_read" on public.results for select using (
   status in ('approved','final') or public.is_admin() or athlete_id = auth.uid()
 );
 create policy "results_staff_write" on public.results for all using (
-  public.is_admin() or current_role() = 'judge'
-) with check (public.is_admin() or current_role() = 'judge');
+  public.is_admin() or public.current_role() = 'judge'
+) with check (public.is_admin() or public.current_role() = 'judge');
 
 alter table public.result_disputes enable row level security;
-create policy "disputes_select" on public.result_disputes for select using (raised_by = auth.uid() or public.is_admin() or current_role() = 'judge');
+create policy "disputes_select" on public.result_disputes for select using (raised_by = auth.uid() or public.is_admin() or public.current_role() = 'judge');
 create policy "disputes_insert" on public.result_disputes for insert with check (raised_by = auth.uid());
-create policy "disputes_resolve" on public.result_disputes for update using (public.is_admin() or current_role() = 'judge');
+create policy "disputes_resolve" on public.result_disputes for update using (public.is_admin() or public.current_role() = 'judge');
 
 -- Rankings & points: public read
 alter table public.rankings enable row level security;
@@ -78,7 +78,7 @@ create policy "rpoints_read" on public.ranking_points for select using (true);
 -- Posts: published public; author/admin manage
 alter table public.posts enable row level security;
 create policy "posts_read" on public.posts for select using (status = 'published' or author_id = auth.uid() or public.is_admin());
-create policy "posts_insert" on public.posts for insert with check (author_id = auth.uid() and current_role() in ('super_admin','admin','coach','judge'));
+create policy "posts_insert" on public.posts for insert with check (author_id = auth.uid() and public.current_role() in ('super_admin','admin','coach','judge'));
 create policy "posts_update_own" on public.posts for update using (author_id = auth.uid() or public.is_admin());
 
 -- Courses: published public; owner/admin manage
@@ -108,7 +108,7 @@ alter table public.notification_preferences enable row level security;
 create policy "notifpref_own" on public.notification_preferences for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 alter table public.media_assets enable row level security;
-create policy "media_own" on public.media_assets for all using (owner_id = auth.uid() or public.is_admin() or current_role() in ('judge','coach')) with check (owner_id = auth.uid() or public.is_admin());
+create policy "media_own" on public.media_assets for all using (owner_id = auth.uid() or public.is_admin() or public.current_role() in ('judge','coach')) with check (owner_id = auth.uid() or public.is_admin());
 
 -- Audit/history: admin read only
 alter table public.audit_logs enable row level security;

@@ -1,4 +1,4 @@
-import { NextIntlClientProvider, hasLocale } from "next-intl";
+import { NextIntlClientProvider } from "next-intl";
 import { notFound } from "next/navigation";
 import { IBM_Plex_Sans_Arabic, IBM_Plex_Sans, Almarai } from "next/font/google";
 import { routing, dirFor } from "@/lib/i18n/routing";
@@ -30,7 +30,7 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  if (!hasLocale(routing.locales, locale)) notFound();
+  if (!routing.locales.includes(locale as (typeof routing.locales)[number])) notFound();
 
   return (
     <html
