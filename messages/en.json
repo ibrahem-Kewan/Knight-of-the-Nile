@@ -1,0 +1,47 @@
+{
+  "common": {
+    "appName": "Knight of the Nile",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "search": "Search",
+    "loading": "Loading...",
+    "more": "More",
+    "back": "Back",
+    "next": "Next"
+  },
+  "nav": {
+    "home": "Home",
+    "tournaments": "Tournaments",
+    "rankings": "Rankings",
+    "courses": "Courses",
+    "news": "News",
+    "about": "About",
+    "login": "Log in",
+    "register": "Sign up",
+    "dashboard": "Dashboard",
+    "logout": "Log out"
+  },
+  "theme": { "light": "Light", "dark": "Dark", "toggle": "Toggle theme" },
+  "lang": { "switch": "Switch language", "ar": "العربية", "en": "English" },
+  "home": {
+    "heroTitle": "Knight of the Nile",
+    "heroSubtitle": "The platform for archery, horseback archery and equestrian — the reference for tournaments, rankings and training",
+    "ctaJoin": "Join now",
+    "ctaExplore": "Explore tournaments",
+    "sports": "Our sports",
+    "latestTournaments": "Latest tournaments",
+    "topRankings": "Top rankings",
+    "latestNews": "Latest news"
+  },
+  "auth": {
+    "login": "Log in",
+    "register": "Sign up",
+    "email": "Email",
+    "password": "Password",
+    "asAthlete": "Athlete / Trainee",
+    "asCoach": "Coach",
+    "pending": "Your account is under review. You will be notified once approved."
+  }
+}

@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.75rem;
+
+    /* Light (sand) */
+    --background: 40 38% 95%;       /* sand-soft */
+    --foreground: 0 0% 5%;          /* ink */
+    --card: 0 0% 100%;
+    --primary: 46 70% 47%;          /* gold */
+    --primary-foreground: 0 0% 5%;
+    --secondary: 202 58% 25%;       /* nile */
+    --secondary-foreground: 40 38% 95%;
+    --muted: 43 35% 82%;            /* sand */
+    --muted-foreground: 0 0% 30%;
+    --border: 43 25% 78%;
+  }
+
+  .dark {
+    --background: 0 0% 5%;          /* ink */
+    --foreground: 40 38% 92%;
+    --card: 0 0% 11%;              /* ink-700 */
+    --primary: 46 70% 52%;
+    --primary-foreground: 0 0% 5%;
+    --secondary: 202 65% 34%;       /* nile-bright */
+    --secondary-foreground: 40 38% 95%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 40 10% 70%;
+    --border: 0 0% 20%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-arabic), var(--font-latin), system-ui, sans-serif;
+    line-height: 1.75;
+  }
+  [dir="rtl"] body { line-height: 1.8; }
+}
