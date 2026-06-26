@@ -15,14 +15,14 @@ export function LoginForm() {
     <form action={action} className="space-y-4">
       <div className="space-y-1.5">
         <Label htmlFor="email">{t("email")}</Label>
-        <Input id="email" name="email" type="email" required autoComplete="email" />
+        <Input id="email" name="email" type="email" required autoComplete="email" placeholder="you@example.com" />
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="password">{t("password")}</Label>
-        <Input id="password" name="password" type="password" required autoComplete="current-password" />
+        <Input id="password" name="password" type="password" required autoComplete="current-password" placeholder="••••••••" />
       </div>
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}
-      <Button type="submit" className="w-full" disabled={pending}>
+      <Button type="submit" className="w-full" size="lg" disabled={pending}>
         {t("login")}
       </Button>
     </form>

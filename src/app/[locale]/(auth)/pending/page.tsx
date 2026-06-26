@@ -1,22 +1,20 @@
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { Link } from "@/lib/i18n/navigation";
 import { Clock } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-export default function PendingPage() {
-  const t = useTranslations("auth");
+export default async function PendingPage() {
+  const t = await getTranslations("auth");
   return (
-    <div className="container flex min-h-[70vh] items-center justify-center py-12">
-      <Card className="w-full max-w-md text-center">
-        <CardContent className="flex flex-col items-center gap-4 p-10">
-          <Clock className="h-12 w-12 text-gold" />
-          <p className="text-lg font-medium">{t("pending")}</p>
-          <Button asChild variant="outline">
-            <Link href="/">العودة للرئيسية</Link>
-          </Button>
-        </CardContent>
-      </Card>
+    <div className="text-center">
+      <div className="mx-auto mb-5 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gold/15">
+        <Clock className="h-8 w-8 text-gold" />
+      </div>
+      <h1 className="font-display text-2xl text-gold">{t("register")}</h1>
+      <p className="mt-3 text-muted-foreground">{t("pending")}</p>
+      <Button asChild variant="outline" className="mt-6">
+        <Link href="/">{t("backHome")}</Link>
+      </Button>
     </div>
   );
 }

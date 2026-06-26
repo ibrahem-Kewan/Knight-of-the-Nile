@@ -9,7 +9,10 @@
     "loading": "Loading...",
     "more": "More",
     "back": "Back",
-    "next": "Next"
+    "next": "Next",
+    "viewAll": "View all",
+    "free": "Free",
+    "comingSoon": "Coming soon"
   },
   "nav": {
     "home": "Home",
@@ -26,22 +29,64 @@
   "theme": { "light": "Light", "dark": "Dark", "toggle": "Toggle theme" },
   "lang": { "switch": "Switch language", "ar": "العربية", "en": "English" },
   "home": {
+    "badge": "The Arabic reference for archery & equestrian",
     "heroTitle": "Knight of the Nile",
-    "heroSubtitle": "The platform for archery, horseback archery and equestrian — the reference for tournaments, rankings and training",
+    "heroSubtitle": "The platform for archery, horseback archery and equestrian — your reference for tournaments, rankings, training and certificates.",
     "ctaJoin": "Join now",
     "ctaExplore": "Explore tournaments",
     "sports": "Our sports",
-    "latestTournaments": "Latest tournaments",
-    "topRankings": "Top rankings",
-    "latestNews": "Latest news"
+    "sportsSub": "Three authentic sports, one integrated system",
+    "stats": { "athletes": "Athletes", "tournaments": "Tournaments", "coaches": "Coaches", "countries": "Countries" },
+    "featuredTournaments": "Featured tournaments",
+    "featuredTournamentsSub": "Register, track your results and ranking",
+    "latestNews": "Latest news",
+    "whyTitle": "Why Knight of the Nile?",
+    "why": {
+      "rankingTitle": "Automatic ranking",
+      "rankingDesc": "Instant local, governorate, country and international rankings after every tournament.",
+      "certTitle": "Digital cards & certificates",
+      "certDesc": "Electronic certificates and a digital QR membership card for every athlete.",
+      "coursesTitle": "Training & courses",
+      "coursesDesc": "Professional courses from certified coaches with quizzes and completion certificates.",
+      "multiTitle": "Arabic & global",
+      "multiDesc": "Full Arabic/English interface with light & dark mode and an installable app."
+    },
+    "ctaBannerTitle": "Ready to enter the field?",
+    "ctaBannerSub": "Create your account and begin your journey in archery and equestrian.",
+    "noTournaments": "No published tournaments yet.",
+    "noNews": "No news yet."
+  },
+  "sports": {
+    "archery": "Archery",
+    "archeryDesc": "Target accuracy and traditional archery arts across multiple distances.",
+    "horseback_archery": "Horseback Archery",
+    "horseback_archeryDesc": "The art of shooting while riding, on the Tabla and Qabaq tracks.",
+    "equestrian": "Equestrian",
+    "equestrianDesc": "Horse riding, jumping, dressage and endurance skills."
   },
   "auth": {
+    "welcomeBack": "Welcome back",
+    "loginTagline": "Log in to follow your tournaments and ranking",
+    "registerTagline": "Join the Knights of the Nile community",
     "login": "Log in",
     "register": "Sign up",
     "email": "Email",
     "password": "Password",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "chooseRole": "I am registering as",
     "asAthlete": "Athlete / Trainee",
     "asCoach": "Coach",
-    "pending": "Your account is under review. You will be notified once approved."
+    "haveAccount": "Already have an account?",
+    "noAccount": "Don't have an account?",
+    "pending": "Your account is under review. You will be notified once approved.",
+    "backHome": "Back to home",
+    "brandLine": "Where knights meet"
+  },
+  "footer": {
+    "tagline": "The Arabic and global reference for archery, horseback archery and equestrian.",
+    "rights": "All rights reserved",
+    "explore": "Explore",
+    "account": "Account"
   }
 }

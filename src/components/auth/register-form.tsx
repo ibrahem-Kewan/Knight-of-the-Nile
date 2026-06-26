@@ -16,41 +16,44 @@ export function RegisterForm() {
   return (
     <form action={action} className="space-y-4">
       <input type="hidden" name="role" value={role} />
-      <div className="grid grid-cols-2 gap-2">
-        {(["athlete", "coach"] as const).map((r) => (
-          <button
-            key={r}
-            type="button"
-            onClick={() => setRole(r)}
-            className={cn(
-              "rounded-md border px-3 py-2 text-sm font-medium transition-colors",
-              role === r ? "border-gold bg-gold/10 text-gold-deep" : "border-border",
-            )}
-          >
-            {r === "athlete" ? t("asAthlete") : t("asCoach")}
-          </button>
-        ))}
+      <div className="space-y-1.5">
+        <Label>{t("chooseRole")}</Label>
+        <div className="grid grid-cols-2 gap-2">
+          {(["athlete", "coach"] as const).map((r) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => setRole(r)}
+              className={cn(
+                "rounded-md border px-3 py-2.5 text-sm font-medium transition-colors",
+                role === r ? "border-gold bg-gold/10 text-gold-deep" : "border-border hover:bg-muted",
+              )}
+            >
+              {r === "athlete" ? t("asAthlete") : t("asCoach")}
+            </button>
+          ))}
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label htmlFor="firstName">الاسم الأول</Label>
+          <Label htmlFor="firstName">{t("firstName")}</Label>
           <Input id="firstName" name="firstName" required />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="lastName">الاسم الأخير</Label>
+          <Label htmlFor="lastName">{t("lastName")}</Label>
           <Input id="lastName" name="lastName" required />
         </div>
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="email">{t("email")}</Label>
-        <Input id="email" name="email" type="email" required autoComplete="email" />
+        <Input id="email" name="email" type="email" required autoComplete="email" placeholder="you@example.com" />
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="password">{t("password")}</Label>
-        <Input id="password" name="password" type="password" required autoComplete="new-password" />
+        <Input id="password" name="password" type="password" required autoComplete="new-password" placeholder="••••••••" />
       </div>
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}
-      <Button type="submit" className="w-full" disabled={pending}>
+      <Button type="submit" className="w-full" size="lg" disabled={pending}>
         {t("register")}
       </Button>
     </form>
