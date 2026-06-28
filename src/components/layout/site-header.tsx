@@ -1,12 +1,16 @@
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { Link } from "@/lib/i18n/navigation";
 import { assets } from "@/config/assets";
+import { getProfile } from "@/lib/auth/session";
+import { roleHome } from "@/config/roles";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { LangSwitcher } from "@/components/shared/lang-switcher";
+import { UserMenu } from "@/components/layout/user-menu";
 import { Button } from "@/components/ui/button";
 
-export function SiteHeader() {
-  const t = useTranslations("nav");
+export async function SiteHeader() {
+  const t = await getTranslations("nav");
+  const profile = await getProfile();
   const links = [
     { href: "/tournaments", label: t("tournaments") },
     { href: "/rankings", label: t("rankings") },
@@ -25,7 +29,7 @@ export function SiteHeader() {
           <span>فارس النيل</span>
         </Link>
 
-        <nav className="hidden items-center gap-6 md:flex">
+        <nav className="hidden items-center gap-6 lg:flex">
           {links.map((l) => (
             <Link key={l.href} href={l.href} className="text-sm font-medium text-foreground/80 transition-colors hover:text-gold">
               {l.label}
@@ -36,9 +40,16 @@ export function SiteHeader() {
         <div className="flex items-center gap-2">
           <LangSwitcher />
           <ThemeToggle />
-          <Button asChild size="sm">
-            <Link href="/login">{t("login")}</Link>
-          </Button>
+          {profile && profile.status === "active" ? (
+            <UserMenu
+              name={profile.display_name ?? profile.first_name_ar ?? "..."}
+              dashboardHref={roleHome[profile.role] ?? "/"}
+            />
+          ) : (
+            <Button asChild size="sm">
+              <Link href="/login">{t("login")}</Link>
+            </Button>
+          )}
         </div>
       </div>
     </header>
