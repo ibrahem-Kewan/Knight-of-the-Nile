@@ -12,7 +12,7 @@ export function ApprovalActions({ userId }: { userId: string }) {
       <Button
         size="sm"
         disabled={pending}
-        onClick={() => start(() => approveUser(userId))}
+        onClick={() => start(() => { void approveUser(userId); })}
       >
         <Check className="h-4 w-4" /> اعتماد
       </Button>
@@ -20,7 +20,7 @@ export function ApprovalActions({ userId }: { userId: string }) {
         size="sm"
         variant="destructive"
         disabled={pending}
-        onClick={() => start(() => rejectUser(userId))}
+        onClick={() => start(() => { void rejectUser(userId); })}
       >
         <X className="h-4 w-4" /> رفض
       </Button>

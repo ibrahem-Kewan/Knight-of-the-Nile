@@ -7,6 +7,7 @@ export const dashboardNav: Record<Role, NavItem[]> = {
     { href: "/admin", labelAr: "نظرة عامة", labelEn: "Overview", icon: "LayoutDashboard" },
     { href: "/admin/users", labelAr: "المستخدمون", labelEn: "Users", icon: "Users" },
     { href: "/admin/approvals", labelAr: "الاعتمادات", labelEn: "Approvals", icon: "CheckCircle" },
+    { href: "/admin/role-requests", labelAr: "طلبات الترقية", labelEn: "Role requests", icon: "UserCog" },
     { href: "/admin/tournaments", labelAr: "البطولات", labelEn: "Tournaments", icon: "Trophy" },
     { href: "/admin/results", labelAr: "النتائج", labelEn: "Results", icon: "ListChecks" },
     { href: "/admin/rankings", labelAr: "التصنيفات", labelEn: "Rankings", icon: "Medal" },
@@ -19,6 +20,7 @@ export const dashboardNav: Record<Role, NavItem[]> = {
     { href: "/admin", labelAr: "نظرة عامة", labelEn: "Overview", icon: "LayoutDashboard" },
     { href: "/admin/users", labelAr: "المستخدمون", labelEn: "Users", icon: "Users" },
     { href: "/admin/approvals", labelAr: "الاعتمادات", labelEn: "Approvals", icon: "CheckCircle" },
+    { href: "/admin/role-requests", labelAr: "طلبات الترقية", labelEn: "Role requests", icon: "UserCog" },
     { href: "/admin/tournaments", labelAr: "البطولات", labelEn: "Tournaments", icon: "Trophy" },
     { href: "/admin/results", labelAr: "النتائج", labelEn: "Results", icon: "ListChecks" },
     { href: "/admin/news", labelAr: "الأخبار", labelEn: "News", icon: "Newspaper" },
@@ -43,5 +45,6 @@ export const dashboardNav: Record<Role, NavItem[]> = {
     { href: "/athlete/courses", labelAr: "دوراتي", labelEn: "My Courses", icon: "GraduationCap" },
     { href: "/athlete/certificates", labelAr: "الشهادات", labelEn: "Certificates", icon: "Award" },
     { href: "/athlete/membership", labelAr: "العضوية", labelEn: "Membership", icon: "IdCard" },
+    { href: "/athlete/request-role", labelAr: "طلب ترقية", labelEn: "Request role", icon: "UserCog" },
   ],
 };

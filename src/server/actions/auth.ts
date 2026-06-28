@@ -37,7 +37,6 @@ export async function registerAction(_prev: ActionState, formData: FormData): Pr
     password: formData.get("password"),
     firstName: formData.get("firstName"),
     lastName: formData.get("lastName"),
-    role: formData.get("role"),
   });
   if (!parsed.success) return { error: "تحقق من صحة الحقول (كلمة المرور 8 أحرف على الأقل)." };
 
@@ -56,7 +55,7 @@ export async function registerAction(_prev: ActionState, formData: FormData): Pr
         first_name_ar: parsed.data.firstName,
         last_name_ar: parsed.data.lastName,
         display_name: `${parsed.data.firstName} ${parsed.data.lastName}`,
-        role: parsed.data.role,
+        // everyone registers as athlete; coach/judge via role request approved by admin
       })
       .eq("id", data.user.id);
   }

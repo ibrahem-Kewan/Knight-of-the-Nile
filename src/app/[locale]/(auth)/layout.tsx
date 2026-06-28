@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/lib/i18n/navigation";
-import { HeroArt } from "@/components/home/hero-art";
+import { AuthSlideshow } from "@/components/home/auth-slideshow";
 
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   const t = await getTranslations("auth");
@@ -13,7 +13,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
           فارس النيل
         </Link>
         <div className="mx-auto w-full max-w-sm">
-          <HeroArt className="w-full drop-shadow-2xl" />
+          <AuthSlideshow />
         </div>
         <p className="font-display text-lg text-gold">{t("brandLine")}</p>
       </div>

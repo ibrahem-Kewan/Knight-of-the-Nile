@@ -10,7 +10,6 @@ export const registerSchema = z.object({
   password: z.string().min(8, { message: "8 أحرف على الأقل" }),
   firstName: z.string().min(2),
   lastName: z.string().min(2),
-  role: z.enum(["athlete", "coach"]),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

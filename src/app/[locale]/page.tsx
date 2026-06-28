@@ -2,6 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/lib/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { assets } from "@/config/assets";
+import { TargetTabla60, TargetFace80 } from "@/components/home/targets";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -122,16 +123,21 @@ export default async function HomePage() {
       </section>
 
       {/* TARGET SPEC */}
-      <section className="container grid items-center gap-10 py-20 md:grid-cols-2">
+      <section className="container grid items-center gap-10 py-20 lg:grid-cols-2">
         <div>
           <p className="text-sm font-medium uppercase tracking-widest text-gold">{t("specKicker")}</p>
           <h2 className="mt-2 font-display text-4xl">{t("specTitle")}</h2>
           <p className="mt-4 max-w-md leading-relaxed text-muted-foreground">{t("specPara")}</p>
         </div>
-        <div className="mx-auto flex aspect-square w-full max-w-sm items-center justify-center rounded-lg border-4 border-gold bg-gradient-to-br from-nile to-nile-bright p-2">
-          <div className="flex h-full w-full items-center justify-center rounded border-4 border-gold/60 text-center font-display text-2xl text-sand">
-            60 × 60 CM
-          </div>
+        <div className="grid gap-6 sm:grid-cols-2">
+          <figure className="text-center">
+            <TargetTabla60 className="mx-auto w-full max-w-[260px]" />
+            <figcaption className="mt-3 font-display text-gold">الهدف الرسمي ٦٠×٦٠ سم</figcaption>
+          </figure>
+          <figure className="text-center">
+            <TargetFace80 className="mx-auto w-full max-w-[260px]" />
+            <figcaption className="mt-3 font-display text-gold">الهدف الرسمي ٨٠×٨٠ سم</figcaption>
+          </figure>
         </div>
       </section>
 
