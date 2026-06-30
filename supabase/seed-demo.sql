@@ -273,3 +273,28 @@ where p.is_active
 limit 1;
 
 -- done
+
+-- 8) Extra demo: enrollment, certificate, dispute (for athlete/judge pages) --
+-- enrollment for Sara in the free archery course
+insert into enrollments (course_id, athlete_id, status, progress)
+select c.id, 'a0000000-0000-0000-0000-000000000004', 'active', 40
+from courses c
+where c.slug = 'archery-basics'
+  and not exists (select 1 from enrollments e where e.course_id = c.id and e.athlete_id = 'a0000000-0000-0000-0000-000000000004');
+
+-- certificate for Sara
+insert into certificates (athlete_id, type, title_ar, title_en, serial, issued_by, issued_at)
+select 'a0000000-0000-0000-0000-000000000004', 'tournament',
+  'المركز الأول - دوري الإسكندرية الشتوي', 'Gold - Alexandria Winter League',
+  'FN-CERT-0001', 'a0000000-0000-0000-0000-000000000001', now()
+where not exists (select 1 from certificates where serial = 'FN-CERT-0001');
+
+-- an open dispute raised by Omar on his result
+insert into result_disputes (result_id, raised_by, reason, status)
+select r.id, 'a0000000-0000-0000-0000-000000000005',
+  '{"ar":"أعتقد أن احتساب النقاط في الجولة الأخيرة غير دقيق.","en":"I believe the last round scoring was inaccurate."}'::jsonb,
+  'open'
+from results r
+where r.athlete_id = 'a0000000-0000-0000-0000-000000000005'
+  and not exists (select 1 from result_disputes d where d.result_id = r.id)
+limit 1;
