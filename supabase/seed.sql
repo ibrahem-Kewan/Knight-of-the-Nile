@@ -1,10 +1,30 @@
 -- Seed — base reference data (run after migrations)
--- Sports
-insert into sports (id, key, name_ar, name_en, sort_order, is_active) values
-  (gen_random_uuid(), 'archery',           'الرماية',                 'Archery',            1, true),
-  (gen_random_uuid(), 'horseback_archery', 'الرماية من على الخيل',    'Horseback Archery',  2, true),
-  (gen_random_uuid(), 'equestrian',        'الفروسية',                'Equestrian',         3, true)
-on conflict do nothing;
+-- ─────────────────────────────────────────────────────────────
+-- Taxonomy (per client, Cpt. Abdelrahman El-Sherbiny):
+--   Top-level categories (sports):   الفروسية · الرماية · Black Knight
+--   Sub-categories (disciplines):
+--     الفروسية  → القفز
+--     الرماية   → الرماية الأرضية · الرماية من على ظهر الخيل
+--     Black Knight → (elite tier, disciplines added later)
+-- ─────────────────────────────────────────────────────────────
+
+-- Categories (sports)
+insert into sports (id, key, name_ar, name_en, image_url, tagline_ar, tagline_en, sort_order, is_active) values
+  (gen_random_uuid(), 'equestrian',   'الفروسية',       'Equestrian',   '/images/categories/equestrian.svg',   'مهارة الفارس والجواد',      'The art of horse & rider',   1, true),
+  (gen_random_uuid(), 'archery',      'الرماية',        'Archery',      '/images/categories/archery.svg',      'دقة التصويب وفنون الرماية',  'Precision and the bow',      2, true),
+  (gen_random_uuid(), 'black_knight', 'الفارس الأسود',  'Black Knight', '/images/categories/black-knight.svg', 'فئة النخبة — بالدعوة فقط',   'The elite tier — by invite', 3, true)
+on conflict (key) do update set
+  name_ar = excluded.name_ar, name_en = excluded.name_en,
+  image_url = excluded.image_url, tagline_ar = excluded.tagline_ar,
+  tagline_en = excluded.tagline_en, sort_order = excluded.sort_order;
+
+-- Sub-categories (disciplines)
+insert into disciplines (id, sport_id, key, name_ar, name_en, is_active) values
+  (gen_random_uuid(), (select id from sports where key = 'equestrian'), 'jumping',            'القفز',                    'Jumping',           true),
+  (gen_random_uuid(), (select id from sports where key = 'archery'),    'ground_archery',     'الرماية الأرضية',          'Ground Archery',    true),
+  (gen_random_uuid(), (select id from sports where key = 'archery'),    'horseback_archery',  'الرماية من على ظهر الخيل', 'Horseback Archery', true)
+on conflict (sport_id, key) do update set
+  name_ar = excluded.name_ar, name_en = excluded.name_en, is_active = excluded.is_active;
 
 -- Countries (Egypt first)
 insert into countries (id, code, name_ar, name_en, phone_code, is_active) values
@@ -20,8 +40,9 @@ on conflict do nothing;
 
 -- Permissions (sample)
 insert into permissions (key, description_ar, description_en) values
-  ('user.approve',   'اعتماد المستخدمين',  'Approve users'),
-  ('tournament.create','إنشاء بطولة',       'Create tournament'),
-  ('result.approve', 'اعتماد النتائج',      'Approve results'),
-  ('post.moderate',  'الإشراف على المحتوى', 'Moderate content')
+  ('user.approve',    'اعتماد المستخدمين',   'Approve users'),
+  ('tournament.create','إنشاء بطولة',        'Create tournament'),
+  ('event.create',    'إنشاء فعالية',        'Create event'),
+  ('result.approve',  'اعتماد النتائج',      'Approve results'),
+  ('post.moderate',   'الإشراف على المحتوى', 'Moderate content')
 on conflict do nothing;

@@ -14,8 +14,27 @@ export async function registerToTournament(tournamentId: string, disciplineId: s
 
   const supabase = await createClient();
 
-  const { data: tour } = await supabase.from("tournaments").select("status").eq("id", tournamentId).single();
-  if (!tour || (tour as { status: string }).status !== "registration_open") return { error: "closed" };
+  const { data: tour } = await supabase
+    .from("tournaments")
+    .select("status, audience, created_by")
+    .eq("id", tournamentId)
+    .single();
+  if (!tour) return { error: "closed" };
+  const tt = tour as { status: string; audience: string | null; created_by: string | null };
+  if (tt.status !== "registration_open") return { error: "closed" };
+
+  // Coach-scoped tournaments: only the creating coach's own athletes may register.
+  if (tt.audience === "coach_athletes" && tt.created_by) {
+    const { data: link } = await supabase
+      .from("coach_athletes")
+      .select("id")
+      .eq("coach_id", tt.created_by)
+      .eq("athlete_id", me.id)
+      .eq("is_current", true)
+      .eq("status", "active")
+      .maybeSingle();
+    if (!link) return { error: "not-eligible" };
+  }
 
   const { error } = await supabase.from("tournament_registrations").insert({
     tournament_id: tournamentId,

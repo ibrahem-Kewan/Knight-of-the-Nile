@@ -5,17 +5,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Trophy } from "lucide-react";
 
-const statusLabel: Record<string, string> = {
-  registration_open: "التسجيل مفتوح",
-  registration_closed: "التسجيل مغلق",
-  ongoing: "جارية",
-  completed: "منتهية",
-  published: "منشورة",
+const statusKey: Record<string, string> = {
+  registration_open: "stRegOpen",
+  registration_closed: "stRegClosed",
+  ongoing: "stOngoing",
+  completed: "stCompleted",
+  published: "stPublished",
 };
 
 export default async function TournamentsPage() {
   const locale = await getLocale();
   const t = await getTranslations("nav");
+  const tt = await getTranslations("tadmin");
   const supabase = await createClient();
 
   const { data: tournaments } = await supabase
@@ -29,7 +30,7 @@ export default async function TournamentsPage() {
     <div className="container py-10">
       <h1 className="mb-6 font-display text-3xl text-gold">{t("tournaments")}</h1>
       {!tournaments?.length ? (
-        <p className="text-muted-foreground">لا توجد بطولات منشورة بعد.</p>
+        <p className="text-muted-foreground">{tt("noTournaments")}</p>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {tournaments.map((t) => (
@@ -38,7 +39,7 @@ export default async function TournamentsPage() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <Trophy className="h-5 w-5 text-nile" />
-                    <Badge variant="secondary">{statusLabel[t.status] ?? t.status}</Badge>
+                    <Badge variant="secondary">{tt(statusKey[t.status] ?? t.status as never)}</Badge>
                   </div>
                   <CardTitle>{locale === "ar" ? t.title_ar : t.title_en ?? t.title_ar}</CardTitle>
                 </CardHeader>

@@ -6,6 +6,43 @@ import { requireRole } from "@/lib/auth/session";
 
 type Res = { ok?: boolean; error?: string };
 
+/** Coach approves an athlete who chose them at signup. */
+export async function approveAthleteLink(linkId: string): Promise<Res> {
+  const me = await requireRole(["coach"]);
+  const supabase = await createClient();
+  const { data: link } = await supabase
+    .from("coach_athletes")
+    .select("id, coach_id")
+    .eq("id", linkId)
+    .maybeSingle();
+  if (!link || (link as { coach_id: string }).coach_id !== me.id) return { error: "forbidden" };
+
+  await supabase
+    .from("coach_athletes")
+    .update({ status: "active", is_current: true, approved_by: me.id, approved_at: new Date().toISOString() })
+    .eq("id", linkId);
+  revalidatePath("/coach/athletes");
+  return { ok: true };
+}
+
+export async function rejectAthleteLink(linkId: string): Promise<Res> {
+  const me = await requireRole(["coach"]);
+  const supabase = await createClient();
+  const { data: link } = await supabase
+    .from("coach_athletes")
+    .select("id, coach_id")
+    .eq("id", linkId)
+    .maybeSingle();
+  if (!link || (link as { coach_id: string }).coach_id !== me.id) return { error: "forbidden" };
+
+  await supabase
+    .from("coach_athletes")
+    .update({ status: "rejected", is_current: false })
+    .eq("id", linkId);
+  revalidatePath("/coach/athletes");
+  return { ok: true };
+}
+
 export async function coachRegisterAthlete(
   athleteId: string,
   tournamentId: string,
@@ -22,6 +59,7 @@ export async function coachRegisterAthlete(
     .eq("coach_id", me.id)
     .eq("athlete_id", athleteId)
     .eq("is_current", true)
+    .eq("status", "active")
     .maybeSingle();
   if (!link) return { error: "not-your-athlete" };
 

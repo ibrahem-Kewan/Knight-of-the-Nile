@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="الفارس الأسود — Black Knight">
+  <defs>
+    <radialGradient id="bkBg" cx="0.5" cy="0.4" r="0.8">
+      <stop offset="0" stop-color="#20232b"/>
+      <stop offset="1" stop-color="#0a0b0f"/>
+    </radialGradient>
+    <pattern id="bkStars" width="80" height="80" patternUnits="userSpaceOnUse">
+      <g fill="none" stroke="#E3B505" stroke-width="1.4" opacity="0.12">
+        <path d="M40 8 L52 28 L72 40 L52 52 L40 72 L28 52 L8 40 L28 28 Z"/>
+      </g>
+    </pattern>
+  </defs>
+  <rect width="800" height="600" fill="url(#bkBg)"/>
+  <rect width="800" height="600" fill="url(#bkStars)"/>
+  <rect x="24" y="24" width="752" height="552" fill="none" stroke="#E3B505" stroke-width="3" opacity="0.75"/>
+  <rect x="36" y="36" width="728" height="528" fill="none" stroke="#E3B505" stroke-width="1" opacity="0.4"/>
+  <!-- helmet crest / knight silhouette -->
+  <g fill="#14161d" stroke="#E3B505" stroke-width="3">
+    <path d="M400 150
+      c46 0 84 30 96 74 c8 30 4 66-14 100 c14 10 22 26 22 44 l0 60 l-40 0 l0-46
+      c0-16-12-28-28-28 l-72 0 c-16 0-28 12-28 28 l0 46 l-40 0 l0-60
+      c0-18 8-34 22-44 c-18-34-22-70-14-100 c12-44 50-74 96-74 Z"/>
+    <!-- visor slits -->
+    <line x1="360" y1="250" x2="440" y2="250" stroke-width="6"/>
+    <line x1="360" y1="278" x2="440" y2="278" stroke-width="6"/>
+  </g>
+  <!-- crown / crest -->
+  <g fill="#E3B505">
+    <path d="M360 150 l14-40 l14 26 l12-34 l12 34 l14-26 l14 40 Z"/>
+  </g>
+  <!-- crossed bow + sword accents -->
+  <g fill="none" stroke="#E3B505" stroke-width="6" stroke-linecap="round" opacity="0.9">
+    <path d="M250 470 C210 430 210 390 250 350"/>
+    <line x1="250" y1="360" x2="250" y2="460"/>
+    <line x1="520" y1="350" x2="560" y2="470"/>
+    <line x1="512" y1="372" x2="536" y2="372"/>
+  </g>
+  <text x="400" y="560" text-anchor="middle" font-family="Georgia, serif" font-size="34" letter-spacing="6" fill="#E3B505">BLACK KNIGHT</text>
+</svg>

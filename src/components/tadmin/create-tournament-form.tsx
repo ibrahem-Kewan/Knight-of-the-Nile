@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
 import { createTournament } from "@/server/actions/tournaments";
@@ -10,13 +10,26 @@ import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
 
 type Sport = { id: string; name_ar: string; name_en: string };
+type Discipline = { id: string; sport_id: string; name_ar: string; name_en: string };
 
-export function CreateTournamentForm({ sports }: { sports: Sport[] }) {
+export function CreateTournamentForm({
+  sports,
+  disciplines = [],
+}: {
+  sports: Sport[];
+  disciplines?: Discipline[];
+}) {
   const t = useTranslations("tadmin");
   const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
+  const [sportId, setSportId] = useState(sports[0]?.id ?? "");
+
+  const sportDisciplines = useMemo(
+    () => disciplines.filter((d) => d.sport_id === sportId),
+    [disciplines, sportId],
+  );
 
   if (!open) {
     return (
@@ -49,9 +62,30 @@ export function CreateTournamentForm({ sports }: { sports: Sport[] }) {
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="sport_id">{t("sport")}</Label>
-          <select id="sport_id" name="sport_id" required className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm">
+          <select
+            id="sport_id"
+            name="sport_id"
+            required
+            value={sportId}
+            onChange={(e) => setSportId(e.target.value)}
+            className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm"
+          >
             {sports.map((s) => (
               <option key={s.id} value={s.id}>{locale === "ar" ? s.name_ar : s.name_en}</option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="discipline_id">{t("category")}</Label>
+          <select
+            id="discipline_id"
+            name="discipline_id"
+            className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm"
+            disabled={sportDisciplines.length === 0}
+          >
+            <option value="">{t("categoryNone")}</option>
+            {sportDisciplines.map((d) => (
+              <option key={d.id} value={d.id}>{locale === "ar" ? d.name_ar : d.name_en}</option>
             ))}
           </select>
         </div>

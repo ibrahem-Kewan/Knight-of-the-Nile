@@ -21,7 +21,9 @@ export default async function AdminUsersPage() {
 
   const { data: users } = await supabase
     .from("profiles")
-    .select("id, display_name, first_name_ar, last_name_ar, email, role, status, created_at")
+    .select(
+      "id, display_name, first_name_ar, last_name_ar, email, role, status, created_at, approver:profiles!profiles_approved_by_fkey(display_name, first_name_ar)",
+    )
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
@@ -41,6 +43,7 @@ export default async function AdminUsersPage() {
                 <th className="p-3 text-start">{t("email")}</th>
                 <th className="p-3 text-start">{t("role")}</th>
                 <th className="p-3 text-start">{t("status")}</th>
+                <th className="p-3 text-start">{t("approvedBy")}</th>
                 <th className="p-3 text-start">{t("actions")}</th>
               </tr>
             </thead>
@@ -53,6 +56,7 @@ export default async function AdminUsersPage() {
                   <td className="p-3 text-muted-foreground">{u.email}</td>
                   <td className="p-3"><Badge variant="secondary">{t(roleKey[u.role] ?? u.role)}</Badge></td>
                   <td className="p-3"><Badge variant={statusVariant[u.status] ?? "secondary"}>{t(statusKey[u.status] ?? u.status)}</Badge></td>
+                  <td className="p-3 text-muted-foreground">{u.approver?.display_name ?? u.approver?.first_name_ar ?? "—"}</td>
                   <td className="p-3">
                     <UserActions
                       id={u.id}

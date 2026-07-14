@@ -7,7 +7,7 @@ import { requireRole } from "@/lib/auth/session";
 type Res = { ok?: boolean; error?: string };
 
 export async function finalizeResult(registrationId: string, points: number): Promise<Res> {
-  await requireRole(["judge", "super_admin", "admin"]);
+  const me = await requireRole(["coach", "judge", "super_admin", "admin"]);
   const supabase = await createClient();
 
   const { data: reg } = await supabase
@@ -17,6 +17,19 @@ export async function finalizeResult(registrationId: string, points: number): Pr
     .single();
   if (!reg) return { error: "not-found" };
   const r = reg as { tournament_id: string; athlete_id: string; discipline_id: string };
+
+  // A coach may only grade athletes who belong to them.
+  if (me.role === "coach") {
+    const { data: link } = await supabase
+      .from("coach_athletes")
+      .select("id")
+      .eq("coach_id", me.id)
+      .eq("athlete_id", r.athlete_id)
+      .eq("is_current", true)
+      .eq("status", "active")
+      .maybeSingle();
+    if (!link) return { error: "not-your-athlete" };
+  }
 
   // upsert a result row for this registration
   const { data: existing } = await supabase.from("results").select("id").eq("registration_id", registrationId).maybeSingle();

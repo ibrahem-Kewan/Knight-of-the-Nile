@@ -47,17 +47,30 @@ export async function registerAction(_prev: ActionState, formData: FormData): Pr
   });
   if (error) return { error: "تعذّر إنشاء الحساب. قد يكون البريد مستخدمًا." };
 
-  // Update the auto-created profile with name + chosen role
+  // Update the auto-created profile with name + optional chosen coach
   if (data.user) {
+    const coachId = String(formData.get("coach_id") || "").trim() || null;
+
     await supabase
       .from("profiles")
       .update({
         first_name_ar: parsed.data.firstName,
         last_name_ar: parsed.data.lastName,
         display_name: `${parsed.data.firstName} ${parsed.data.lastName}`,
+        primary_coach_id: coachId,
         // everyone registers as athlete; coach/judge via role request approved by admin
       })
       .eq("id", data.user.id);
+
+    // If a coach was chosen, create a pending link the coach must approve.
+    if (coachId) {
+      await supabase.from("coach_athletes").insert({
+        coach_id: coachId,
+        athlete_id: data.user.id,
+        status: "pending",
+        is_current: false,
+      });
+    }
   }
 
   redirect("/pending");

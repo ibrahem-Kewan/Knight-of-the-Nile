@@ -10,31 +10,29 @@ const statusKey: Record<string, string> = {
   registration_closed: "stRegClosed", ongoing: "stOngoing", completed: "stCompleted", cancelled: "stCancelled",
 };
 
-export default async function AdminTournamentsPage() {
-  await requireRole(["super_admin", "admin"]);
+export default async function CoachTournamentsPage() {
+  const me = await requireRole(["coach"]);
   const locale = await getLocale();
   const t = await getTranslations("tadmin");
   const supabase = await createClient();
 
-  const [{ data: sports }, { data: disciplines }, { data: tournaments }, { data: judges }] = await Promise.all([
+  const [{ data: sports }, { data: disciplines }, { data: tournaments }] = await Promise.all([
     supabase.from("sports").select("id, name_ar, name_en").eq("is_active", true).order("sort_order"),
     supabase.from("disciplines").select("id, sport_id, name_ar, name_en").eq("is_active", true),
     supabase
       .from("tournaments")
-      .select("id, title_ar, title_en, status, start_date, venue, sport_id, tournament_disciplines(discipline_id)")
+      .select("id, title_ar, title_en, status, venue, sport_id, tournament_disciplines(discipline_id)")
+      .eq("created_by", me.id)
       .is("deleted_at", null)
       .order("created_at", { ascending: false }),
-    supabase.from("profiles").select("id, display_name, first_name_ar").eq("role", "judge").eq("status", "active"),
   ]);
 
-  const judgeList = (judges ?? []).map((j: any) => ({ id: j.id, name: j.display_name ?? j.first_name_ar ?? "—" }));
   const disc = (disciplines ?? []) as any[];
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl text-gold">{t("title")}</h1>
-      </div>
+      <h1 className="font-display text-2xl text-gold">{t("title")}</h1>
+      <p className="text-sm text-muted-foreground">{t("coachScopeNote")}</p>
 
       <CreateTournamentForm sports={(sports ?? []) as any} disciplines={disc} />
 
@@ -61,7 +59,7 @@ export default async function AdminTournamentsPage() {
                     <TournamentRowActions
                       id={tr.id}
                       status={tr.status}
-                      judges={judgeList}
+                      judges={[]}
                       sportId={tr.sport_id}
                       disciplines={disc}
                       currentDisciplineId={tr.tournament_disciplines?.[0]?.discipline_id ?? ""}

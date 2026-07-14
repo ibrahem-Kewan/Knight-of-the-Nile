@@ -16,9 +16,9 @@ export default async function AboutPage() {
   ] as const;
 
   const sports = [
-    { icon: Target, key: "archery" },
-    { icon: Crosshair, key: "horseback_archery" },
     { icon: Award, key: "equestrian" },
+    { icon: Target, key: "archery" },
+    { icon: Crosshair, key: "black_knight" },
   ] as const;
 
   return (

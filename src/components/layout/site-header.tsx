@@ -13,6 +13,7 @@ export async function SiteHeader() {
   const profile = await getProfile();
   const links = [
     { href: "/tournaments", label: t("tournaments") },
+    { href: "/events", label: t("events") },
     { href: "/rankings", label: t("rankings") },
     { href: "/courses", label: t("courses") },
     { href: "/news", label: t("news") },

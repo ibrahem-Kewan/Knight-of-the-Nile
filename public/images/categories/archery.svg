@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="الرماية — Archery">
+  <defs>
+    <linearGradient id="arBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1b2a6b"/>
+      <stop offset="1" stop-color="#2E47A0"/>
+    </linearGradient>
+    <pattern id="arStars" width="80" height="80" patternUnits="userSpaceOnUse">
+      <g fill="none" stroke="#E3B505" stroke-width="1.4" opacity="0.13">
+        <path d="M40 8 L52 28 L72 40 L52 52 L40 72 L28 52 L8 40 L28 28 Z"/>
+      </g>
+    </pattern>
+  </defs>
+  <rect width="800" height="600" fill="url(#arBg)"/>
+  <rect width="800" height="600" fill="url(#arStars)"/>
+  <rect x="24" y="24" width="752" height="552" fill="none" stroke="#E3B505" stroke-width="3" opacity="0.7"/>
+  <rect x="36" y="36" width="728" height="528" fill="none" stroke="#E3B505" stroke-width="1" opacity="0.4"/>
+  <!-- target (official 60x60 square face) -->
+  <g transform="translate(560 300)">
+    <rect x="-120" y="-120" width="240" height="240" fill="#E2231A"/>
+    <rect x="-92"  y="-92"  width="184" height="184" fill="#1FA64A"/>
+    <rect x="-64"  y="-64"  width="128" height="128" fill="#111"/>
+    <rect x="-36"  y="-36"  width="72"  height="72"  fill="#FFE500"/>
+    <rect x="-12"  y="-12"  width="24"  height="24"  fill="#fff"/>
+  </g>
+  <!-- bow + drawn arrow -->
+  <g fill="none" stroke="#E3B505" stroke-width="10" stroke-linecap="round">
+    <path d="M250 140 C120 250 120 350 250 460"/>
+    <path d="M250 155 L250 445" stroke-width="4"/>
+  </g>
+  <g stroke="#E3B505" stroke-width="6" stroke-linecap="round">
+    <line x1="250" y1="300" x2="560" y2="300"/>
+  </g>
+  <polygon points="560,300 536,288 536,312" fill="#E3B505"/>
+  <g fill="#E3B505">
+    <polygon points="250,300 274,290 274,310"/>
+    <polygon points="238,286 258,300 238,314"/>
+  </g>
+</svg>
