@@ -1,15 +1,24 @@
-// Brand assets sourced from the Knight of the Nile design.
-// NOTE: these are remote (Lovable CDN). To make them permanent for production,
-// download each into /public/brand/ and replace the URL with e.g. "/brand/hero-archer.jpg".
-const BASE = "https://nil-knight-championships.lovable.app";
+// Brand assets — sourced from the local project files in src/assets/branding
+// (bundled by Next at build time; no remote CDN, no /public copy needed).
+import logoImg from "@/assets/branding/knight-of-the-nile-logo.jpg";
+import horseArcherImg from "@/assets/branding/Knight of the Nile-Image_ortpzmortpzmortp.png";
+import galleryMorningImg from "@/assets/branding/gallery-morning-DLYtb1s-.jpg";
+import galleryPrecisionImg from "@/assets/branding/gallery-precision-GWYg58jG.jpg";
+import galleryGearImg from "@/assets/branding/gallery-gear-oGqohwr3.jpg";
 
 export const assets = {
-  logo: `${BASE}/__l5e/assets-v1/4fef2db1-10bb-46ad-9482-982d47c1158d/knight-of-the-nile-logo.jpg`,
-  hero: `${BASE}/assets/hero-archer-DxZt46af.jpg`,
+  logo: logoImg.src,
+  hero: horseArcherImg.src,
   gallery: [
-    { src: `${BASE}/assets/gallery-morning-DLYtb1s-.jpg`, ar: "تدريب الفجر", en: "Morning Drill" },
-    { src: `${BASE}/assets/gallery-precision-GWYg58jG.jpg`, ar: "الدقة", en: "Precision" },
-    { src: `${BASE}/assets/gallery-gear-oGqohwr3.jpg`, ar: "العتاد", en: "Heritage Gear" },
-    { src: `${BASE}/assets/gallery-charge-C20X6RHk.jpg`, ar: "الانطلاق", en: "The Charge" },
+    { src: galleryMorningImg.src, ar: "تدريب الفجر", en: "Morning Drill" },
+    { src: galleryPrecisionImg.src, ar: "الدقة", en: "Precision" },
+    { src: galleryGearImg.src, ar: "العتاد", en: "Heritage Gear" },
+    { src: horseArcherImg.src, ar: "الانطلاق", en: "The Charge" },
   ],
+  // Category cover images (Arabic-themed, real project photos).
+  covers: {
+    horse: horseArcherImg.src,      // الفروسية / الرماية من على ظهر الخيل
+    target: galleryPrecisionImg.src, // الرماية / الرماية الأرضية
+    gear: galleryGearImg.src,        // الفارس الأسود
+  },
 } as const;

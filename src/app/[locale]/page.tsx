@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Target, Crosshair, Shield, Trophy, MapPin, Calendar, ArrowLeft, ArrowRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-type Category = { icon: LucideIcon; t: string; en: string; d: string; chips?: string[]; tag?: string; elite?: boolean };
+type Category = { icon: LucideIcon; t: string; en: string; d: string; cover: string; chips?: string[]; tag?: string; elite?: boolean };
 
 export default async function HomePage() {
   const locale = await getLocale();
@@ -35,9 +35,9 @@ export default async function HomePage() {
   ];
 
   const categories: Category[] = [
-    { icon: Target, t: "groundTitle", en: "groundEn", d: "groundDesc", chips: ["10M","20M","25M","50M","70M","100M"] },
-    { icon: Crosshair, t: "hbaTitle", en: "hbaEn", d: "hbaDesc", tag: "hbaTag" },
-    { icon: Shield, t: "blackTitle", en: "blackEn", d: "blackDesc", elite: true },
+    { icon: Target, t: "groundTitle", en: "groundEn", d: "groundDesc", cover: assets.covers.target, chips: ["10M","20M","25M","50M","70M","100M"] },
+    { icon: Crosshair, t: "hbaTitle", en: "hbaEn", d: "hbaDesc", cover: assets.covers.horse, tag: "hbaTag" },
+    { icon: Shield, t: "blackTitle", en: "blackEn", d: "blackDesc", cover: assets.covers.gear, elite: true },
   ];
 
   const statusLabels: Record<string, { ar: string; en: string }> = {
@@ -80,7 +80,12 @@ export default async function HomePage() {
         <p className="mx-auto mt-3 max-w-2xl text-center text-muted-foreground">{t("catSub")}</p>
         <div className="mt-12 grid gap-6 md:grid-cols-3">
           {categories.map((c) => (
-            <Card key={c.t} className={c.elite ? "border-gold/60 bg-gradient-to-b from-ink to-ink-700 text-sand" : ""}>
+            <Card key={c.t} className={`overflow-hidden ${c.elite ? "border-gold/60 bg-gradient-to-b from-ink to-ink-700 text-sand" : ""}`}>
+              <div className="relative h-40 w-full overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={c.cover} alt={t(c.t as never)} className="h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-ink/80 to-transparent" />
+              </div>
               <CardHeader>
                 <div className={`mb-3 inline-flex h-12 w-12 items-center justify-center rounded-lg ${c.elite ? "bg-gold text-ink" : "bg-gold/15 text-gold-deep"}`}>
                   <c.icon className="h-6 w-6" />

@@ -16,9 +16,9 @@ export default async function AboutPage() {
   ] as const;
 
   const sports = [
-    { icon: Award, key: "equestrian" },
-    { icon: Target, key: "archery" },
-    { icon: Crosshair, key: "black_knight" },
+    { icon: Award, key: "equestrian", cover: assets.covers.horse },
+    { icon: Target, key: "archery", cover: assets.covers.target },
+    { icon: Crosshair, key: "black_knight", cover: assets.covers.gear },
   ] as const;
 
   return (
@@ -70,10 +70,17 @@ export default async function AboutPage() {
         <h2 className="mb-10 text-center font-display text-3xl text-gold">{t("sportsTitle")}</h2>
         <div className="grid gap-6 md:grid-cols-3">
           {sports.map((s) => (
-            <div key={s.key} className="rounded-lg border border-border bg-card p-8 text-center">
-              <s.icon className="mx-auto mb-4 h-10 w-10 text-nile" />
-              <h3 className="text-lg font-semibold">{ts(s.key)}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{ts(`${s.key}Desc`)}</p>
+            <div key={s.key} className="overflow-hidden rounded-lg border border-border bg-card text-center">
+              <div className="relative h-44 w-full overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={s.cover} alt={ts(s.key)} className="h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-ink/70 to-transparent" />
+              </div>
+              <div className="p-8">
+                <s.icon className="mx-auto mb-4 h-10 w-10 text-nile" />
+                <h3 className="text-lg font-semibold">{ts(s.key)}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{ts(`${s.key}Desc`)}</p>
+              </div>
             </div>
           ))}
         </div>

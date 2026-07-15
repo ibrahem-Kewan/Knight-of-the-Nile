@@ -9,14 +9,16 @@
 -- ─────────────────────────────────────────────────────────────
 
 -- Categories (sports)
-insert into sports (id, key, name_ar, name_en, image_url, tagline_ar, tagline_en, sort_order, is_active) values
-  (gen_random_uuid(), 'equestrian',   'الفروسية',       'Equestrian',   '/images/categories/equestrian.svg',   'مهارة الفارس والجواد',      'The art of horse & rider',   1, true),
-  (gen_random_uuid(), 'archery',      'الرماية',        'Archery',      '/images/categories/archery.svg',      'دقة التصويب وفنون الرماية',  'Precision and the bow',      2, true),
-  (gen_random_uuid(), 'black_knight', 'الفارس الأسود',  'Black Knight', '/images/categories/black-knight.svg', 'فئة النخبة — بالدعوة فقط',   'The elite tier — by invite', 3, true)
+-- Cover images are rendered in the UI from real project photos (src/assets/branding
+-- via src/config/assets.ts → assets.covers). image_url is kept for future use.
+insert into sports (id, key, name_ar, name_en, tagline_ar, tagline_en, sort_order, is_active) values
+  (gen_random_uuid(), 'equestrian',   'الفروسية',       'Equestrian',   'مهارة الفارس والجواد',      'The art of horse & rider',   1, true),
+  (gen_random_uuid(), 'archery',      'الرماية',        'Archery',      'دقة التصويب وفنون الرماية',  'Precision and the bow',      2, true),
+  (gen_random_uuid(), 'black_knight', 'الفارس الأسود',  'Black Knight', 'فئة النخبة — بالدعوة فقط',   'The elite tier — by invite', 3, true)
 on conflict (key) do update set
   name_ar = excluded.name_ar, name_en = excluded.name_en,
-  image_url = excluded.image_url, tagline_ar = excluded.tagline_ar,
-  tagline_en = excluded.tagline_en, sort_order = excluded.sort_order;
+  tagline_ar = excluded.tagline_ar, tagline_en = excluded.tagline_en,
+  sort_order = excluded.sort_order;
 
 -- Sub-categories (disciplines)
 insert into disciplines (id, sport_id, key, name_ar, name_en, is_active) values
