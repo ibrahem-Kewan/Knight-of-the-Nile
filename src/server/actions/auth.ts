@@ -73,7 +73,8 @@ export async function registerAction(_prev: ActionState, formData: FormData): Pr
     }
   }
 
-  redirect("/pending");
+  // Athletes are active immediately; their dashboard unlocks after a coach approves them.
+  redirect("/athlete");
 }
 
 export async function logoutAction(): Promise<void> {

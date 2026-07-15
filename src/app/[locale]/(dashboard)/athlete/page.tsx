@@ -1,9 +1,11 @@
+import { getTranslations } from "next-intl/server";
 import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { StatCard } from "@/components/shared/stat-card";
 
 export default async function AthleteOverview() {
   const profile = await requireRole(["athlete"]);
+  const t = await getTranslations("dash");
   const supabase = await createClient();
 
   const { count: regs } = await supabase
@@ -19,12 +21,12 @@ export default async function AthleteOverview() {
   return (
     <div className="space-y-6">
       <h1 className="font-display text-2xl text-gold">
-        أهلًا، {profile.display_name ?? "بطل"}
+        {t("welcome", { name: profile.display_name ?? t("champ") })}
       </h1>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <StatCard label="بطولاتي" value={regs ?? 0} />
-        <StatCard label="شهاداتي" value={certs ?? 0} />
-        <StatCard label="تصنيفي الحالي" value="—" />
+        <StatCard label={t("myTournaments")} value={regs ?? 0} />
+        <StatCard label={t("myCerts")} value={certs ?? 0} />
+        <StatCard label={t("myRank")} value="—" />
       </div>
     </div>
   );

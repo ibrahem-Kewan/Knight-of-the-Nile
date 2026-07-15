@@ -134,6 +134,8 @@
     "haveAccount": "Already have an account?",
     "noAccount": "Don't have an account?",
     "pending": "Your account is under review. You will be notified once approved.",
+    "awaitingCoachTitle": "Awaiting coach approval",
+    "awaitingCoachNote": "Your account is created and you can browse the platform. Your dashboard will appear once your coach approves you.",
     "backHome": "Back to home",
     "brandLine": "Where knights meet",
     "athleteNote": "Your account starts as an athlete. After approval you can request an upgrade to coach or judge from your dashboard."
@@ -306,7 +308,11 @@
     "upcomingTournaments": "Upcoming tournaments",
     "myTournaments": "My tournaments",
     "resultsPending": "Results pending approval",
-    "openDisputes": "Open disputes"
+    "openDisputes": "Open disputes",
+    "welcome": "Welcome, {name}",
+    "champ": "champion",
+    "myCerts": "My certificates",
+    "myRank": "My current ranking"
   },
   "coach": {
     "title": "My athletes",
