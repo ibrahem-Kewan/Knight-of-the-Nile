@@ -1,9 +1,11 @@
+import { getTranslations } from "next-intl/server";
 import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { StatCard } from "@/components/shared/stat-card";
 
 export default async function AdminOverview() {
   await requireRole(["super_admin", "admin"]);
+  const t = await getTranslations("dash");
   const supabase = await createClient();
 
   const counts = async (table: string, filter?: (q: any) => any) => {
@@ -22,12 +24,12 @@ export default async function AdminOverview() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-2xl text-gold">لوحة الإدارة</h1>
+      <h1 className="font-display text-2xl text-gold">{t("adminTitle")}</h1>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="المستخدمون" value={users} />
-        <StatCard label="بانتظار الاعتماد" value={pending} hint="حسابات جديدة" />
-        <StatCard label="البطولات" value={tournaments} />
-        <StatCard label="نتائج معلّقة" value={pendingResults} hint="بحاجة لاعتماد" />
+        <StatCard label={t("statUsers")} value={users} />
+        <StatCard label={t("statPending")} value={pending} hint={t("hintNewAccounts")} />
+        <StatCard label={t("statTournaments")} value={tournaments} />
+        <StatCard label={t("statPendingResults")} value={pendingResults} hint={t("hintNeedsApproval")} />
       </div>
     </div>
   );

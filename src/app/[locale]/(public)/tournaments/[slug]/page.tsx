@@ -16,6 +16,7 @@ export default async function TournamentDetail({
   const { slug } = await params;
   const locale = await getLocale();
   const tr = await getTranslations("treg");
+  const ck = await getTranslations("checkout");
   const supabase = await createClient();
 
   const { data: t } = await supabase
@@ -71,6 +72,15 @@ export default async function TournamentDetail({
 
       {isOpen && me?.role === "athlete" && me.status === "active" && disciplines.length > 0 && (
         <RegisterControl tournamentId={t.id} disciplines={disciplines} />
+      )}
+      {Number(t.fees) > 0 && me && (
+        <div className="mt-4">
+          <Button asChild size="lg" variant="outline">
+            <Link href={`/checkout?context=tournament&id=${t.id}&amount=${t.fees}&currency=${t.currency}&title=${encodeURIComponent(title)}`}>
+              {ck("pay")}
+            </Link>
+          </Button>
+        </div>
       )}
       {isOpen && !me && (
         <Button asChild size="lg">

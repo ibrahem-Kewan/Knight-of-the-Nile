@@ -13,6 +13,7 @@ export const dashboardNav: Record<Role, NavItem[]> = {
     { href: "/admin/results", labelAr: "النتائج", labelEn: "Results", icon: "ListChecks" },
     { href: "/admin/rankings", labelAr: "التصنيفات", labelEn: "Rankings", icon: "Medal" },
     { href: "/admin/sports", labelAr: "الرياضات", labelEn: "Sports", icon: "Target" },
+    { href: "/admin/payments", labelAr: "المدفوعات", labelEn: "Payments", icon: "Wallet" },
     { href: "/admin/geography", labelAr: "الجغرافيا", labelEn: "Geography", icon: "Globe" },
     { href: "/admin/news", labelAr: "الأخبار", labelEn: "News", icon: "Newspaper" },
     { href: "/admin/audit", labelAr: "سجل التدقيق", labelEn: "Audit", icon: "ScrollText" },
@@ -25,6 +26,7 @@ export const dashboardNav: Record<Role, NavItem[]> = {
     { href: "/admin/tournaments", labelAr: "البطولات", labelEn: "Tournaments", icon: "Trophy" },
     { href: "/admin/events", labelAr: "الفعاليات", labelEn: "Events", icon: "CalendarDays" },
     { href: "/admin/results", labelAr: "النتائج", labelEn: "Results", icon: "ListChecks" },
+    { href: "/admin/payments", labelAr: "المدفوعات", labelEn: "Payments", icon: "Wallet" },
     { href: "/admin/news", labelAr: "الأخبار", labelEn: "News", icon: "Newspaper" },
   ],
   coach: [
@@ -33,6 +35,7 @@ export const dashboardNav: Record<Role, NavItem[]> = {
     { href: "/coach/tournaments", labelAr: "بطولاتي", labelEn: "Tournaments", icon: "Trophy" },
     { href: "/coach/events", labelAr: "فعالياتي", labelEn: "Events", icon: "CalendarDays" },
     { href: "/coach/register", labelAr: "تسجيل في بطولة", labelEn: "Register", icon: "ClipboardList" },
+    { href: "/coach/scoring", labelAr: "تقييم متدربيّ", labelEn: "Scoring", icon: "Crosshair" },
     { href: "/coach/results", labelAr: "النتائج", labelEn: "Results", icon: "ListChecks" },
     { href: "/coach/courses", labelAr: "دوراتي", labelEn: "My Courses", icon: "GraduationCap" },
     { href: "/coach/posts", labelAr: "المنشورات", labelEn: "Posts", icon: "Newspaper" },

@@ -12,6 +12,7 @@ export default async function EventDetail({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const locale = await getLocale();
   const t = await getTranslations("events");
+  const ck = await getTranslations("checkout");
   const supabase = await createClient();
 
   const { data: e } = await supabase
@@ -56,6 +57,15 @@ export default async function EventDetail({ params }: { params: Promise<{ slug: 
       </dl>
 
       {isOpen && me && me.status === "active" && <EventRegisterControl eventId={e.id} />}
+      {Number(e.fees) > 0 && me && (
+        <div className="mt-4">
+          <Button asChild size="lg" variant="outline">
+            <Link href={`/checkout?context=event&id=${e.id}&amount=${e.fees}&currency=${e.currency}&title=${encodeURIComponent(title)}`}>
+              {ck("pay")}
+            </Link>
+          </Button>
+        </div>
+      )}
       {isOpen && !me && (
         <Button asChild size="lg">
           <Link href="/login">{t("mustLogin")}</Link>

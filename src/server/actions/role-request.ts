@@ -8,7 +8,13 @@ type Res = { ok?: boolean; error?: string };
 
 export async function requestRoleUpgrade(role: "coach" | "judge", note?: string): Promise<Res> {
   const me = await requireAuth();
-  if (me.role !== "athlete") return { error: "already" };
+
+  // Athlete → coach/judge; coach → judge. Judges/admins have nothing to request.
+  const allowed: Record<string, ("coach" | "judge")[]> = {
+    athlete: ["coach", "judge"],
+    coach: ["judge"],
+  };
+  if (!allowed[me.role]?.includes(role)) return { error: "already" };
 
   const supabase = await createClient();
   // avoid duplicate pending request

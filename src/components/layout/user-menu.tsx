@@ -38,6 +38,13 @@ export function UserMenu({ name, dashboardHref }: { name: string; dashboardHref:
           >
             <LayoutDashboard className="h-4 w-4" /> {t("myDashboard")}
           </Link>
+          <Link
+            href="/profile"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted"
+          >
+            <User className="h-4 w-4" /> {t("profile")}
+          </Link>
           <form action={logoutAction}>
             <button
               type="submit"

@@ -1,9 +1,2 @@
--- 0016 — Category/discipline media (Arabic-themed cover images)
--- Additive & idempotent. Adds cover image columns used by home + category pages.
-
-alter table sports      add column if not exists image_url text;
-alter table disciplines add column if not exists image_url text;
-
--- Optional short tagline shown under a category card (bilingual).
-alter table sports add column if not exists tagline_ar text;
-alter table sports add column if not exists tagline_en text;
+-- Moved to 0021_taxonomy_media.sql to avoid a version collision with
+-- the existing 0016_ranking_functions.sql. Intentionally left as a no-op.
