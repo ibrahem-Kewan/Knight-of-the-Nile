@@ -1,6 +1,7 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/lib/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getProfile } from "@/lib/auth/session";
 import { assets } from "@/config/assets";
 import { TargetTabla60, TargetFace80 } from "@/components/home/targets";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,8 @@ export default async function HomePage() {
   const isAr = locale === "ar";
   const Arrow = isAr ? ArrowLeft : ArrowRight;
   const supabase = await createClient();
+  const profile = await getProfile();
+  const isLoggedIn = Boolean(profile);
 
   const { data: tournaments } = await supabase
     .from("tournaments")
@@ -66,9 +69,11 @@ export default async function HomePage() {
             <Button asChild size="lg">
               <Link href="/tournaments">{t("exploreCategories")} <Arrow className="h-4 w-4" /></Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-gold/50 bg-transparent text-gold hover:bg-gold/10">
-              <Link href="/register">{t("ctaJoin")}</Link>
-            </Button>
+            {!isLoggedIn && (
+              <Button asChild size="lg" variant="outline" className="border-gold/50 bg-transparent text-gold hover:bg-gold/10">
+                <Link href="/register">{t("ctaJoin")}</Link>
+              </Button>
+            )}
           </div>
         </div>
       </section>
@@ -199,7 +204,8 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      {/* JOURNEY CTA */}
+      {/* JOURNEY CTA — guests only */}
+      {!isLoggedIn && (
       <section className="relative overflow-hidden bg-ink py-24 text-center text-sand">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={assets.hero} alt="" className="absolute inset-0 h-full w-full object-cover opacity-25" />
@@ -211,6 +217,7 @@ export default async function HomePage() {
           </Button>
         </div>
       </section>
+      )}
     </>
   );
 }

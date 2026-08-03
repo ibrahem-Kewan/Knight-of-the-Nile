@@ -13,5 +13,38 @@ public/sw.js
 public/sw.js.map
 .vercel
 .DS_Store
-supabase/.branches
-supabase/.temp
+# --- Supabase: لا يُرفع شيء منه إلى المستودع ---
+supabase/
+.supabase/
+
+# --- أي بيانات أو نسخ قاعدة بيانات ---
+*.sql
+*.dump
+*.sqlite
+*.sqlite3
+*.db
+*.bak
+*.backup
+*.csv
+*.tsv
+/data/
+/backups/
+/dumps/
+seed*.sql
+
+# --- ملفات قد تحوي أسرارًا أو بيانات دخول ---
+DEMO.md
+*.pem
+*.key
+*.p12
+*.pfx
+.env.keys
+secrets*.json
+service-account*.json
+
+# --- أدوات ومخرجات محلية ---
+*.log
+npm-debug.log*
+coverage/
+.idea/
+.vscode/

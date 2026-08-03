@@ -1,12 +1,14 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/lib/i18n/navigation";
 import { assets } from "@/config/assets";
+import { getProfile } from "@/lib/auth/session";
 import { Button } from "@/components/ui/button";
 import { Target, Crosshair, Award, Gem, Landmark, Scale, Users } from "lucide-react";
 
 export default async function AboutPage() {
   const t = await getTranslations("about");
   const ts = await getTranslations("sports");
+  const isLoggedIn = Boolean(await getProfile());
 
   const values = [
     { icon: Gem, t: "v1Title", d: "v1" },
@@ -86,7 +88,8 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      {/* cta */}
+      {/* cta — guests only */}
+      {!isLoggedIn && (
       <section className="bg-gradient-to-r from-ink to-nile py-16 text-center text-sand">
         <div className="container">
           <h2 className="font-display text-3xl text-gold">{t("ctaTitle")}</h2>
@@ -96,6 +99,7 @@ export default async function AboutPage() {
           </Button>
         </div>
       </section>
+      )}
     </>
   );
 }
