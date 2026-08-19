@@ -7,6 +7,17 @@ const intlMiddleware = createIntlMiddleware(routing);
 
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
+// أقصى وقت ننتظره من Supabase داخل الـ middleware.
+// لو تجاوزناه (قاعدة البيانات متوقفة أو بطيئة) نكمل الطلب بدل تعليق الموقع كله.
+const AUTH_TIMEOUT_MS = 2500;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+  return Promise.race([
+    promise,
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
+  ]);
+}
+
 export async function middleware(request: NextRequest) {
   // 1) i18n routing (always runs)
   const response = intlMiddleware(request);
@@ -28,7 +39,8 @@ export async function middleware(request: NextRequest) {
           },
         },
       });
-      await supabase.auth.getUser();
+      // المهم: مهلة قصوى — لا ننتظر Supabase إلى ما لا نهاية
+      await withTimeout(supabase.auth.getUser(), AUTH_TIMEOUT_MS);
     } catch {
       // never let auth refresh crash the request
     }
