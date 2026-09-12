@@ -15,7 +15,7 @@ export default async function RankingsPage() {
     .limit(100);
 
   return (
-    <div className="container py-8 sm:py-10 lg:py-12">
+    <div className="container px-4 sm:px-6 lg:px-10 xl:px-14 py-8 sm:py-10 lg:py-12">
       <h1 className="mb-6 font-display text-3xl text-gold">{t("rankings")}</h1>
       {!rows?.length ? (
         <p className="text-muted-foreground">لا توجد تصنيفات بعد.</p>

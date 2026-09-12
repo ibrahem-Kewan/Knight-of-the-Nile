@@ -18,7 +18,7 @@ export default async function CoursesPage() {
     .limit(30);
 
   return (
-    <div className="container py-8 sm:py-10 lg:py-12">
+    <div className="container px-4 sm:px-6 lg:px-10 xl:px-14 py-8 sm:py-10 lg:py-12">
       <h1 className="mb-6 font-display text-3xl text-gold">{nav("courses")}</h1>
       {!courses?.length ? (
         <p className="text-muted-foreground">{t("noPublic")}</p>

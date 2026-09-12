@@ -5,7 +5,7 @@ import { Mail, MapPin, Instagram, Facebook, Youtube } from "lucide-react";
 export default async function ContactPage() {
   const t = await getTranslations("contact");
   return (
-    <div className="container grid gap-12 py-12 sm:py-16 md:grid-cols-2">
+    <div className="container px-4 sm:px-6 lg:px-10 xl:px-14 grid gap-12 py-12 sm:py-16 md:grid-cols-2">
       <div>
         <p className="text-sm font-medium uppercase tracking-widest text-gold">{t("kicker")}</p>
         <h1 className="mt-2 font-display text-4xl text-gold">{t("title")}</h1>

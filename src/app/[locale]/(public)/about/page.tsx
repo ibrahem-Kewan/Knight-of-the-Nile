@@ -30,7 +30,7 @@ export default async function AboutPage() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={assets.hero} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
         <div className="absolute inset-0 bg-gradient-to-t from-ink to-ink/40" />
-        <div className="container relative py-16 sm:py-20 lg:py-24 text-center">
+        <div className="container relative px-4 sm:px-6 lg:px-10 xl:px-14 py-16 sm:py-20 lg:py-24 text-center">
           <p className="text-sm font-medium uppercase tracking-widest text-gold">{t("kicker")}</p>
           <h1 className="mx-auto mt-3 max-w-3xl font-display text-4xl text-sand md:text-5xl">{t("title")}</h1>
           <p className="mx-auto mt-5 max-w-2xl leading-relaxed text-sand/80">{t("lead")}</p>
@@ -38,7 +38,7 @@ export default async function AboutPage() {
       </section>
 
       {/* mission / vision */}
-      <section className="container grid gap-6 py-12 sm:py-16 md:grid-cols-2">
+      <section className="container px-4 sm:px-6 lg:px-10 xl:px-14 grid gap-6 py-12 sm:py-16 md:grid-cols-2">
         <div className="rounded-lg border border-border bg-card p-8">
           <h2 className="font-display text-2xl text-gold">{t("missionTitle")}</h2>
           <p className="mt-3 leading-relaxed text-muted-foreground">{t("mission")}</p>
@@ -51,7 +51,7 @@ export default async function AboutPage() {
 
       {/* values */}
       <section className="border-y border-border bg-muted/30">
-        <div className="container py-12 sm:py-16">
+        <div className="container px-4 sm:px-6 lg:px-10 xl:px-14 py-12 sm:py-16">
           <h2 className="mb-10 text-center font-display text-3xl text-gold">{t("valuesTitle")}</h2>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {values.map((v) => (
@@ -68,7 +68,7 @@ export default async function AboutPage() {
       </section>
 
       {/* sports */}
-      <section className="container py-12 sm:py-16">
+      <section className="container px-4 sm:px-6 lg:px-10 xl:px-14 py-12 sm:py-16">
         <h2 className="mb-10 text-center font-display text-3xl text-gold">{t("sportsTitle")}</h2>
         <div className="grid gap-6 md:grid-cols-3">
           {sports.map((s) => (
@@ -91,7 +91,7 @@ export default async function AboutPage() {
       {/* cta — guests only */}
       {!isLoggedIn && (
       <section className="bg-gradient-to-r from-ink to-nile py-16 text-center text-sand">
-        <div className="container py-12 sm:py-16">
+        <div className="container px-4 sm:px-6 lg:px-10 xl:px-14 py-12 sm:py-16">
           <h2 className="font-display text-3xl text-gold">{t("ctaTitle")}</h2>
           <p className="mx-auto mt-3 max-w-xl text-sand/85">{t("ctaSub")}</p>
           <Button asChild size="lg" className="mt-7">

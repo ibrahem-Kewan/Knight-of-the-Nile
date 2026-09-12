@@ -42,7 +42,7 @@ export default async function TournamentDetail({
   }
 
   return (
-    <div className="container max-w-3xl py-8 sm:py-10 lg:py-12">
+    <div className="container max-w-3xl px-4 sm:px-6 lg:px-10 xl:px-14 py-8 sm:py-10 lg:py-12">
       <div className="mb-4 flex items-center gap-3">
         <Badge variant="secondary">{t.scope}</Badge>
         <span className="text-sm text-muted-foreground">{t.venue}</span>
