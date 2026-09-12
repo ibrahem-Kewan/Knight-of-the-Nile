@@ -7,14 +7,16 @@ import { TargetTabla60, TargetFace80 } from "@/components/home/targets";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Target, Crosshair, Shield, Trophy, MapPin, Calendar, ArrowLeft, ArrowRight } from "lucide-react";
+import { Target, Flag, Shield, Trophy, MapPin, Calendar, ArrowLeft, ArrowRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-type Category = { icon: LucideIcon; t: string; en: string; d: string; cover: string; chips?: string[]; tag?: string; elite?: boolean };
+type Category = { key: string; icon: LucideIcon; en: string; cover: string; chips?: string[]; elite?: boolean };
 
 export default async function HomePage() {
   const locale = await getLocale();
   const t = await getTranslations("home");
+  const ts = await getTranslations("sports");
+  const td = await getTranslations("disciplines");
   const isAr = locale === "ar";
   const Arrow = isAr ? ArrowLeft : ArrowRight;
   const supabase = await createClient();
@@ -37,10 +39,14 @@ export default async function HomePage() {
     { n: "06", ar: "أسطورة", en: "Legend", m: "100m" },
   ];
 
+  // Three official top-level categories: الفروسية (equestrian) · الرماية (archery, split
+  // into ground + horseback) · Black Knight (elite tier). Keys mirror sports.key /
+  // disciplines.key in the database (supabase/seed.sql) and the "sports" / "disciplines"
+  // message namespaces, so this stays in sync with the admin sports & tournament-category UI.
   const categories: Category[] = [
-    { icon: Target, t: "groundTitle", en: "groundEn", d: "groundDesc", cover: assets.covers.target, chips: ["10M","20M","25M","50M","70M","100M"] },
-    { icon: Crosshair, t: "hbaTitle", en: "hbaEn", d: "hbaDesc", cover: assets.covers.horse, tag: "hbaTag" },
-    { icon: Shield, t: "blackTitle", en: "blackEn", d: "blackDesc", cover: assets.covers.gear, elite: true },
+    { key: "equestrian", icon: Flag, en: "Equestrian", cover: assets.covers.horse, chips: [td("jumping")] },
+    { key: "archery", icon: Target, en: "Archery", cover: assets.covers.target, chips: [td("ground_archery"), td("horseback_archery")] },
+    { key: "black_knight", icon: Shield, en: "Black Knight", cover: assets.covers.gear, elite: true },
   ];
 
   const statusLabels: Record<string, { ar: string; en: string }> = {
@@ -67,7 +73,7 @@ export default async function HomePage() {
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-sand/80">{t("heroArtPara")}</p>
           <div className="mt-9 flex flex-wrap gap-3">
             <Button asChild size="lg">
-              <Link href="/tournaments">{t("exploreCategories")} <Arrow className="h-4 w-4" /></Link>
+              <Link href="/about">{t("exploreCategories")} <Arrow className="h-4 w-4" /></Link>
             </Button>
             {!isLoggedIn && (
               <Button asChild size="lg" variant="outline" className="border-gold/50 bg-transparent text-gold hover:bg-gold/10">
@@ -78,43 +84,45 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* CATEGORIES */}
+      {/* CATEGORIES — logged-in only */}
+      {isLoggedIn && (
       <section id="categories" className="container py-20">
         <p className="text-center text-sm font-medium uppercase tracking-widest text-gold">{t("catKicker")}</p>
         <h2 className="mt-2 text-center font-display text-4xl text-foreground">{t("catTitle")}</h2>
         <p className="mx-auto mt-3 max-w-2xl text-center text-muted-foreground">{t("catSub")}</p>
         <div className="mt-12 grid gap-6 md:grid-cols-3">
           {categories.map((c) => (
-            <Card key={c.t} className={`overflow-hidden ${c.elite ? "border-gold/60 bg-gradient-to-b from-ink to-ink-700 text-sand" : ""}`}>
+            <Card key={c.key} className={`overflow-hidden ${c.elite ? "border-gold/60 bg-gradient-to-b from-ink to-ink-700 text-sand" : ""}`}>
               <div className="relative h-40 w-full overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={c.cover} alt={t(c.t as never)} className="h-full w-full object-cover" />
+                <img src={c.cover} alt={ts(c.key as never)} className="h-full w-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-ink/80 to-transparent" />
               </div>
               <CardHeader>
                 <div className={`mb-3 inline-flex h-12 w-12 items-center justify-center rounded-lg ${c.elite ? "bg-gold text-ink" : "bg-gold/15 text-gold-deep"}`}>
                   <c.icon className="h-6 w-6" />
                 </div>
-                <CardTitle className={c.elite ? "text-gold" : ""}>{t(c.t as never)}</CardTitle>
-                <p className={`text-xs uppercase tracking-wide ${c.elite ? "text-sand/60" : "text-muted-foreground"}`}>{t(c.en as never)}</p>
+                <CardTitle className={c.elite ? "text-gold" : ""}>{ts(c.key as never)}</CardTitle>
+                <p className={`text-xs uppercase tracking-wide ${c.elite ? "text-sand/60" : "text-muted-foreground"}`}>{c.en}</p>
               </CardHeader>
               <CardContent>
-                <p className={`text-sm ${c.elite ? "text-sand/80" : "text-muted-foreground"}`}>{t(c.d as never)}</p>
-                {c.chips && (
+                <p className={`text-sm ${c.elite ? "text-sand/80" : "text-muted-foreground"}`}>{ts(`${c.key}Desc` as never)}</p>
+                {c.chips && c.chips.length > 0 && (
                   <div className="mt-4 flex flex-wrap gap-1.5">
                     {c.chips.map((ch) => (
                       <span key={ch} className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium">{ch}</span>
                     ))}
                   </div>
                 )}
-                {c.tag && <Badge variant="warning" className="mt-4">{t(c.tag as never)}</Badge>}
               </CardContent>
             </Card>
           ))}
         </div>
       </section>
+      )}
 
-      {/* DISTANCE LADDER */}
+      {/* DISTANCE LADDER — logged-in only */}
+      {isLoggedIn && (
       <section id="distances" className="border-y border-border bg-muted/30">
         <div className="container py-20">
           <p className="text-center text-sm font-medium uppercase tracking-widest text-gold">{t("distKicker")}</p>
@@ -131,8 +139,10 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+      )}
 
-      {/* TARGET SPEC */}
+      {/* TARGET SPEC — logged-in only */}
+      {isLoggedIn && (
       <section className="container grid items-center gap-10 py-20 lg:grid-cols-2">
         <div>
           <p className="text-sm font-medium uppercase tracking-widest text-gold">{t("specKicker")}</p>
@@ -150,6 +160,7 @@ export default async function HomePage() {
           </figure>
         </div>
       </section>
+      )}
 
       {/* GALLERY */}
       <section className="border-t border-border bg-muted/30">
@@ -170,8 +181,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* FEATURED TOURNAMENTS */}
-      {tournaments?.length ? (
+      {/* FEATURED TOURNAMENTS — logged-in only */}
+      {isLoggedIn && tournaments?.length ? (
         <section className="container py-20">
           <div className="mb-10 flex items-end justify-between">
             <div>

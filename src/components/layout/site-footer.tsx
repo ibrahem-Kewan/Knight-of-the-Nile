@@ -1,9 +1,12 @@
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/lib/i18n/navigation";
+import { siteConfig } from "@/config/site";
 
 export function SiteFooter() {
   const t = useTranslations("footer");
   const tn = useTranslations("nav");
+  const locale = useLocale();
+  const brandName = locale === "en" ? siteConfig.nameEn : siteConfig.name;
 
   const explore = [
     { href: "/tournaments", label: tn("tournaments") },
@@ -25,8 +28,7 @@ export function SiteFooter() {
         <div className="md:col-span-2">
           <div className="flex items-center gap-2">
             <span className="inline-block h-8 w-8 rounded-full bg-gradient-to-br from-gold to-gold-deep" />
-            <span className="font-display text-lg text-gold">فارس النيل</span>
-            <span className="text-sm text-muted-foreground">Knight of the Nile</span>
+            <span className="font-display text-lg text-gold">{brandName}</span>
           </div>
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
             {t("tagline")}
@@ -55,7 +57,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-border py-5">
         <p className="container text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} فارس النيل — {t("rights")}
+          © {new Date().getFullYear()} {brandName} — {t("rights")}
         </p>
       </div>
     </footer>

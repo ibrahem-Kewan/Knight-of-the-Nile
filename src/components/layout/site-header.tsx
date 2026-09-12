@@ -1,8 +1,9 @@
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/lib/i18n/navigation";
 import { assets } from "@/config/assets";
 import { getProfile } from "@/lib/auth/session";
 import { roleHome } from "@/config/roles";
+import { siteConfig } from "@/config/site";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { LangSwitcher } from "@/components/shared/lang-switcher";
 import { UserMenu } from "@/components/layout/user-menu";
@@ -10,6 +11,8 @@ import { Button } from "@/components/ui/button";
 
 export async function SiteHeader() {
   const t = await getTranslations("nav");
+  const locale = await getLocale();
+  const brandName = locale === "en" ? siteConfig.nameEn : siteConfig.name;
   const profile = await getProfile();
   const links = [
     { href: "/tournaments", label: t("tournaments") },
@@ -26,8 +29,8 @@ export async function SiteHeader() {
       <div className="container flex h-16 items-center justify-between gap-4">
         <Link href="/" className="flex items-center gap-2.5 font-display text-lg text-gold">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={assets.logo} alt="فارس النيل" className="h-9 w-9 rounded-full object-cover ring-1 ring-gold/40" />
-          <span>فارس النيل</span>
+          <img src={assets.logo} alt={brandName} className="h-9 w-9 rounded-full object-cover ring-1 ring-gold/40" />
+          <span>{brandName}</span>
         </Link>
 
         <nav className="hidden items-center gap-6 lg:flex">
