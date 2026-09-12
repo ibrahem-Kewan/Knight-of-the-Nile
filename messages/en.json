@@ -90,7 +90,29 @@
     "galleryKicker": "From the field",
     "galleryTitle": "Moments of archery.",
     "journeyTitle": "Begin your journey as a knight",
-    "journeyEn": "Draw the bow. Begin the journey."
+    "journeyEn": "Draw the bow. Begin the journey.",
+    "coursesKicker": "Learning & development",
+    "coursesTitle": "Training courses",
+    "coursesSoon": "Coming soon",
+    "coursesSub": "A complete training system inside the platform: video lessons from certified coaches and judges, a quiz after every level, and a verified completion certificate added to the knight's profile. Launching soon.",
+    "coursesFeat": {
+      "certified": {
+        "title": "Certified coaches",
+        "desc": "Courses delivered by certified coaches and judges on the platform."
+      },
+      "video": {
+        "title": "Video lessons",
+        "desc": "Progressive video content with downloadable files and references."
+      },
+      "quiz": {
+        "title": "Assessment quizzes",
+        "desc": "A quiz after every level to measure real progress."
+      },
+      "cert": {
+        "title": "Completion certificate",
+        "desc": "A QR-verified electronic certificate added to your profile."
+      }
+    }
   },
   "sports": {
     "equestrian": "Equestrian",

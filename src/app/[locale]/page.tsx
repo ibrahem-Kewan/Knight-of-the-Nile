@@ -7,10 +7,25 @@ import { TargetTabla60, TargetFace80 } from "@/components/home/targets";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Target, Flag, Shield, Trophy, MapPin, Calendar, ArrowLeft, ArrowRight } from "lucide-react";
+import {
+  Target,
+  Flag,
+  Shield,
+  Trophy,
+  MapPin,
+  Calendar,
+  ArrowLeft,
+  ArrowRight,
+  Clock,
+  GraduationCap,
+  PlayCircle,
+  ClipboardCheck,
+  Award,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 type Category = { key: string; icon: LucideIcon; en: string; cover: string; chips?: string[]; elite?: boolean };
+type CourseTeaser = { key: string; icon: LucideIcon };
 
 export default async function HomePage() {
   const locale = await getLocale();
@@ -47,6 +62,15 @@ export default async function HomePage() {
     { key: "equestrian", icon: Flag, en: "Equestrian", cover: assets.covers.horse, chips: [td("jumping")] },
     { key: "archery", icon: Target, en: "Archery", cover: assets.covers.target, chips: [td("ground_archery"), td("horseback_archery")] },
     { key: "black_knight", icon: Shield, en: "Black Knight", cover: assets.covers.gear, elite: true },
+  ];
+
+  // Courses are not live yet: this is a teaser section only (no links, no disabled
+  // buttons) so nothing on it promises an action the platform can't deliver today.
+  const courseTeasers: CourseTeaser[] = [
+    { key: "certified", icon: GraduationCap },
+    { key: "video", icon: PlayCircle },
+    { key: "quiz", icon: ClipboardCheck },
+    { key: "cert", icon: Award },
   ];
 
   const statusLabels: Record<string, { ar: string; en: string }> = {
@@ -121,6 +145,74 @@ export default async function HomePage() {
       </section>
       )}
 
+      {/* FEATURED TOURNAMENTS — section 3 · logged-in only */}
+      {isLoggedIn && tournaments?.length ? (
+        <section id="featured-tournaments" className="container py-20">
+          <div className="mb-10 flex items-end justify-between">
+            <div>
+              <h2 className="font-display text-3xl text-gold">{t("featuredTournaments")}</h2>
+              <p className="mt-2 text-muted-foreground">{t("featuredTournamentsSub")}</p>
+            </div>
+            <Button asChild variant="ghost" className="hidden md:inline-flex">
+              <Link href="/tournaments">{t("featuredTournaments")} <Arrow className="h-4 w-4" /></Link>
+            </Button>
+          </div>
+          <div className="grid gap-6 md:grid-cols-3">
+            {tournaments.map((tr) => (
+              <Link key={tr.id} href={`/tournaments/${tr.slug}`}>
+                <Card className="h-full transition-all hover:-translate-y-1 hover:border-gold">
+                  <div className="flex h-32 items-center justify-center bg-gradient-to-br from-gold/20 to-nile/20">
+                    <Trophy className="h-10 w-10 text-gold" />
+                  </div>
+                  <CardHeader>
+                    <Badge variant="secondary" className="mb-1 w-fit">{statusLabels[tr.status]?.[isAr ? "ar" : "en"] ?? tr.status}</Badge>
+                    <CardTitle className="text-lg">{isAr ? tr.title_ar : tr.title_en ?? tr.title_ar}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex flex-col gap-1 text-sm text-muted-foreground">
+                    {tr.venue && <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> {tr.venue}</span>}
+                    {tr.start_date && <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> {new Date(tr.start_date).toLocaleDateString(locale)}</span>}
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {/* COURSES — coming soon (teaser, no actions yet) */}
+      <section id="courses" className="container py-20">
+        <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-gold/[0.08] via-card to-nile/[0.08] p-8 md:p-14">
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-32 mx-auto h-64 w-64 rounded-full bg-gold/15 blur-3xl" />
+          <div className="relative">
+            <div className="flex flex-col items-center text-center">
+              <p className="text-sm font-medium uppercase tracking-widest text-gold">{t("coursesKicker")}</p>
+              <h2 className="mt-2 font-display text-4xl text-foreground">{t("coursesTitle")}</h2>
+              <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-4 py-1.5 text-sm font-semibold text-gold-deep dark:text-gold">
+                <Clock className="h-4 w-4 shrink-0" aria-hidden />
+                {t("coursesSoon")}
+              </p>
+              <p className="mx-auto mt-5 max-w-2xl leading-relaxed text-muted-foreground">{t("coursesSub")}</p>
+            </div>
+            <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {courseTeasers.map((f) => (
+                <li
+                  key={f.key}
+                  className="rounded-xl border border-border bg-card/70 p-5 transition-colors hover:border-gold/60"
+                >
+                  <span className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-gold/15 text-gold-deep dark:text-gold">
+                    <f.icon className="h-5 w-5" aria-hidden />
+                  </span>
+                  <h3 className="font-medium text-foreground">{t(`coursesFeat.${f.key}.title` as never)}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                    {t(`coursesFeat.${f.key}.desc` as never)}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
       {/* DISTANCE LADDER — logged-in only */}
       {isLoggedIn && (
       <section id="distances" className="border-y border-border bg-muted/30">
@@ -180,40 +272,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* FEATURED TOURNAMENTS — logged-in only */}
-      {isLoggedIn && tournaments?.length ? (
-        <section className="container py-20">
-          <div className="mb-10 flex items-end justify-between">
-            <div>
-              <h2 className="font-display text-3xl text-gold">{t("featuredTournaments")}</h2>
-              <p className="mt-2 text-muted-foreground">{t("featuredTournamentsSub")}</p>
-            </div>
-            <Button asChild variant="ghost" className="hidden md:inline-flex">
-              <Link href="/tournaments">{t("featuredTournaments")} <Arrow className="h-4 w-4" /></Link>
-            </Button>
-          </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {tournaments.map((tr) => (
-              <Link key={tr.id} href={`/tournaments/${tr.slug}`}>
-                <Card className="h-full transition-all hover:-translate-y-1 hover:border-gold">
-                  <div className="flex h-32 items-center justify-center bg-gradient-to-br from-gold/20 to-nile/20">
-                    <Trophy className="h-10 w-10 text-gold" />
-                  </div>
-                  <CardHeader>
-                    <Badge variant="secondary" className="mb-1 w-fit">{statusLabels[tr.status]?.[isAr ? "ar" : "en"] ?? tr.status}</Badge>
-                    <CardTitle className="text-lg">{isAr ? tr.title_ar : tr.title_en ?? tr.title_ar}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex flex-col gap-1 text-sm text-muted-foreground">
-                    {tr.venue && <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> {tr.venue}</span>}
-                    {tr.start_date && <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> {new Date(tr.start_date).toLocaleDateString(locale)}</span>}
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </section>
-      ) : null}
 
       {/* JOURNEY CTA — guests only */}
       {!isLoggedIn && (
