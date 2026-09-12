@@ -179,67 +179,7 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      
-
-      {/* DISTANCE LADDER — logged-in only */}
-      {isLoggedIn && (
-      <section id="distances" className="border-y border-border bg-muted/30">
-        <div className="container py-20">
-          <p className="text-center text-sm font-medium uppercase tracking-widest text-gold">{t("distKicker")}</p>
-          <h2 className="mt-2 text-center font-display text-4xl">{t("distTitle")}</h2>
-          <p className="mx-auto mt-3 max-w-2xl text-center text-muted-foreground">{t("distSub")}</p>
-          <div className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-            {distances.map((d) => (
-              <div key={d.n} className="rounded-lg border border-border bg-card p-5 text-center transition-colors hover:border-gold">
-                <div className="text-xs text-muted-foreground">{d.n}</div>
-                <div className="mt-1 font-medium">{isAr ? d.ar : d.en}</div>
-                <div className="mt-2 font-display text-2xl text-gold">{d.m}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-      )}
-
-      {/* TARGET SPEC — logged-in only */}
-      {isLoggedIn && (
-      <section className="container py-20">
-        <p className="text-center text-sm font-medium uppercase tracking-widest text-gold">{t("specKicker")}</p>
-
-        <div className="mx-auto mt-12 flex max-w-md flex-col items-center gap-16">
-          <div className="flex flex-col items-center text-center">
-            <TargetTabla60 className="w-full max-w-[220px] sm:max-w-[260px]" />
-            <h2 className="mt-6 font-display text-3xl sm:text-4xl">{t("spec60Title")}</h2>
-            <p className="mt-4 leading-relaxed text-muted-foreground">{t("spec60Para")}</p>
-          </div>
-          <div className="flex flex-col items-center text-center">
-            <TargetFace80 className="w-full max-w-[220px] sm:max-w-[260px]" />
-            <h2 className="mt-6 font-display text-3xl sm:text-4xl">{t("spec80Title")}</h2>
-            <p className="mt-4 leading-relaxed text-muted-foreground">{t("spec80Para")}</p>
-          </div>
-        </div>
-      </section>
-      )}
-
-      {/* GALLERY */}
-      <section className="border-t border-border bg-muted/30">
-        <div className="container py-20">
-          <p className="text-center text-sm font-medium uppercase tracking-widest text-gold">{t("galleryKicker")}</p>
-          <h2 className="mt-2 text-center font-display text-4xl">{t("galleryTitle")}</h2>
-          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {assets.gallery.map((g) => (
-              <figure key={g.src} className="group relative aspect-[3/4] overflow-hidden rounded-lg">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={g.src} alt={isAr ? g.ar : g.en} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/90 to-transparent p-4 font-display text-gold">
-                  {isAr ? g.ar : g.en}
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-        </div>
-      </section>
-{/* COURSES — coming soon (teaser, no actions yet) */}
+      {/* COURSES — coming soon (teaser, no actions yet) */}
       <section id="courses" className="container py-20">
         <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-gold/[0.08] via-card to-nile/[0.08] p-8 md:p-14">
           <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-32 mx-auto h-64 w-64 rounded-full bg-gold/15 blur-3xl" />
@@ -272,6 +212,74 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* DISTANCE LADDER — logged-in only */}
+      {isLoggedIn && (
+      <section id="distances" className="border-y border-border bg-muted/30">
+        <div className="container py-20">
+          <p className="text-center text-sm font-medium uppercase tracking-widest text-gold">{t("distKicker")}</p>
+          <h2 className="mt-2 text-center font-display text-4xl">{t("distTitle")}</h2>
+          <p className="mx-auto mt-3 max-w-2xl text-center text-muted-foreground">{t("distSub")}</p>
+          <div className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+            {distances.map((d) => (
+              <div key={d.n} className="rounded-lg border border-border bg-card p-5 text-center transition-colors hover:border-gold">
+                <div className="text-xs text-muted-foreground">{d.n}</div>
+                <div className="mt-1 font-medium">{isAr ? d.ar : d.en}</div>
+                <div className="mt-2 font-display text-2xl text-gold">{d.m}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      )}
+
+      {/* TARGET SPEC — logged-in only */}
+      {isLoggedIn && (
+      <section className="container py-20">
+        <p className="text-center text-sm font-medium uppercase tracking-widest text-gold">{t("specKicker")}</p>
+
+        <div className="mt-12 space-y-16">
+          <div className="grid items-center gap-10 lg:grid-cols-2">
+            <div>
+              <h2 className="font-display text-3xl sm:text-4xl">{t("spec60Title")}</h2>
+              <p className="mt-4 max-w-md leading-relaxed text-muted-foreground">{t("spec60Para")}</p>
+            </div>
+            <div>
+              <TargetTabla60 className="mx-auto w-full max-w-[220px] sm:max-w-[260px]" />
+            </div>
+          </div>
+          <div className="grid items-center gap-10 lg:grid-cols-2">
+            <div>
+              <h2 className="font-display text-3xl sm:text-4xl">{t("spec80Title")}</h2>
+              <p className="mt-4 max-w-md leading-relaxed text-muted-foreground">{t("spec80Para")}</p>
+            </div>
+            <div>
+              <TargetFace80 className="mx-auto w-full max-w-[220px] sm:max-w-[260px]" />
+            </div>
+          </div>
+        </div>
+      </section>
+      )}
+
+      {/* GALLERY */}
+      <section className="border-t border-border bg-muted/30">
+        <div className="container py-20">
+          <p className="text-center text-sm font-medium uppercase tracking-widest text-gold">{t("galleryKicker")}</p>
+          <h2 className="mt-2 text-center font-display text-4xl">{t("galleryTitle")}</h2>
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {assets.gallery.map((g) => (
+              <figure key={g.src} className="group relative aspect-[3/4] overflow-hidden rounded-lg">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={g.src} alt={isAr ? g.ar : g.en} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/90 to-transparent p-4 font-display text-gold">
+                  {isAr ? g.ar : g.en}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* JOURNEY CTA — guests only */}
       {!isLoggedIn && (
       <section className="relative overflow-hidden bg-ink py-24 text-center text-sand">
