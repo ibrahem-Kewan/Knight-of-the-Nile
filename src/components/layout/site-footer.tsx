@@ -1,13 +1,13 @@
-import { useTranslations, useLocale } from "next-intl";
+import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/lib/i18n/navigation";
 import { siteConfig } from "@/config/site";
 import { getProfile } from "@/lib/auth/session";
 import { roleHome } from "@/config/roles";
 
 export async function SiteFooter() {
-  const t = useTranslations("footer");
-  const tn = useTranslations("nav");
-  const locale = useLocale();
+  const t = await getTranslations("footer");
+  const tn = await getTranslations("nav");
+  const locale = await getLocale();
   const brandName = locale === "en" ? siteConfig.nameEn : siteConfig.name;
   const profile = await getProfile();
   const isLoggedIn = Boolean(profile && profile.status === "active");
