@@ -27,7 +27,7 @@ export default async function TournamentsPage() {
     .limit(50);
 
   return (
-    <div className="container py-10">
+    <div className="container py-8 sm:py-10 lg:py-12">
       <h1 className="mb-6 font-display text-3xl text-gold">{t("tournaments")}</h1>
       {!tournaments?.length ? (
         <p className="text-muted-foreground">{tt("noTournaments")}</p>

@@ -88,7 +88,7 @@ export default async function HomePage() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={assets.hero} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" />
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/70 to-ink/30" />
-        <div className="container relative flex min-h-[88vh] flex-col justify-center py-20">
+        <div className="container relative flex min-h-[88vh] flex-col justify-center py-16 sm:py-20">
           <p className="mb-4 text-sm font-medium uppercase tracking-widest text-gold">{t("heroKicker")}</p>
           <h1 className="max-w-3xl font-display text-5xl font-extrabold leading-tight text-sand md:text-7xl">
             {t("heroArtTitle")}
@@ -110,7 +110,7 @@ export default async function HomePage() {
 
       {/* CATEGORIES — logged-in only */}
       {isLoggedIn && (
-      <section id="categories" className="container py-20">
+      <section id="categories" className="container py-14 sm:py-16 lg:py-20">
         <p className="text-center text-sm font-medium uppercase tracking-widest text-gold">{t("catKicker")}</p>
         <h2 className="mt-2 text-center font-display text-4xl text-foreground">{t("catTitle")}</h2>
         <p className="mx-auto mt-3 max-w-2xl text-center text-muted-foreground">{t("catSub")}</p>
@@ -147,7 +147,7 @@ export default async function HomePage() {
 
       {/* FEATURED TOURNAMENTS — section 3 · logged-in only */}
       {isLoggedIn && tournaments?.length ? (
-        <section id="featured-tournaments" className="container py-20">
+        <section id="featured-tournaments" className="container py-14 sm:py-16 lg:py-20">
           <div className="mb-10 flex items-end justify-between">
             <div>
               <h2 className="font-display text-3xl text-gold">{t("featuredTournaments")}</h2>
@@ -180,7 +180,7 @@ export default async function HomePage() {
       ) : null}
 
       {/* COURSES — coming soon (teaser, no actions yet) */}
-      <section id="courses" className="container py-20">
+      <section id="courses" className="container py-14 sm:py-16 lg:py-20">
         <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-gold/[0.08] via-card to-nile/[0.08] p-8 md:p-14">
           <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-32 mx-auto h-64 w-64 rounded-full bg-gold/15 blur-3xl" />
           <div className="relative">
@@ -216,7 +216,7 @@ export default async function HomePage() {
       {/* DISTANCE LADDER — logged-in only */}
       {isLoggedIn && (
       <section id="distances" className="border-y border-border bg-muted/30">
-        <div className="container py-20">
+        <div className="container py-14 sm:py-16 lg:py-20">
           <p className="text-center text-sm font-medium uppercase tracking-widest text-gold">{t("distKicker")}</p>
           <h2 className="mt-2 text-center font-display text-4xl">{t("distTitle")}</h2>
           <p className="mx-auto mt-3 max-w-2xl text-center text-muted-foreground">{t("distSub")}</p>
@@ -235,7 +235,7 @@ export default async function HomePage() {
 
       {/* TARGET SPEC — logged-in only */}
       {isLoggedIn && (
-      <section className="container py-20">
+      <section className="container py-14 sm:py-16 lg:py-20">
         <p className="text-center text-sm font-medium uppercase tracking-widest text-gold">{t("specKicker")}</p>
 
         <div className="mt-12 space-y-16">
@@ -282,7 +282,7 @@ export default async function HomePage() {
 
       {/* JOURNEY CTA — guests only */}
       {!isLoggedIn && (
-      <section className="relative overflow-hidden bg-ink py-24 text-center text-sand">
+      <section className="relative overflow-hidden bg-ink py-16 sm:py-20 lg:py-24 text-center text-sand">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={assets.hero} alt="" className="absolute inset-0 h-full w-full object-cover opacity-25" />
         <div className="container relative">

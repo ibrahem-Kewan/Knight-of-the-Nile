@@ -28,7 +28,7 @@ export default async function EventDetail({ params }: { params: Promise<{ slug: 
   const me = await getProfile();
 
   return (
-    <div className="container max-w-3xl py-10">
+    <div className="container max-w-3xl py-8 sm:py-10 lg:py-12">
       <div className="mb-4 flex items-center gap-3">
         <Badge variant="secondary">{t("badge")}</Badge>
         {e.venue && <span className="text-sm text-muted-foreground">{e.venue}</span>}
