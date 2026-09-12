@@ -1,12 +1,16 @@
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/lib/i18n/navigation";
 import { siteConfig } from "@/config/site";
+import { getProfile } from "@/lib/auth/session";
+import { roleHome } from "@/config/roles";
 
-export function SiteFooter() {
+export async function SiteFooter() {
   const t = useTranslations("footer");
   const tn = useTranslations("nav");
   const locale = useLocale();
   const brandName = locale === "en" ? siteConfig.nameEn : siteConfig.name;
+  const profile = await getProfile();
+  const isLoggedIn = Boolean(profile && profile.status === "active");
 
   const explore = [
     { href: "/tournaments", label: tn("tournaments") },
@@ -15,12 +19,19 @@ export function SiteFooter() {
     { href: "/news", label: tn("news") },
   ] as const;
 
-  const account = [
-    { href: "/login", label: tn("login") },
-    { href: "/register", label: tn("register") },
-    { href: "/about", label: tn("about") },
-    { href: "/contact", label: tn("contact") },
-  ] as const;
+  const account = isLoggedIn
+    ? ([
+        { href: (profile ? roleHome[profile.role] : "/") ?? "/", label: tn("dashboard") },
+        { href: "/profile", label: tn("profile") },
+        { href: "/about", label: tn("about") },
+        { href: "/contact", label: tn("contact") },
+      ] as const)
+    : ([
+        { href: "/login", label: tn("login") },
+        { href: "/register", label: tn("register") },
+        { href: "/about", label: tn("about") },
+        { href: "/contact", label: tn("contact") },
+      ] as const);
 
   return (
     <footer className="border-t border-border bg-card">
