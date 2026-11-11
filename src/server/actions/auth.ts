@@ -37,8 +37,30 @@ export async function registerAction(_prev: ActionState, formData: FormData): Pr
     password: formData.get("password"),
     firstName: formData.get("firstName"),
     lastName: formData.get("lastName"),
+    phone: formData.get("phone"),
+    registrationType: formData.get("registration_type"),
   });
-  if (!parsed.success) return { error: "تحقق من صحة الحقول (كلمة المرور 8 أحرف على الأقل)." };
+  if (!parsed.success) {
+    // No default type: the user must choose one explicitly.
+    if (!formData.get("registration_type")) return { error: "errTypeRequired" };
+    return { error: "تحقق من صحة الحقول (كلمة المرور 8 أحرف على الأقل، ورقم هاتف صحيح)." };
+  }
+  const isTeam = parsed.data.registrationType === "team";
+
+  // Team accounts must pick a real, active coach — validated before creating the account.
+  let coachId: string | null = null;
+  if (isTeam) {
+    coachId = String(formData.get("coach_id") || "").trim() || null;
+    if (!coachId) return { error: "errCoachRequired" };
+    const { data: coach } = await (await createClient())
+      .from("profiles")
+      .select("id")
+      .eq("id", coachId)
+      .eq("role", "coach")
+      .eq("status", "active")
+      .maybeSingle();
+    if (!coach) return { error: "errCoachRequired" };
+  }
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
@@ -49,14 +71,14 @@ export async function registerAction(_prev: ActionState, formData: FormData): Pr
 
   // Update the auto-created profile with name + optional chosen coach
   if (data.user) {
-    const coachId = String(formData.get("coach_id") || "").trim() || null;
-
     await supabase
       .from("profiles")
       .update({
         first_name_ar: parsed.data.firstName,
         last_name_ar: parsed.data.lastName,
         display_name: `${parsed.data.firstName} ${parsed.data.lastName}`,
+        phone: parsed.data.phone,
+        registration_type: parsed.data.registrationType,
         primary_coach_id: coachId,
         // everyone registers as athlete; coach/judge via role request approved by admin
       })

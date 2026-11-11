@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { PasswordForm } from "@/components/profile/password-form";
+import { RegistrationTypeSection } from "@/components/profile/registration-type-section";
 import { RoleUpgradeCard } from "@/components/profile/role-upgrade-card";
 
 export default async function ProfilePage() {
@@ -50,6 +51,7 @@ export default async function ProfilePage() {
 
       <div className="space-y-6">
         <ProfileForm initial={initial} />
+        {me.role === "athlete" && <RegistrationTypeSection athleteId={me.id} />}
         {canUpgrade && (
           <RoleUpgradeCard currentRole={me.role as "athlete" | "coach"} pendingRole={pendingRole} />
         )}
