@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-type Category = { key: string; icon: LucideIcon; en: string; cover: string; chips?: string[]; elite?: boolean };
+type Category = { key: string; icon: LucideIcon; en: string; cover: string; chips?: string[]; elite?: boolean; contain?: boolean };
 type CourseTeaser = { key: string; icon: LucideIcon };
 
 export default async function HomePage() {
@@ -61,7 +61,7 @@ export default async function HomePage() {
   const categories: Category[] = [
     { key: "equestrian", icon: Flag, en: "Equestrian", cover: assets.covers.horse, chips: [td("jumping")] },
     { key: "archery", icon: Target, en: "Archery", cover: assets.covers.target, chips: [td("ground_archery"), td("horseback_archery")] },
-    { key: "black_knight", icon: Shield, en: "Black Knight", cover: assets.covers.gear, elite: true },
+    { key: "black_knight", icon: Shield, en: "Black Knight", cover: assets.covers.blackKnight, elite: true, contain: true },
   ];
 
   // Courses are not live yet: this is a teaser section only (no links, no disabled
@@ -117,10 +117,10 @@ export default async function HomePage() {
         <div className="mt-12 grid gap-6 md:grid-cols-3">
           {categories.map((c) => (
             <Card key={c.key} className={`overflow-hidden ${c.elite ? "border-gold/60 bg-gradient-to-b from-ink to-ink-700 text-sand" : ""}`}>
-              <div className="relative h-40 w-full overflow-hidden">
+              <div className={`relative h-40 w-full overflow-hidden ${c.contain ? "bg-[#e3d3b1]" : ""}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={c.cover} alt={ts(c.key as never)} className="h-full w-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-ink/80 to-transparent" />
+                <img src={c.cover} alt={ts(c.key as never)} className={`h-full w-full ${c.contain ? "object-contain" : "object-cover"}`} />
+                {!c.contain && <div className="absolute inset-0 bg-gradient-to-t from-ink/80 to-transparent" />}
               </div>
               <CardHeader>
                 <div className={`mb-3 inline-flex h-12 w-12 items-center justify-center rounded-lg ${c.elite ? "bg-gold text-ink" : "bg-gold/15 text-gold-deep"}`}>

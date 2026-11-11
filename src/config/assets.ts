@@ -5,6 +5,7 @@ import horseArcherImg from "@/assets/branding/Knight of the Nile-Image_ortpzmort
 import galleryMorningImg from "@/assets/branding/gallery-morning-DLYtb1s-.jpg";
 import galleryPrecisionImg from "@/assets/branding/gallery-precision-GWYg58jG.jpg";
 import galleryGearImg from "@/assets/branding/gallery-gear-oGqohwr3.jpg";
+import blackKnightImg from "@/assets/branding/black-knight.jpg";
 
 export const assets = {
   logo: logoImg.src,
@@ -19,6 +20,9 @@ export const assets = {
   covers: {
     horse: horseArcherImg.src,      // الفروسية / الرماية من على ظهر الخيل
     target: galleryPrecisionImg.src, // الرماية / الرماية الأرضية
-    gear: galleryGearImg.src,        // الفارس الأسود
+    gear: galleryGearImg.src,        // العتاد (لم تعد غلاف الفارس الأسود)
+    // الفارس الأسود — شعار مربع بخلفية رملية؛ يُعرض بـ object-contain فوق لون خلفيته
+    // (خلفية bg-[#e3d3b1] في الرئيسية و about) حتى لا يُقصّ الفارس أو شريط الاسم.
+    blackKnight: blackKnightImg.src,
   },
 } as const;

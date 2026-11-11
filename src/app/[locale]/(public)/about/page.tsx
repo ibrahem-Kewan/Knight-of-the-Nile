@@ -18,9 +18,9 @@ export default async function AboutPage() {
   ] as const;
 
   const sports = [
-    { icon: Award, key: "equestrian", cover: assets.covers.horse },
-    { icon: Target, key: "archery", cover: assets.covers.target },
-    { icon: Crosshair, key: "black_knight", cover: assets.covers.gear },
+    { icon: Award, key: "equestrian", cover: assets.covers.horse, contain: false },
+    { icon: Target, key: "archery", cover: assets.covers.target, contain: false },
+    { icon: Crosshair, key: "black_knight", cover: assets.covers.blackKnight, contain: true },
   ] as const;
 
   return (
@@ -73,10 +73,10 @@ export default async function AboutPage() {
         <div className="grid gap-6 md:grid-cols-3">
           {sports.map((s) => (
             <div key={s.key} className="overflow-hidden rounded-lg border border-border bg-card text-center">
-              <div className="relative h-44 w-full overflow-hidden">
+              <div className={`relative h-44 w-full overflow-hidden ${s.contain ? "bg-[#e3d3b1]" : ""}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={s.cover} alt={ts(s.key)} className="h-full w-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-ink/70 to-transparent" />
+                <img src={s.cover} alt={ts(s.key)} className={`h-full w-full ${s.contain ? "object-contain" : "object-cover"}`} />
+                {!s.contain && <div className="absolute inset-0 bg-gradient-to-t from-ink/70 to-transparent" />}
               </div>
               <div className="p-8">
                 <s.icon className="mx-auto mb-4 h-10 w-10 text-nile" />
