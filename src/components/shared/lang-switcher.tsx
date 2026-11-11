@@ -16,10 +16,10 @@ export function LangSwitcher() {
       type="button"
       aria-label={t("switch")}
       onClick={() => router.replace(pathname, { locale: next })}
-      className="inline-flex h-9 items-center gap-1.5 rounded-md border border-border px-3 text-sm font-medium hover:bg-muted"
+      className="inline-flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-md border border-border px-2.5 sm:px-3 text-sm font-medium hover:bg-muted"
     >
-      <Languages className="h-4 w-4" />
-      {t(next)}
+      <Languages className="h-4 w-4" aria-hidden />
+      <span className="hidden sm:inline">{t(next)}</span>
     </button>
   );
 }

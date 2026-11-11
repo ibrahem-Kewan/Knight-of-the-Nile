@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { StatCard } from "@/components/shared/stat-card";
+import { RegistrationTypeSection } from "@/components/profile/registration-type-section";
 
 export default async function AthleteOverview() {
   const profile = await requireRole(["athlete"]);
@@ -24,10 +25,11 @@ export default async function AthleteOverview() {
         {t("welcome", { name: profile.display_name ?? t("champ") })}
       </h1>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <StatCard label={t("myTournaments")} value={regs ?? 0} />
-        <StatCard label={t("myCerts")} value={certs ?? 0} />
-        <StatCard label={t("myRank")} value="—" />
+        <StatCard label={t("myTournaments")} value={regs ?? 0} href="/athlete/tournaments" actionLabel={t("viewDetails")} />
+        <StatCard label={t("myCerts")} value={certs ?? 0} href="/athlete/certificates" actionLabel={t("viewDetails")} />
+        <StatCard label={t("myRank")} value="—" href="/rankings" actionLabel={t("viewDetails")} />
       </div>
+      <RegistrationTypeSection athleteId={profile.id} />
     </div>
   );
 }

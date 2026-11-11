@@ -7,6 +7,7 @@ import { siteConfig } from "@/config/site";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { LangSwitcher } from "@/components/shared/lang-switcher";
 import { UserMenu } from "@/components/layout/user-menu";
+import { SiteMobileMenu } from "@/components/layout/site-mobile-menu";
 import { Button } from "@/components/ui/button";
 
 export async function SiteHeader() {
@@ -26,11 +27,11 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
-      <div className="container flex h-16 items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-2.5 font-display text-lg text-gold">
+      <div className="container flex h-16 items-center justify-between gap-2 sm:gap-4">
+        <Link href="/" className="flex min-w-0 items-center gap-2.5 font-display text-lg text-gold">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={assets.logo} alt={brandName} className="h-9 w-9 rounded-full object-cover ring-1 ring-gold/40" />
-          <span>{brandName}</span>
+          <img src={assets.logo} alt={brandName} width={36} height={36} className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-gold/40" />
+          <span className="truncate">{brandName}</span>
         </Link>
 
         <nav className="hidden items-center gap-6 lg:flex">
@@ -41,7 +42,7 @@ export async function SiteHeader() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <LangSwitcher />
           <ThemeToggle />
           {profile && profile.status === "active" ? (
@@ -54,6 +55,7 @@ export async function SiteHeader() {
               <Link href="/login">{t("login")}</Link>
             </Button>
           )}
+          <SiteMobileMenu links={links.map((l) => ({ href: l.href, label: l.label }))} />
         </div>
       </div>
     </header>

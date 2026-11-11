@@ -17,9 +17,9 @@ export default async function JudgeOverview() {
     <div className="space-y-6">
       <h1 className="font-display text-2xl text-gold">{t("judgeTitle")}</h1>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <StatCard label={t("myTournaments")} value={assigned ?? 0} />
-        <StatCard label={t("resultsPending")} value="—" />
-        <StatCard label={t("openDisputes")} value="—" />
+        <StatCard label={t("myTournaments")} value={assigned ?? 0} href="/judge/tournaments" actionLabel={t("viewDetails")} />
+        <StatCard label={t("resultsPending")} value="—" href="/judge/scoring" actionLabel={t("viewDetails")} />
+        <StatCard label={t("openDisputes")} value="—" href="/judge/disputes" actionLabel={t("viewDetails")} />
       </div>
     </div>
   );

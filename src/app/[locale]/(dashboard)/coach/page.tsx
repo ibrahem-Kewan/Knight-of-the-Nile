@@ -23,9 +23,9 @@ export default async function CoachOverview() {
     <div className="space-y-6">
       <h1 className="font-display text-2xl text-gold">{t("coachTitle")}</h1>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <StatCard label={t("myAthletes")} value={athletes ?? 0} />
-        <StatCard label={t("myCourses")} value={courses ?? 0} />
-        <StatCard label={t("upcomingTournaments")} value="—" />
+        <StatCard label={t("myAthletes")} value={athletes ?? 0} href="/coach/athletes" actionLabel={t("viewDetails")} />
+        <StatCard label={t("myCourses")} value={courses ?? 0} href="/coach/courses" actionLabel={t("viewDetails")} />
+        <StatCard label={t("upcomingTournaments")} value="—" href="/coach/tournaments" actionLabel={t("viewDetails")} />
       </div>
     </div>
   );

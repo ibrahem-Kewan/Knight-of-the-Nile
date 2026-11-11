@@ -25,11 +25,11 @@ export default async function AdminOverview() {
   return (
     <div className="space-y-6">
       <h1 className="font-display text-2xl text-gold">{t("adminTitle")}</h1>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label={t("statUsers")} value={users} />
-        <StatCard label={t("statPending")} value={pending} hint={t("hintNewAccounts")} />
-        <StatCard label={t("statTournaments")} value={tournaments} />
-        <StatCard label={t("statPendingResults")} value={pendingResults} hint={t("hintNeedsApproval")} />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard label={t("statUsers")} value={users} href="/admin/users" actionLabel={t("viewDetails")} />
+        <StatCard label={t("statPending")} value={pending} hint={t("hintNewAccounts")} href="/admin/approvals" actionLabel={t("viewDetails")} />
+        <StatCard label={t("statTournaments")} value={tournaments} href="/admin/tournaments" actionLabel={t("viewDetails")} />
+        <StatCard label={t("statPendingResults")} value={pendingResults} hint={t("hintNeedsApproval")} href="/admin/results" actionLabel={t("viewDetails")} />
       </div>
     </div>
   );
