@@ -9,6 +9,7 @@ import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { DashboardMobileNav } from "@/components/layout/dashboard-mobile-nav";
 import { dashboardNav } from "@/config/navigation";
 import { RegistrationTypeSection } from "@/components/profile/registration-type-section";
+import { enumLabel } from "@/lib/i18n/labels";
 
 // Private area: keep every dashboard page out of search engines.
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -62,12 +63,13 @@ export default async function DashboardLayout({
 
   const items = dashboardNav[profile.role] ?? [];
   const td = await getTranslations("dash");
+  const te = await getTranslations("enums");
 
   return (
     <>
       <DashboardMobileNav items={items} />
-      <div className="container flex gap-0 px-0 py-0 lg:px-4">
-        <DashboardSidebar items={items} label={td("sections")} />
+      <div className="container flex items-stretch gap-0 px-0 py-0 lg:gap-2 lg:px-4">
+        <DashboardSidebar items={items} label={td("sections")} roleLabel={enumLabel(te, "role", profile.role)} />
         <section className="min-w-0 flex-1 px-4 py-5 sm:px-6 sm:py-6">{children}</section>
       </div>
     </>

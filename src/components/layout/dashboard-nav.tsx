@@ -43,7 +43,7 @@ export function DashboardNavList({
   const pathname = usePathname();
 
   return (
-    <ul className={cn("flex flex-col gap-1", className)}>
+    <ul className={cn("flex flex-col gap-0.5", className)}>
       {items.map((item) => {
         const Icon = navIcon(item.icon);
         const active = isNavActive(pathname, item.href);
@@ -54,11 +54,25 @@ export function DashboardNavList({
               onClick={onNavigate}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
-                active ? "bg-primary/15 text-gold-deep dark:text-gold" : "text-foreground/80 hover:bg-muted hover:text-foreground",
+                "group relative flex min-h-11 items-center gap-3 rounded-xl px-2.5 py-1.5 text-sm transition-colors duration-150",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-1 focus-visible:ring-offset-card",
+                // Start-edge indicator (flips automatically in RTL via logical `start`).
+                "before:absolute before:inset-y-2.5 before:start-0 before:w-1 before:rounded-full before:bg-gold before:transition-opacity",
+                active
+                  ? "bg-primary/10 font-semibold text-gold-deep before:opacity-100 dark:text-gold"
+                  : "font-medium text-foreground/75 before:opacity-0 hover:bg-muted/60 hover:text-foreground",
               )}
             >
-              <Icon className="h-4 w-4 shrink-0" aria-hidden />
+              <span
+                className={cn(
+                  "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-150",
+                  active
+                    ? "bg-gold text-ink shadow-sm"
+                    : "bg-muted/50 text-muted-foreground group-hover:bg-primary/15 group-hover:text-gold-deep dark:group-hover:text-gold",
+                )}
+              >
+                <Icon className="h-4 w-4" aria-hidden />
+              </span>
               <span className="truncate">{t(item.labelKey as never)}</span>
             </Link>
           </li>
