@@ -43,3 +43,175 @@
   }
   [dir="rtl"] body { line-height: 1.8; }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Brand loader (src/components/shared/brand-loader.tsx)
+   Shown by loading.tsx while a route streams. Hidden for the first
+   350ms so fast navigations never flash it.
+   ───────────────────────────────────────────────────────────── */
+@layer components {
+  .kotn-loader {
+    --kotn-gold: 201 162 39;      /* #C9A227 */
+    --kotn-gold-soft: 230 199 90; /* #E6C75A */
+    --kotn-nile: 30 96 145;       /* #1E6091 */
+    animation: kotn-fade-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
+  }
+
+  .kotn-loader__glow {
+    background:
+      radial-gradient(38rem 38rem at 50% 45%, rgb(var(--kotn-gold) / 0.16), transparent 60%),
+      radial-gradient(30rem 20rem at 50% 80%, rgb(var(--kotn-nile) / 0.10), transparent 70%);
+    animation: kotn-breathe-glow 4s ease-in-out infinite;
+  }
+
+  /* Staged entrance (relative to the overlay's own delay) */
+  .kotn-loader__stage   { animation: kotn-rise-scale 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.4s both; }
+  .kotn-loader__name    { animation: kotn-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.6s both, kotn-shimmer-text 3.2s linear 1.3s infinite; }
+  .kotn-loader__rule    { animation: kotn-rule 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.75s both; }
+  .kotn-loader__tagline { animation: kotn-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.85s both; }
+  .kotn-loader__track   { animation: kotn-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.95s both; }
+
+  /* Gold, engraved-looking wordmark with a moving highlight */
+  .kotn-loader__name {
+    background-image: linear-gradient(
+      100deg,
+      #a6841c 0%, #c9a227 30%, #fff3c4 45%, #e6c75a 55%, #c9a227 70%, #a6841c 100%
+    );
+    background-size: 250% 100%;
+    background-position: 100% 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 1px 0 rgb(0 0 0 / 0.15));
+  }
+
+  .kotn-loader__ripple {
+    position: absolute;
+    inset: 16%;
+    border-radius: 9999px;
+    border: 1px solid rgb(var(--kotn-gold) / 0.55);
+    animation: kotn-ripple 3s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+  }
+  .kotn-loader__ripple:nth-child(2) { animation-delay: 1s; border-color: rgb(var(--kotn-nile) / 0.45); }
+  .kotn-loader__ripple:nth-child(3) { animation-delay: 2s; }
+
+  .kotn-loader__dial { animation: kotn-spin 40s linear infinite; }
+  .kotn-loader__dash { animation: kotn-spin 14s linear infinite reverse; }
+
+  /* Comet arc: conic gradient clipped to a 3px ring */
+  .kotn-loader__arc {
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      rgb(var(--kotn-gold) / 0) 200deg,
+      rgb(var(--kotn-gold) / 0.9) 340deg,
+      rgb(var(--kotn-gold-soft)) 360deg
+    );
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2.5px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2.5px));
+    animation: kotn-spin 1.8s cubic-bezier(0.55, 0.15, 0.45, 0.85) infinite;
+  }
+  .kotn-loader__orbit { animation: kotn-spin 1.8s cubic-bezier(0.55, 0.15, 0.45, 0.85) infinite; }
+  .kotn-loader__head {
+    position: absolute;
+    top: -3px;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    margin-left: -4px;
+    border-radius: 9999px;
+    background: #fff3c4;
+    box-shadow:
+      0 0 6px 2px rgb(var(--kotn-gold-soft) / 0.9),
+      0 0 18px 6px rgb(var(--kotn-gold) / 0.45);
+  }
+
+  .kotn-loader__disk {
+    box-shadow:
+      0 0 0 6px rgb(var(--kotn-gold) / 0.08),
+      0 18px 50px -12px rgb(0 0 0 / 0.55),
+      0 0 40px -6px rgb(var(--kotn-gold) / 0.45),
+      inset 0 0 24px rgb(0 0 0 / 0.8);
+  }
+  .kotn-loader__emblem { animation: kotn-breathe 3.6s ease-in-out infinite; }
+
+  /* Diagonal light sweep across the emblem (mirrored in RTL) */
+  .kotn-loader__shine {
+    background: linear-gradient(
+      115deg,
+      transparent 35%, rgb(255 243 196 / 0.0) 40%, rgb(255 243 196 / 0.35) 50%, rgb(255 243 196 / 0) 60%, transparent 65%
+    );
+    background-size: 250% 100%;
+    mix-blend-mode: screen;
+    animation: kotn-sweep 3.6s ease-in-out 1s infinite;
+  }
+  [dir="rtl"] .kotn-loader__shine { animation-name: kotn-sweep-rtl; }
+
+  .kotn-loader__bar {
+    background: linear-gradient(90deg, transparent, rgb(var(--kotn-gold)), rgb(var(--kotn-gold-soft)), transparent);
+    animation: kotn-progress 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  }
+  [dir="rtl"] .kotn-loader__bar { animation-name: kotn-progress-rtl; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .kotn-loader__glow,
+    .kotn-loader__dial,
+    .kotn-loader__dash,
+    .kotn-loader__arc,
+    .kotn-loader__orbit,
+    .kotn-loader__emblem,
+    .kotn-loader__shine,
+    .kotn-loader__ripple,
+    .kotn-loader__bar { animation: none; }
+    .kotn-loader__ripple, .kotn-loader__shine, .kotn-loader__orbit { display: none; }
+    .kotn-loader__name { animation: kotn-rise 0.01ms 0.6s both; }
+    .kotn-loader__bar { inset-inline: 0; width: 100%; opacity: 0.6; }
+  }
+}
+
+@keyframes kotn-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes kotn-spin { to { transform: rotate(360deg); } }
+@keyframes kotn-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes kotn-rise-scale {
+  from { opacity: 0; transform: scale(0.82); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes kotn-rule {
+  from { opacity: 0; transform: scaleX(0.2); }
+  to   { opacity: 1; transform: scaleX(1); }
+}
+@keyframes kotn-ripple {
+  0%   { transform: scale(1);   opacity: 0.7; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+@keyframes kotn-breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.045); }
+}
+@keyframes kotn-breathe-glow {
+  0%, 100% { opacity: 0.75; }
+  50%      { opacity: 1; }
+}
+@keyframes kotn-shimmer-text {
+  from { background-position: 100% 0; }
+  to   { background-position: -150% 0; }
+}
+@keyframes kotn-sweep {
+  0%, 15%   { background-position: 130% 0; }
+  70%, 100% { background-position: -130% 0; }
+}
+@keyframes kotn-sweep-rtl {
+  0%, 15%   { background-position: -130% 0; }
+  70%, 100% { background-position: 130% 0; }
+}
+@keyframes kotn-progress {
+  from { transform: translateX(-120%); }
+  to   { transform: translateX(320%); }
+}
+@keyframes kotn-progress-rtl {
+  from { transform: translateX(120%); }
+  to   { transform: translateX(-320%); }
+}
