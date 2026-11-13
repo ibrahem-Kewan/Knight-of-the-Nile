@@ -216,6 +216,7 @@
         "backToLogin": "Back to log in",
         "errInvalidEmail": "Enter a valid email address.",
         "errResetRateLimit": "Too many requests in a short time. Wait a minute and try again.",
+        "errResetEmailQuota": "We can't send the email right now because the site has temporarily reached its email limit. Please try again in an hour or contact the site admin.",
         "errResetFailed": "We couldn't complete this right now, please try again shortly.",
         "resetTitle": "Set a new password",
         "resetTagline": "Choose a new password for <b>{email}</b>.",

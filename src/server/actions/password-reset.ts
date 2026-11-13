@@ -41,6 +41,9 @@ export async function requestPasswordReset(_prev: ForgotState, formData: FormDat
 
   if (error) {
     console.error("[reset] request", error.status, error.code ?? error.message);
+    // Project-wide e-mail quota (Supabase built-in SMTP allows only a few e-mails per hour → use custom SMTP).
+    if (error.code === "over_email_send_rate_limit") return { error: "errResetEmailQuota" };
+    // Same e-mail asked again within ~60 seconds.
     if (error.status === 429 || /rate_limit/.test(error.code ?? "")) return { error: "errResetRateLimit" };
     return { error: "errResetFailed" };
   }
