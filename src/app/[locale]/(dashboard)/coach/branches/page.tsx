@@ -23,7 +23,7 @@ export default async function CoachBranchesPage() {
   const [{ data: branchRows }, { data: govRows }] = await Promise.all([
     supabase
       .from("coach_branches")
-      .select("id, name_ar, name_en, governorate_id, address, map_url, is_active")
+      .select("id, name_ar, name_en, governorate_id, city, address, map_url, is_active")
       .eq("coach_id", me.id)
       .order("is_active", { ascending: false })
       .order("created_at", { ascending: true }),
@@ -67,7 +67,10 @@ export default async function CoachBranchesPage() {
                   {b.governorate_id && govName.get(b.governorate_id) && (
                     <p className="flex items-center gap-1.5">
                       <MapPin className="h-4 w-4 shrink-0" aria-hidden />
-                      <span className="break-words">{govName.get(b.governorate_id)}</span>
+                      <span className="break-words">
+                        {govName.get(b.governorate_id)}
+                        {b.city ? ` — ${b.city}` : ""}
+                      </span>
                     </p>
                   )}
                   {b.address && <p className="break-words">{b.address}</p>}

@@ -15,41 +15,54 @@ type BranchInput = {
   name_ar: string;
   name_en: string | null;
   governorate_id: string | null;
+  city: string | null;
   address: string | null;
   map_url: string | null;
 };
 
-function parseBranch(fd: FormData): BranchInput | null {
+function parseBranch(fd: FormData): { input?: BranchInput; error?: string } {
   const name_ar = str(fd, "name_ar");
   const name_en = str(fd, "name_en");
   const address = str(fd, "address");
   const map_url = str(fd, "map_url");
   const governorate_id = str(fd, "governorate_id");
+  const city = str(fd, "city");
 
-  if (name_ar.length < 2 || name_ar.length > 80) return null;
-  if (name_en.length > 80) return null;
-  if (address.length > 200) return null;
-  if (map_url && (map_url.length > 500 || !URL_RE.test(map_url))) return null;
-  if (governorate_id && !UUID_RE.test(governorate_id)) return null;
+  if (name_ar.length < 2 || name_ar.length > 80) return { error: "errInvalid" };
+  if (name_en.length > 80) return { error: "errInvalid" };
+  if (address.length > 200) return { error: "errInvalid" };
+  if (map_url && (map_url.length > 500 || !URL_RE.test(map_url))) return { error: "errInvalid" };
+  if (governorate_id && !UUID_RE.test(governorate_id)) return { error: "errInvalid" };
+  if (city && (city.length < 2 || city.length > 80)) return { error: "errCityInvalid" };
+  if (city && !governorate_id) return { error: "errCityNeedsGovernorate" };
 
   return {
-    name_ar,
-    name_en: name_en || null,
-    governorate_id: governorate_id || null,
-    address: address || null,
-    map_url: map_url || null,
+    input: {
+      name_ar,
+      name_en: name_en || null,
+      governorate_id: governorate_id || null,
+      city: city || null,
+      address: address || null,
+      map_url: map_url || null,
+    },
   };
 }
 
 // ---- coach branches ----
+function branchDbError(code: string | undefined): string {
+  if (code === "42501") return "errForbidden";
+  if (code === "23514") return "errInvalid";
+  return "errGeneric";
+}
+
 export async function createBranch(fd: FormData): Promise<Res> {
   const me = await requireRole(["coach"]);
-  const input = parseBranch(fd);
-  if (!input) return { error: "errInvalid" };
+  const { input, error: invalid } = parseBranch(fd);
+  if (!input) return { error: invalid ?? "errInvalid" };
 
   const supabase = await createClient();
   const { error } = await supabase.from("coach_branches").insert({ ...input, coach_id: me.id });
-  if (error) return { error: error.code === "42501" ? "errForbidden" : "errGeneric" };
+  if (error) return { error: branchDbError(error.code) };
 
   revalidatePath("/coach/branches");
   return { ok: true };
@@ -58,8 +71,8 @@ export async function createBranch(fd: FormData): Promise<Res> {
 export async function updateBranch(id: string, fd: FormData): Promise<Res> {
   const me = await requireRole(["coach"]);
   if (!UUID_RE.test(id)) return { error: "errInvalid" };
-  const input = parseBranch(fd);
-  if (!input) return { error: "errInvalid" };
+  const { input, error: invalid } = parseBranch(fd);
+  if (!input) return { error: invalid ?? "errInvalid" };
 
   const supabase = await createClient();
   const { data: own } = await supabase
@@ -71,7 +84,7 @@ export async function updateBranch(id: string, fd: FormData): Promise<Res> {
   if (!own) return { error: "errNotFound" };
 
   const { error } = await supabase.from("coach_branches").update(input).eq("id", id).eq("coach_id", me.id);
-  if (error) return { error: error.code === "42501" ? "errForbidden" : "errGeneric" };
+  if (error) return { error: branchDbError(error.code) };
 
   revalidatePath("/coach/branches");
   return { ok: true };

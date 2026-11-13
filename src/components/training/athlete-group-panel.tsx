@@ -62,7 +62,7 @@ export type PanelGroup = {
 
 export type MembershipWindow = { joined_at: string; left_at: string | null };
 
-export type PanelBranch = { name_ar: string; name_en: string | null; address: string | null; map_url: string | null } | null;
+export type PanelBranch = { name_ar: string; name_en: string | null; address: string | null; map_url: string | null; place?: string | null } | null;
 
 const UPCOMING_LIMIT = 4;
 const HISTORY_LIMIT = 8;
@@ -173,6 +173,7 @@ export async function AthleteGroupPanel({
             <dd className="flex min-w-0 flex-wrap items-start gap-x-2 gap-y-1">
               <span className="min-w-0 break-words">
                 {branchName ?? "—"}
+                {branch?.place ? ` — ${branch.place}` : ""}
                 {branch?.address ? ` — ${branch.address}` : ""}
               </span>
               {branch?.map_url && (

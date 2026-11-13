@@ -73,7 +73,7 @@ export default async function AthleteTrainingPage() {
 
   const [{ data: branchRows }, { data: sportRows }, { data: coachRows }, { data: sessionRows }, { data: cycleRows }, billingResults] =
     await Promise.all([
-      supabase.from("coach_branches").select("id, name_ar, name_en, address, map_url").in("id", branchIds),
+      supabase.from("coach_branches").select("id, name_ar, name_en, governorate_id, city, address, map_url").in("id", branchIds),
       sportIds.length ? supabase.from("sports").select("id, name_ar, name_en").in("id", sportIds) : Promise.resolve({ data: [] as Named[] }),
       supabase.from("profiles").select("id, display_name").in("id", coachIds),
       supabase
@@ -111,7 +111,22 @@ export default async function AthleteTrainingPage() {
     : { data: [] as PanelClaim[] };
   const claims = (claimRows ?? []) as PanelClaim[];
 
-  const branchById = new Map(((branchRows ?? []) as BranchRow[]).map((b) => [b.id, b]));
+  const rawBranches = (branchRows ?? []) as (BranchRow & { governorate_id: string | null; city: string | null })[];
+  const govIds = [...new Set(rawBranches.map((b) => b.governorate_id).filter((x): x is string => !!x))];
+  const { data: govRows } = govIds.length
+    ? await supabase.from("governorates").select("id, name_ar, name_en").in("id", govIds)
+    : { data: [] as { id: string; name_ar: string; name_en: string }[] };
+  const govNameById = new Map(
+    ((govRows ?? []) as { id: string; name_ar: string; name_en: string }[]).map((g) => [g.id, loc === "ar" ? g.name_ar : g.name_en || g.name_ar]),
+  );
+  const branchById = new Map(
+    rawBranches.map((b) => {
+      const gov = b.governorate_id ? govNameById.get(b.governorate_id) ?? null : null;
+      // A city is only ever shown together with its governorate.
+      const place = gov ? (b.city ? `${gov} — ${b.city}` : gov) : null;
+      return [b.id, { ...b, place }] as const;
+    }),
+  );
   const sportById = new Map(((sportRows ?? []) as Named[]).map((s) => [s.id, s]));
   const coachById = new Map(((coachRows ?? []) as { id: string; display_name: string | null }[]).map((c) => [c.id, c.display_name]));
   const cycles = (cycleRows ?? []) as (PanelCycle & { group_id: string })[];
