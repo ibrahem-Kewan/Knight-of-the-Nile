@@ -6,6 +6,7 @@ import { registerAction } from "@/server/actions/auth";
 import { Link } from "@/lib/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 
 type Coach = { id: string; name: string };
@@ -81,7 +82,7 @@ export function RegisterForm({ coaches = [] }: { coaches?: Coach[] }) {
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="password">{t("password")}</Label>
-        <Input id="password" name="password" type="password" required autoComplete="new-password" placeholder="••••••••" />
+        <PasswordInput id="password" name="password" required autoComplete="new-password" placeholder="••••••••" />
       </div>
       {regType === "team" && (
         <div className="space-y-1.5">

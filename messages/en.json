@@ -12,7 +12,9 @@
         "next": "Next",
         "viewAll": "View all",
         "free": "Free",
-        "comingSoon": "Coming soon"
+        "comingSoon": "Coming soon",
+        "showPassword": "Show password",
+        "hidePassword": "Hide password"
     },
     "loader": {
         "tagline": "Heritage horsemanship · Precision archery"
@@ -1091,7 +1093,11 @@
         "confirmAccept": "Confirm: mark {name} present",
         "errClaimNotAllowed": "You can't send an alert for this session (it must be held, not cancelled, within the last 7 days, and not already marked present).",
         "errClaimExists": "You already have an open alert for this session.",
-        "claimRespondBy": "Respond by {date}"
+        "claimRespondBy": "Respond by {date}",
+        "city": "City / center",
+        "cityPlaceholder": "e.g. Zagazig",
+        "errCityInvalid": "City / center must be 2 to 80 characters.",
+        "errCityNeedsGovernorate": "Choose a governorate before entering a city / center."
     },
     "manage": {
         "edit": "Edit",

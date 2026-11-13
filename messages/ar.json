@@ -12,7 +12,9 @@
         "next": "التالي",
         "viewAll": "عرض الكل",
         "free": "مجاني",
-        "comingSoon": "قريبًا"
+        "comingSoon": "قريبًا",
+        "showPassword": "إظهار كلمة المرور",
+        "hidePassword": "إخفاء كلمة المرور"
     },
     "loader": {
         "tagline": "أصالة الفروسية · دقة الرماية"
@@ -1091,7 +1093,11 @@
         "confirmAccept": "تأكيد: تسجيل {name} حاضرًا",
         "errClaimNotAllowed": "لا يمكنك إرسال تنبيه لهذه الحصة (يجب أن تكون منعقدة وغير ملغاة خلال آخر 7 أيام ولم تُسجَّل حاضرًا).",
         "errClaimExists": "لديك تنبيه مفتوح بالفعل لهذه الحصة.",
-        "claimRespondBy": "الرد قبل {date}"
+        "claimRespondBy": "الرد قبل {date}",
+        "city": "المركز / المدينة",
+        "cityPlaceholder": "مثل: الزقازيق",
+        "errCityInvalid": "المركز أو المدينة يجب أن يكون من حرفين إلى 80 حرفًا.",
+        "errCityNeedsGovernorate": "اختر المحافظة أولًا قبل كتابة المركز أو المدينة."
     },
     "manage": {
         "edit": "تعديل",

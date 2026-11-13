@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { loginAction } from "@/server/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 
 export function LoginForm() {
@@ -19,7 +20,7 @@ export function LoginForm() {
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="password">{t("password")}</Label>
-        <Input id="password" name="password" type="password" required autoComplete="current-password" placeholder="••••••••" />
+        <PasswordInput id="password" name="password" required autoComplete="current-password" placeholder="••••••••" />
       </div>
       {state?.error && (
         <p className="text-sm text-danger">{t.has(state.error) ? t(state.error as never) : t("errLoginFailed")}</p>

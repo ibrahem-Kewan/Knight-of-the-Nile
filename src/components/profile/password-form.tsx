@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { changeMyPassword } from "@/server/actions/profile";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 
 export function PasswordForm() {
@@ -32,11 +32,11 @@ export function PasswordForm() {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="new_password">{t("newPassword")}</Label>
-          <Input id="new_password" name="new_password" type="password" autoComplete="new-password" />
+          <PasswordInput id="new_password" name="new_password" autoComplete="new-password" />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="confirm_password">{t("confirmPassword")}</Label>
-          <Input id="confirm_password" name="confirm_password" type="password" autoComplete="new-password" />
+          <PasswordInput id="confirm_password" name="confirm_password" autoComplete="new-password" />
         </div>
       </div>
       {msg && <p className="text-sm text-success">{msg}</p>}
