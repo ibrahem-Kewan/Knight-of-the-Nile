@@ -2,6 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { money } from "@/lib/i18n/labels";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { decodeSlug } from "@/lib/content/slug";
 import { getProfile } from "@/lib/auth/session";
 import { localized } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -10,18 +11,19 @@ import { Link } from "@/lib/i18n/navigation";
 import { EventRegisterControl } from "@/components/events/event-register-control";
 
 export default async function EventDetail({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
+  const slug = decodeSlug((await params).slug);
   const locale = await getLocale();
   const t = await getTranslations("events");
   const ck = await getTranslations("checkout");
   const te = await getTranslations("enums");
   const supabase = await createClient();
 
-  const { data: e } = await supabase
+  const { data: e, error: loadError } = await supabase
     .from("events")
     .select("*, sports(name_ar,name_en)")
     .eq("slug", slug)
-    .single();
+    .maybeSingle();
+  if (loadError) console.error("[event-detail]", loadError.message);
 
   if (!e || e.status === "draft" || e.deleted_at || e.deletion_requested_at) notFound();
 

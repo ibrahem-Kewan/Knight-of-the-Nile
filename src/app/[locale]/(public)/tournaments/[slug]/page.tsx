@@ -2,6 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { enumLabel, money } from "@/lib/i18n/labels";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { decodeSlug } from "@/lib/content/slug";
 import { getProfile } from "@/lib/auth/session";
 import { localized } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +15,7 @@ export default async function TournamentDetail({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
+  const slug = decodeSlug((await params).slug);
   const locale = await getLocale();
   const tr = await getTranslations("treg");
   const ck = await getTranslations("checkout");
@@ -22,11 +23,12 @@ export default async function TournamentDetail({
   const te = await getTranslations("enums");
   const supabase = await createClient();
 
-  const { data: t } = await supabase
+  const { data: t, error: loadError } = await supabase
     .from("tournaments")
     .select("*, sports(name_ar,name_en)")
     .eq("slug", slug)
-    .single();
+    .maybeSingle();
+  if (loadError) console.error("[tournament-detail]", loadError.message);
 
   if (!t || t.status === "draft" || t.deleted_at || t.deletion_requested_at) notFound();
 
