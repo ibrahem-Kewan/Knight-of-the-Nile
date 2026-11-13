@@ -100,7 +100,12 @@ export async function uploadMyAvatar(formData: FormData): Promise<Res> {
   const { error: upErr } = await supabase.storage
     .from(AVATAR_BUCKET)
     .upload(path, bytes, { contentType: type, cacheControl: "31536000", upsert: false });
-  if (upErr) { console.error("[avatar] upload", upErr.message); return { error: "failed" }; }
+  if (upErr) {
+    console.error("[avatar] upload", upErr.message);
+    // Bucket missing = migration 0041 not applied on this database.
+    if (/bucket not found/i.test(upErr.message)) return { error: "avatarStorageUnavailable" };
+    return { error: "failed" };
+  }
 
   const { data: pub } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(path);
   const { error } = await supabase.from("profiles").update({ avatar_url: pub.publicUrl }).eq("id", me.id);

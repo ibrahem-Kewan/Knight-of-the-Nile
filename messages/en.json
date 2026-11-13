@@ -565,6 +565,7 @@
         "avatarType": "Unsupported file type. Choose a JPG, PNG or WebP image.",
         "avatarTooLarge": "The image is too large. Maximum size is 10 MB.",
         "avatarMissing": "Choose an image first.",
+        "avatarStorageUnavailable": "Couldn't save the photo: image storage isn't set up on the server yet. Please contact the platform admins.",
         "bio": "Bio",
         "social": "Social media accounts",
         "instagram": "Instagram",
