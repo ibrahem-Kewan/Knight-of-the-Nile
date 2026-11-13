@@ -237,10 +237,10 @@ export async function setTournamentStatus(id: string, status: string): Promise<R
 }
 
 /**
- * Add / remove a tournament judge (PR-12). Manager = admin or the creator. A coach's tournament
- * takes other active coaches as judges; other tournaments take judges. The creator coach is
- * always the judge of his own tournament and cannot be removed. DB: set_tournament_judge (0040),
- * audited in audit_logs.
+ * Add / remove a tournament judge (PR-12, widened in PR-14). Manager = admin or the creator.
+ * Any tournament takes active judges AND active coaches as judges (both score it — owner
+ * decision 13 Nov). The creator coach is always the judge of his own tournament and cannot be
+ * removed. DB: set_tournament_judge (0040, already accepts coach|judge), audited in audit_logs.
  */
 async function changeJudge(tournamentId: string, profileId: string, add: boolean): Promise<Res> {
   const me = await requireRole(CREATOR_ROLES);
@@ -254,8 +254,9 @@ async function changeJudge(tournamentId: string, profileId: string, add: boolean
   if (add) {
     const { data: p } = await supabase.from("profiles").select("role, status").eq("id", profileId).maybeSingle();
     const pr = p as { role: Role; status: string } | null;
-    const wanted: Role = ctx.creator.role === "coach" ? "coach" : "judge";
-    if (!pr || pr.status !== "active" || pr.role !== wanted) return { error: "errJudgeInvalid" };
+    if (!pr || pr.status !== "active" || (pr.role !== "coach" && pr.role !== "judge")) {
+      return { error: "errJudgeInvalid" };
+    }
   }
   const { error } = await supabase.rpc("set_tournament_judge", {
     p_tournament: tournamentId,
@@ -263,7 +264,9 @@ async function changeJudge(tournamentId: string, profileId: string, add: boolean
     p_add: add,
   });
   if (error) {
-    console.error("[tournaments]", error.message);
+    console.error("[tournaments] set_tournament_judge", error.code, error.message);
+    // Function missing on the live DB (migration 0040 not applied) or PostgREST schema cache stale.
+    if (error.code === "PGRST202" || error.code === "42883") return { error: "errDbOutdated" };
     if (error.code === "42501") return { error: "forbidden" };
     if (error.message.includes("judge_is_creator")) return { error: "errJudgeIsCreator" };
     if (error.message.includes("judge_invalid")) return { error: "errJudgeInvalid" };

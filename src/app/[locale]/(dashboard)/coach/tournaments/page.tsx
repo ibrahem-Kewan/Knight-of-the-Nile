@@ -13,7 +13,7 @@ export default async function CoachTournamentsPage() {
 
   // Only the coach's own tournaments; ones sent for deletion approval leave this list (PR-11).
   // Branch-local (PR-12): the coach picks one of his active branches and is the judge.
-  const [{ data: sports }, { data: disciplines }, { data: tournamentsRows }, { data: branchRows }, { data: coachRows }] =
+  const [{ data: sports }, { data: disciplines }, { data: tournamentsRows }, { data: branchRows }, { data: coachRows }, { data: judgeRows }] =
     await Promise.all([
       supabase.from("sports").select("id, name_ar, name_en").eq("is_active", true).order("sort_order"),
       supabase.from("disciplines").select("id, sport_id, name_ar, name_en").eq("is_active", true),
@@ -25,10 +25,12 @@ export default async function CoachTournamentsPage() {
         .order("created_at", { ascending: false }),
       supabase.from("coach_branches").select("id, name_ar, name_en").eq("coach_id", me.id).eq("is_active", true).order("created_at"),
       supabase.from("profiles").select("id, display_name, first_name_ar").eq("role", "coach").eq("status", "active").neq("id", me.id),
+      supabase.from("profiles").select("id, display_name, first_name_ar").eq("role", "judge").eq("status", "active"),
     ]);
   const tournaments = withoutPendingDeletion(tournamentsRows);
   const branches = (branchRows ?? []) as BranchOption[];
   const coaches = (coachRows ?? []).map((c: any) => ({ id: c.id, name: c.display_name ?? c.first_name_ar ?? "—" }));
+  const judges = (judgeRows ?? []).map((j: any) => ({ id: j.id, name: j.display_name ?? j.first_name_ar ?? "—" }));
   const disc = (disciplines ?? []) as any[];
 
   return (
@@ -56,6 +58,7 @@ export default async function CoachTournamentsPage() {
           disciplines={disc}
           branches={branches}
           coachCandidates={coaches}
+          judgeCandidates={judges}
         />
       )}
     </div>

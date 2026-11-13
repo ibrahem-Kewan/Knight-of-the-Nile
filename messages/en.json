@@ -323,7 +323,7 @@
         "sport": "Sport",
         "category": "Category",
         "categoryNone": "No category",
-        "coachScopeNote": "Your tournaments are local, one per branch: that branch's athletes register and you are the judge; you can add other coaches as judges.",
+        "coachScopeNote": "Your tournaments are local, one per branch: that branch's athletes register and you are the judge; you can add judges or other coaches to judge them.",
         "scope": "Scope",
         "venue": "Venue",
         "start": "Start date",
@@ -366,7 +366,9 @@
         "judges": "Judges",
         "noJudges": "No judges yet",
         "mainJudge": "main judge",
-        "removeJudge": "Remove judge"
+        "removeJudge": "Remove judge",
+        "assignCoach": "Assign coach",
+        "coachTag": "coach"
     },
     "treg": {
         "register": "Register for tournament",
@@ -717,10 +719,11 @@
         "short": "Password must be at least 8 characters.",
         "mismatch": "Passwords do not match.",
         "errBranchInvalid": "Choose one of your active branches.",
-        "errJudgeInvalid": "This person can't be a judge for this tournament.",
+        "errJudgeInvalid": "This person can't judge this tournament (must be an active judge or coach).",
         "errJudgeIsCreator": "The tournament's creator is its main judge and can't be removed.",
         "not-branch-athlete": "This tournament is only for athletes in this branch's groups.",
-        "no-judge": "Choose a judge first."
+        "no-judge": "Choose a judge first.",
+        "errDbOutdated": "This feature needs a database update first — please contact the administration."
     },
     "table": {
         "name": "Name",

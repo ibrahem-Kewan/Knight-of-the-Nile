@@ -11,7 +11,7 @@ export default async function JudgeTournamentsPage() {
   const supabase = await createClient();
 
   // A judge manages only the tournaments they created (PR-11 — no longer coaches' ones).
-  const [{ data: sports }, { data: disciplines }, { data: tournamentsRows }, { data: judges }] = await Promise.all([
+  const [{ data: sports }, { data: disciplines }, { data: tournamentsRows }, { data: judges }, { data: coachRows }] = await Promise.all([
     supabase.from("sports").select("id, name_ar, name_en").eq("is_active", true).order("sort_order"),
     supabase.from("disciplines").select("id, sport_id, name_ar, name_en").eq("is_active", true),
     supabase
@@ -21,9 +21,11 @@ export default async function JudgeTournamentsPage() {
       .is("deleted_at", null)
       .order("created_at", { ascending: false }),
     supabase.from("profiles").select("id, display_name, first_name_ar").eq("role", "judge").eq("status", "active"),
+    supabase.from("profiles").select("id, display_name, first_name_ar").eq("role", "coach").eq("status", "active"),
   ]);
 
   const judgeList = (judges ?? []).map((j: any) => ({ id: j.id, name: j.display_name ?? j.first_name_ar ?? "—" }));
+  const coachList = (coachRows ?? []).map((c: any) => ({ id: c.id, name: c.display_name ?? c.first_name_ar ?? "—" }));
   const tournaments = withoutPendingDeletion(tournamentsRows);
   const disc = (disciplines ?? []) as any[];
 
@@ -36,7 +38,7 @@ export default async function JudgeTournamentsPage() {
       {!tournaments?.length ? (
         <p className="text-muted-foreground">{t("noTournaments")}</p>
       ) : (
-        <TournamentsTable tournaments={tournaments} sports={(sports ?? []) as any} disciplines={disc} judgeCandidates={judgeList} />
+        <TournamentsTable tournaments={tournaments} sports={(sports ?? []) as any} disciplines={disc} judgeCandidates={judgeList} coachCandidates={coachList} />
       )}
     </div>
   );

@@ -7,28 +7,33 @@ import { assignJudge, removeJudge } from "@/server/actions/tournaments";
 import { errorLabel } from "@/lib/i18n/labels";
 
 type Person = { id: string; name: string };
+type StaffMember = Person & { isCoach?: boolean };
 
 /**
- * Judges of a tournament (PR-12): current judges as chips (removable, except the creator)
- * plus a picker to add one. For a coach's branch tournament the candidates are other coaches.
+ * Judging staff of a tournament (PR-12, PR-14): current judges as chips (removable, except the
+ * creator; coaches are tagged) plus two pickers — one for judges and one for coaches. Both kinds
+ * become judges of the tournament and can score it.
  */
 export function TournamentJudges({
   tournamentId,
   creatorId,
   current,
-  candidates,
+  judgeCandidates,
+  coachCandidates,
 }: {
   tournamentId: string;
   creatorId: string | null;
-  current: Person[];
-  candidates: Person[];
+  current: StaffMember[];
+  judgeCandidates: Person[];
+  coachCandidates: Person[];
 }) {
   const t = useTranslations("tadmin");
   const tErr = useTranslations("errors");
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
   const currentIds = new Set(current.map((p) => p.id));
-  const options = candidates.filter((c) => !currentIds.has(c.id));
+  const judgeOptions = judgeCandidates.filter((c) => !currentIds.has(c.id));
+  const coachOptions = coachCandidates.filter((c) => !currentIds.has(c.id));
 
   const run = (fn: () => Promise<{ ok?: boolean; error?: string }>) =>
     start(async () => {
@@ -37,6 +42,22 @@ export function TournamentJudges({
       if (!res?.ok) setErr(errorLabel(tErr, res?.error));
     });
 
+  const picker = (label: string, options: Person[]) =>
+    options.length > 0 && (
+      <select
+        value=""
+        disabled={pending}
+        aria-label={label}
+        onChange={(e) => { const v = e.target.value; if (v) run(() => assignJudge(tournamentId, v)); }}
+        className="h-8 max-w-[12rem] rounded-md border border-border bg-background px-2 text-xs"
+      >
+        <option value="">{label}</option>
+        {options.map((o) => (
+          <option key={o.id} value={o.id}>{o.name}</option>
+        ))}
+      </select>
+    );
+
   return (
     <div className="flex basis-full flex-wrap items-center gap-1.5">
       <span className="text-xs text-muted-foreground">{t("judges")}:</span>
@@ -44,6 +65,7 @@ export function TournamentJudges({
       {current.map((p) => (
         <span key={p.id} className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 py-0.5 ps-2.5 pe-1 text-xs">
           {p.name}
+          {p.isCoach && p.id !== creatorId && <span className="text-muted-foreground">({t("coachTag")})</span>}
           {p.id === creatorId ? (
             <span className="pe-1.5 text-muted-foreground">({t("mainJudge")})</span>
           ) : (
@@ -60,20 +82,8 @@ export function TournamentJudges({
           )}
         </span>
       ))}
-      {options.length > 0 && (
-        <select
-          value=""
-          disabled={pending}
-          aria-label={t("assignJudge")}
-          onChange={(e) => { const v = e.target.value; if (v) run(() => assignJudge(tournamentId, v)); }}
-          className="h-8 max-w-[12rem] rounded-md border border-border bg-background px-2 text-xs"
-        >
-          <option value="">{t("assignJudge")}</option>
-          {options.map((o) => (
-            <option key={o.id} value={o.id}>{o.name}</option>
-          ))}
-        </select>
-      )}
+      {picker(t("assignJudge"), judgeOptions)}
+      {picker(t("assignCoach"), coachOptions)}
       {err && <span role="alert" className="basis-full text-xs text-danger">{err}</span>}
     </div>
   );

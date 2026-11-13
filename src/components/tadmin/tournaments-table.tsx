@@ -26,7 +26,7 @@ const personName = (p: { display_name: string | null; first_name_ar: string | nu
 /**
  * Shared manage table for admin / coach / judge tournament pages: status flow, category,
  * judges (PR-12), edit and delete (PR-11). Pages pass only rows the viewer may manage.
- * Judge candidates: a coach's (branch) tournament takes other coaches; any other takes judges.
+ * Judge candidates (PR-14): every tournament takes both judges and coaches as judges.
  */
 export async function TournamentsTable({
   tournaments,
@@ -86,8 +86,11 @@ export async function TournamentsTable({
             const coachOwned = creator?.role === "coach";
             const current = staff
               .filter((s) => s.tournament_id === tr.id)
-              .map((s) => ({ id: s.profile_id, name: byId.get(s.profile_id) ? personName(byId.get(s.profile_id)) : "—" }));
-            const candidates = (coachOwned ? coachCandidates : judgeCandidates).filter((c) => c.id !== tr.created_by);
+              .map((s) => {
+                const p = byId.get(s.profile_id);
+                return { id: s.profile_id, name: p ? personName(p) : "—", isCoach: p?.role === "coach" };
+              });
+            const notCreator = (c: Person) => c.id !== tr.created_by;
             const branch = tr.branch_id ? branchName.get(tr.branch_id) : null;
             return (
               <tr key={tr.id} className="border-t border-border align-top">
@@ -119,7 +122,7 @@ export async function TournamentsTable({
                         initial={{ ...tr, discipline_id: disciplineId }}
                       />
                       <ContentDeleteButton type="tournament" id={tr.id} title={title} />
-                      <TournamentJudges tournamentId={tr.id} creatorId={coachOwned ? tr.created_by : null} current={current} candidates={candidates} />
+                      <TournamentJudges tournamentId={tr.id} creatorId={coachOwned ? tr.created_by : null} current={current} judgeCandidates={judgeCandidates.filter(notCreator)} coachCandidates={coachCandidates.filter(notCreator)} />
                     </div>
                   )}
                 </td>
