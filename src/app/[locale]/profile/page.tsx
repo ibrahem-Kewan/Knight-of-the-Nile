@@ -1,7 +1,8 @@
 import { getTranslations } from "next-intl/server";
 import { requireAuth } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { ProfileForm } from "@/components/profile/profile-form";
+import { AvatarUploader } from "@/components/profile/avatar-uploader";
+import { ProfileForm, type ProfileInitial } from "@/components/profile/profile-form";
 import { PasswordForm } from "@/components/profile/password-form";
 import { RegistrationTypeSection } from "@/components/profile/registration-type-section";
 import { RoleUpgradeCard } from "@/components/profile/role-upgrade-card";
@@ -28,28 +29,24 @@ export default async function ProfilePage() {
       .maybeSingle(),
   ]);
 
-  const initial = (data ?? {}) as any;
+  const initial = (data ?? {}) as ProfileInitial;
   const pendingRole = (pendingReq as { requested_role: string } | null)?.requested_role ?? null;
   const canUpgrade = me.role === "athlete" || me.role === "coach";
 
   return (
     <div className="container max-w-3xl py-10">
-      <div className="mb-8 flex items-center gap-4">
-        {initial.avatar_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={initial.avatar_url} alt="" className="h-16 w-16 rounded-full object-cover ring-1 ring-gold/40" />
-        ) : (
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gold/15 text-xl font-bold text-gold">
-            {(initial.display_name ?? me.email ?? "?").slice(0, 1)}
-          </div>
-        )}
-        <div>
-          <h1 className="font-display text-2xl text-gold">{t("title")}</h1>
-          <p className="text-sm text-muted-foreground">{initial.display_name ?? me.email}</p>
-        </div>
+      <div className="mb-8">
+        <h1 className="font-display text-2xl text-gold">{t("title")}</h1>
+        <p className="text-sm text-muted-foreground">{initial.display_name ?? me.email}</p>
       </div>
 
       <div className="space-y-6">
+        <section className="rounded-lg border border-border bg-card p-6">
+          <AvatarUploader
+            url={initial.avatar_url ?? null}
+            fallback={(initial.display_name ?? me.email ?? "?").slice(0, 1).toUpperCase()}
+          />
+        </section>
         <ProfileForm initial={initial} />
         {me.role === "athlete" && <RegistrationTypeSection athleteId={me.id} />}
         {canUpgrade && (

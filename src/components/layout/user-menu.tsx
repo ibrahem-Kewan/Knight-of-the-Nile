@@ -6,7 +6,15 @@ import { Link } from "@/lib/i18n/navigation";
 import { logoutAction } from "@/server/actions/auth";
 import { LayoutDashboard, LogOut, ChevronDown, User } from "lucide-react";
 
-export function UserMenu({ name, dashboardHref }: { name: string; dashboardHref: string }) {
+export function UserMenu({
+  name,
+  dashboardHref,
+  avatarUrl,
+}: {
+  name: string;
+  dashboardHref: string;
+  avatarUrl?: string | null;
+}) {
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -23,9 +31,14 @@ export function UserMenu({ name, dashboardHref }: { name: string; dashboardHref:
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex h-9 items-center gap-1.5 rounded-md border border-border px-3 text-sm font-medium hover:bg-muted"
+        className="inline-flex h-9 items-center gap-1.5 rounded-md border border-border px-2.5 text-sm font-medium hover:bg-muted"
       >
-        <User className="h-4 w-4" />
+        {avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={avatarUrl} alt="" className="h-6 w-6 rounded-full object-cover ring-1 ring-gold/40" />
+        ) : (
+          <User className="h-4 w-4" />
+        )}
         <span className="hidden max-w-[10ch] truncate sm:inline">{name}</span>
         <ChevronDown className="h-3.5 w-3.5" />
       </button>

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { errorLabel } from "@/lib/i18n/labels";
 import {
   approveUser, rejectUser, setUserStatus, setUserRole, deleteUser,
 } from "@/server/actions/admin";
@@ -16,11 +17,12 @@ export function UserActions({
   id: string; role: Role; status: string; isSelf: boolean; viewerIsSuper: boolean;
 }) {
   const t = useTranslations("admin");
+  const te = useTranslations("errors");
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
   const exec = async (fn: () => Promise<{ ok?: boolean; error?: string }>) => {
     const r = await fn();
-    setErr(r.error ? (t.has(r.error) ? t(r.error) : r.error) : null);
+    setErr(r.error ? (t.has(r.error) ? t(r.error) : errorLabel(te, r.error)) : null);
   };
   const run = (fn: () => Promise<{ ok?: boolean; error?: string }>) => () => start(() => exec(fn));
 

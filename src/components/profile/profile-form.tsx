@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-type Initial = {
+export type ProfileInitial = {
   first_name_ar?: string | null;
   last_name_ar?: string | null;
   first_name_en?: string | null;
@@ -20,7 +20,7 @@ type Initial = {
   social?: Record<string, string> | null;
 };
 
-export function ProfileForm({ initial }: { initial: Initial }) {
+export function ProfileForm({ initial }: { initial: ProfileInitial }) {
   const t = useTranslations("profile");
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
@@ -34,7 +34,7 @@ export function ProfileForm({ initial }: { initial: Initial }) {
           setMsg(null); setErr(null);
           const res = await updateMyProfile(fd);
           if (res?.ok) setMsg(t("saved"));
-          else setErr(res?.error ? t("error") : t("error"));
+          else setErr(t("error"));
         })
       }
       className="space-y-6 rounded-lg border border-border bg-card p-6"
@@ -64,11 +64,6 @@ export function ProfileForm({ initial }: { initial: Initial }) {
         <div className="space-y-1.5">
           <Label htmlFor="email">{t("email")}</Label>
           <Input id="email" name="email" type="email" defaultValue={initial.email ?? ""} dir="ltr" />
-        </div>
-        <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="avatar_url">{t("avatarUrl")}</Label>
-          <Input id="avatar_url" name="avatar_url" defaultValue={initial.avatar_url ?? ""} dir="ltr" placeholder="https://…" />
-          <p className="text-xs text-muted-foreground">{t("avatarHint")}</p>
         </div>
         <div className="space-y-1.5 sm:col-span-2">
           <Label htmlFor="bio">{t("bio")}</Label>

@@ -5,6 +5,9 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireAuth } from "@/lib/auth/session";
+import {
+  AVATAR_BUCKET, AVATAR_EXT, AVATAR_MAX_BYTES, AVATAR_TYPES, sniffImageType, type AvatarType,
+} from "@/lib/profile/avatar";
 
 type Res = { ok?: boolean; error?: string };
 
@@ -45,7 +48,7 @@ export async function updateMyProfile(formData: FormData): Promise<Res> {
       last_name_en: lastEn,
       display_name: display,
       phone: str(formData, "phone"),
-      avatar_url: str(formData, "avatar_url"),
+      // avatar_url is managed only by uploadMyAvatar / removeMyAvatar (migration 0041).
       bio: bioText ? { ar: bioText } : null,
       social,
     })
@@ -60,7 +63,66 @@ export async function updateMyProfile(formData: FormData): Promise<Res> {
     await supabase.from("profiles").update({ email }).eq("id", me.id);
   }
 
-  revalidatePath("/profile");
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+/** Deletes every file in the user's avatar folder except `keep` (best effort, logged). */
+async function cleanupAvatarFolder(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  keep?: string,
+) {
+  const { data: files, error } = await supabase.storage.from(AVATAR_BUCKET).list(userId, { limit: 100 });
+  if (error) { console.error("[avatar] list", error.message); return; }
+  const stale = (files ?? []).map((f) => `${userId}/${f.name}`).filter((p) => p !== keep);
+  if (stale.length === 0) return;
+  const { error: rmErr } = await supabase.storage.from(AVATAR_BUCKET).remove(stale);
+  if (rmErr) console.error("[avatar] remove", rmErr.message);
+}
+
+/**
+ * Upload a profile photo (already resized/cropped in the browser).
+ * Double guard: checks here + bucket limits & storage RLS "own folder only" (0041).
+ */
+export async function uploadMyAvatar(formData: FormData): Promise<Res> {
+  const me = await requireAuth();
+  const file = formData.get("avatar");
+  if (!(file instanceof File) || file.size === 0) return { error: "avatarMissing" };
+  if (file.size > AVATAR_MAX_BYTES) return { error: "avatarTooLarge" };
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const type = sniffImageType(bytes);
+  if (!type || !(AVATAR_TYPES as readonly string[]).includes(type)) return { error: "avatarType" };
+
+  const supabase = await createClient();
+  const path = `${me.id}/${Date.now()}.${AVATAR_EXT[type as AvatarType]}`;
+  const { error: upErr } = await supabase.storage
+    .from(AVATAR_BUCKET)
+    .upload(path, bytes, { contentType: type, cacheControl: "31536000", upsert: false });
+  if (upErr) { console.error("[avatar] upload", upErr.message); return { error: "failed" }; }
+
+  const { data: pub } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(path);
+  const { error } = await supabase.from("profiles").update({ avatar_url: pub.publicUrl }).eq("id", me.id);
+  if (error) {
+    console.error("[avatar] profile", error.message);
+    await supabase.storage.from(AVATAR_BUCKET).remove([path]);
+    return { error: "failed" };
+  }
+
+  await cleanupAvatarFolder(supabase, me.id, path);
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+/** Remove the profile photo (profile field + stored files). */
+export async function removeMyAvatar(): Promise<Res> {
+  const me = await requireAuth();
+  const supabase = await createClient();
+  const { error } = await supabase.from("profiles").update({ avatar_url: null }).eq("id", me.id);
+  if (error) { console.error("[avatar] profile", error.message); return { error: "failed" }; }
+  await cleanupAvatarFolder(supabase, me.id);
+  revalidatePath("/", "layout");
   return { ok: true };
 }
 

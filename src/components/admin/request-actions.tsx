@@ -2,17 +2,19 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { errorLabel } from "@/lib/i18n/labels";
 import { approveRoleRequest, rejectRoleRequest } from "@/server/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Check, X } from "lucide-react";
 
 export function RequestActions({ id }: { id: string }) {
   const t = useTranslations("admin");
+  const te = useTranslations("errors");
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
   const exec = async (fn: () => Promise<{ ok?: boolean; error?: string }>) => {
     const r = await fn();
-    setErr(r.error ? (t.has(r.error) ? t(r.error) : r.error) : null);
+    setErr(r.error ? (t.has(r.error) ? t(r.error) : errorLabel(te, r.error)) : null);
   };
   return (
     <div className="flex flex-wrap items-center gap-2">

@@ -4,13 +4,14 @@ import { AuthSlideshow } from "@/components/home/auth-slideshow";
 
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   const t = await getTranslations("auth");
+  const tc = await getTranslations("common");
   return (
     <div className="grid min-h-[calc(100dvh-4rem)] md:grid-cols-2">
       {/* Brand panel */}
       <div className="relative hidden flex-col justify-between overflow-hidden bg-gradient-to-br from-ink via-ink to-nile p-10 text-sand md:flex">
         <Link href="/" className="flex items-center gap-2 font-display text-xl text-gold">
           <span className="inline-block h-9 w-9 rounded-full bg-gradient-to-br from-gold to-gold-deep" />
-          فارس النيل
+          {tc("appName")}
         </Link>
         <div className="mx-auto w-full max-w-sm">
           <AuthSlideshow />

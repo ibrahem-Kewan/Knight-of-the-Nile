@@ -49,6 +49,7 @@ export async function SiteHeader() {
             <UserMenu
               name={profile.display_name ?? profile.first_name_ar ?? "..."}
               dashboardHref={roleHome[profile.role] ?? "/"}
+              avatarUrl={profile.avatar_url}
             />
           ) : (
             <Button asChild size="sm">
