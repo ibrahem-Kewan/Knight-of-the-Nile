@@ -1166,9 +1166,26 @@
         "iosShow": "How to install",
         "iosHide": "Hide steps",
         "iosStepsLabel": "Steps to install on iPhone",
-        "iosStep1": "Tap the Share button in the browser bar",
-        "iosStep2": "Choose “Add to Home Screen”",
-        "iosStep3": "Tap “Add” to finish",
-        "installed": "Installed! Open Knight of the Nile from your home screen."
+        "installed": "Installed! Open Knight of the Nile from your home screen.",
+        "ios": {
+            "safari": {
+                "step1": "Tap the Share button (on iOS 26, tap ••• first, then “Share”)",
+                "step2": "Choose “Add to Home Screen” — tap “View More” if you don’t see it",
+                "step3": "Tap “Add” (and turn on “Open as Web App” if shown)"
+            },
+            "chrome": {
+                "step1": "Tap the Share button in the address bar at the top",
+                "step2": "Choose “Add to Home Screen” — scroll down if it’s not visible",
+                "step3": "Tap “Add” to finish"
+            },
+            "other": {
+                "step1": "Open the browser menu, then choose “Share”",
+                "step2": "Choose “Add to Home Screen”",
+                "step3": "Tap “Add” — if the option is missing, open the site in Safari"
+            }
+        },
+        "inApp": "This in-app browser can’t install apps. Copy the link, open it in Safari or Chrome, then install from the menu.",
+        "copyLink": "Copy site link",
+        "linkCopied": "Link copied"
     }
 }

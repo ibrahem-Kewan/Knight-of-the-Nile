@@ -2,7 +2,7 @@
 
 import { useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
-import { CheckCircle2, ChevronDown, Download, Share, SquarePlus } from "lucide-react";
+import { Check, CheckCircle2, ChevronDown, Copy, Download, Ellipsis, Share, SquarePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getServerSnapshot, getSnapshot, promptInstall, subscribe } from "@/lib/pwa/install-prompt";
@@ -17,6 +17,7 @@ export function InstallAppCard() {
   const t = useTranslations("pwa");
   const s = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const [stepsOpen, setStepsOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   if (!s.phone || s.standalone) return null;
 
@@ -34,11 +35,22 @@ export function InstallAppCard() {
   const ios = s.platform === "ios";
   if (!ios && !s.canPrompt) return null;
 
+  const browser = s.iosBrowser === "inapp" ? "safari" : s.iosBrowser;
   const steps = [
-    { icon: Share, text: t("iosStep1") },
-    { icon: SquarePlus, text: t("iosStep2") },
-    { icon: CheckCircle2, text: t("iosStep3") },
+    { icon: browser === "other" ? Ellipsis : Share, text: t(`ios.${browser}.step1`) },
+    { icon: SquarePlus, text: t(`ios.${browser}.step2`) },
+    { icon: CheckCircle2, text: t(`ios.${browser}.step3`) },
   ];
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(window.location.origin + window.location.pathname);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2500);
+    } catch {
+      /* clipboard blocked — the user can still copy from the address bar */
+    }
+  }
 
   return (
     <Shell>
@@ -57,7 +69,15 @@ export function InstallAppCard() {
         </div>
       </div>
 
-      {ios ? (
+      {ios && s.iosBrowser === "inapp" ? (
+        <>
+          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t("inApp")}</p>
+          <Button type="button" variant="outline" className="mt-2 h-11 w-full border-gold/50" onClick={() => void copyLink()}>
+            {copied ? <Check className="h-4 w-4 text-gold-deep dark:text-gold" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />}
+            <span aria-live="polite">{copied ? t("linkCopied") : t("copyLink")}</span>
+          </Button>
+        </>
+      ) : ios ? (
         <>
           <Button
             type="button"

@@ -11,6 +11,8 @@
  */
 
 type Platform = "android" | "ios" | "other";
+/** iPhone browser — each one hides "Add to Home Screen" in a different place. */
+export type IosBrowser = "safari" | "chrome" | "other" | "inapp";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -23,6 +25,8 @@ export interface InstallState {
   /** A phone (Android or iPhone), not a tablet or desktop. */
   phone: boolean;
   platform: Platform;
+  /** Only meaningful when platform === "ios". */
+  iosBrowser: IosBrowser;
   /** Android/Chromium: the native install prompt is available. */
   canPrompt: boolean;
   /** Installed during this visit (`appinstalled` or the prompt was accepted). */
@@ -33,6 +37,7 @@ const SERVER_STATE: InstallState = {
   standalone: false,
   phone: false,
   platform: "other",
+  iosBrowser: "safari",
   canPrompt: false,
   installed: false,
 };
@@ -51,6 +56,17 @@ function detectPlatform(): Platform {
   if (/iPhone|iPod/i.test(ua)) return "ios";
   if (/Android/i.test(ua)) return "android";
   return "other";
+}
+
+function detectIosBrowser(): IosBrowser {
+  const ua = navigator.userAgent;
+  // In-app webviews (Instagram, Facebook, Messenger, TikTok, Snapchat, LINE, X…) cannot add to Home Screen.
+  if (/FBAN|FBAV|FB_IAB|Instagram|Messenger|musical_ly|BytedanceWebview|Snapchat|Line\/|Twitter|LinkedInApp|GSA\//i.test(ua)) {
+    return "inapp";
+  }
+  if (/CriOS/i.test(ua)) return "chrome";
+  if (/FxiOS|EdgiOS|OPiOS|OPT\/|YaBrowser|DuckDuckGo|Brave/i.test(ua)) return "other";
+  return "safari";
 }
 
 function detectPhone(platform: Platform): boolean {
@@ -78,6 +94,7 @@ if (typeof window !== "undefined") {
     standalone: detectStandalone(),
     phone: detectPhone(platform),
     platform,
+    iosBrowser: platform === "ios" ? detectIosBrowser() : "safari",
     canPrompt: false,
     installed: false,
   };
