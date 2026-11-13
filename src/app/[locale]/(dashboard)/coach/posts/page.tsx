@@ -3,6 +3,8 @@ import { enumLabel } from "@/lib/i18n/labels";
 import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
+import { PostEditForm } from "@/components/content/post-edit-form";
+import { ContentDeleteButton } from "@/components/shared/content-delete-button";
 
 export default async function CoachPostsPage() {
   const me = await requireRole(["coach"]);
@@ -14,6 +16,8 @@ export default async function CoachPostsPage() {
   const supabase = await createClient();
   const { data: posts } = await supabase
     .from("posts").select("id, title_ar, title_en, status, type, created_at").eq("author_id", me.id)
+    .is("deleted_at", null)
+    .is("deletion_requested_at", null)
     .order("created_at", { ascending: false });
 
   return (
@@ -28,15 +32,25 @@ export default async function CoachPostsPage() {
               <th className="p-3 text-start">{tt("title")}</th>
               <th className="p-3 text-start">{tt("type")}</th>
               <th className="p-3 text-start">{tt("status")}</th>
+              <th className="p-3 text-start">{tt("actions")}</th>
             </tr></thead>
             <tbody>
-              {posts.map((p: any) => (
-                <tr key={p.id} className="border-t border-border">
-                  <td className="p-3 font-medium">{ar ? p.title_ar : p.title_en ?? p.title_ar}</td>
-                  <td className="p-3 text-muted-foreground">{enumLabel(te, "postType", p.type)}</td>
-                  <td className="p-3"><Badge variant={p.status === "published" ? "success" : "secondary"}>{enumLabel(te, "status", p.status)}</Badge></td>
-                </tr>
-              ))}
+              {posts.map((p: any) => {
+                const title = ar ? p.title_ar : p.title_en ?? p.title_ar;
+                return (
+                  <tr key={p.id} className="border-t border-border align-top">
+                    <td className="p-3 font-medium">{title}</td>
+                    <td className="p-3 text-muted-foreground">{enumLabel(te, "postType", p.type)}</td>
+                    <td className="p-3"><Badge variant={p.status === "published" ? "success" : "secondary"}>{enumLabel(te, "status", p.status)}</Badge></td>
+                    <td className="p-3">
+                      <div className="flex flex-wrap gap-1.5">
+                        <PostEditForm post={p} />
+                        <ContentDeleteButton type="post" id={p.id} title={title} />
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

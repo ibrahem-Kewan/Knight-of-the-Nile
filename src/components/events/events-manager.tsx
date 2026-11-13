@@ -1,6 +1,7 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { CreateEventForm } from "@/components/events/create-event-form";
 import { EventRowActions } from "@/components/events/event-row-actions";
+import { ContentDeleteButton } from "@/components/shared/content-delete-button";
 import { Badge } from "@/components/ui/badge";
 
 const statusKey: Record<string, string> = {
@@ -8,12 +9,21 @@ const statusKey: Record<string, string> = {
   registration_closed: "stRegClosed", ongoing: "stOngoing", completed: "stCompleted", cancelled: "stCancelled",
 };
 
+/** Columns every events manage page must select (incl. edit-form values). */
+export const EVENT_MANAGE_COLUMNS =
+  "id, title_ar, title_en, status, venue, sport_id, start_date, end_date, registration_end, max_participants, fees, deletion_requested_at";
+
 type Sport = { id: string; name_ar: string; name_en: string };
-type EventRow = { id: string; title_ar: string; title_en: string | null; status: string; venue: string | null };
+type EventRow = {
+  id: string; title_ar: string; title_en: string | null; status: string; venue: string | null;
+  sport_id: string | null; start_date: string | null; end_date: string | null; registration_end: string | null;
+  max_participants: number | null; fees: number | string | null; deletion_requested_at?: string | null;
+};
 
 export async function EventsManager({ sports, events }: { sports: Sport[]; events: EventRow[] }) {
   const locale = await getLocale();
   const t = await getTranslations("events");
+  const tm = await getTranslations("manage");
 
   return (
     <div className="space-y-6">
@@ -34,14 +44,31 @@ export async function EventsManager({ sports, events }: { sports: Sport[]; event
               </tr>
             </thead>
             <tbody>
-              {events.map((e) => (
-                <tr key={e.id} className="border-t border-border align-top">
-                  <td className="p-3 font-medium">{locale === "ar" ? e.title_ar : e.title_en ?? e.title_ar}</td>
-                  <td className="p-3"><Badge variant="secondary">{t(statusKey[e.status] ?? e.status)}</Badge></td>
-                  <td className="p-3 text-muted-foreground">{e.venue ?? "—"}</td>
-                  <td className="p-3"><EventRowActions id={e.id} status={e.status} /></td>
-                </tr>
-              ))}
+              {events.map((e) => {
+                const title = locale === "ar" ? e.title_ar : e.title_en ?? e.title_ar;
+                const pendingDelete = !!e.deletion_requested_at;
+                return (
+                  <tr key={e.id} className="border-t border-border align-top">
+                    <td className="p-3 font-medium">
+                      {title}
+                      {pendingDelete && <Badge variant="warning" className="ms-2 align-middle">{tm("pendingDeletion")}</Badge>}
+                    </td>
+                    <td className="p-3"><Badge variant="secondary">{t(statusKey[e.status] ?? e.status)}</Badge></td>
+                    <td className="p-3 text-muted-foreground">{e.venue ?? "—"}</td>
+                    <td className="p-3">
+                      {pendingDelete ? (
+                        <span className="text-xs text-muted-foreground">{tm("pendingDeletionHint")}</span>
+                      ) : (
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <EventRowActions id={e.id} status={e.status} />
+                          <CreateEventForm sports={sports} initial={e} />
+                          <ContentDeleteButton type="event" id={e.id} title={title} />
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

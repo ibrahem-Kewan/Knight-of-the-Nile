@@ -4,6 +4,8 @@ import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { PostModerate } from "@/components/admin/post-moderate";
+import { PostEditForm } from "@/components/content/post-edit-form";
+import { ContentDeleteButton } from "@/components/shared/content-delete-button";
 
 export default async function AdminNewsPage() {
   await requireRole(["super_admin", "admin"]);
@@ -12,10 +14,12 @@ export default async function AdminNewsPage() {
   const t = await getTranslations("pages.adminNews");
   const tt = await getTranslations("table");
   const te = await getTranslations("enums");
+  const tm = await getTranslations("manage");
   const supabase = await createClient();
   const { data: posts } = await supabase
     .from("posts")
-    .select("id, title_ar, title_en, type, status, created_at, profiles(display_name)")
+    .select("id, title_ar, title_en, type, status, created_at, deletion_requested_at, profiles(display_name)")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(100);
 
@@ -34,14 +38,31 @@ export default async function AdminNewsPage() {
               <th className="p-3 text-start">{tt("actions")}</th>
             </tr></thead>
             <tbody>
-              {posts.map((p: any) => (
-                <tr key={p.id} className="border-t border-border align-top">
-                  <td className="p-3 font-medium">{ar ? p.title_ar : p.title_en ?? p.title_ar}</td>
-                  <td className="p-3 text-muted-foreground">{p.profiles?.display_name ?? "—"}</td>
-                  <td className="p-3"><Badge variant={p.status === "published" ? "success" : p.status === "pending_review" ? "warning" : "secondary"}>{enumLabel(te, "status", p.status)}</Badge></td>
-                  <td className="p-3">{p.status !== "published" ? <PostModerate id={p.id} /> : <span className="text-xs text-muted-foreground">—</span>}</td>
-                </tr>
-              ))}
+              {posts.map((p: any) => {
+                const title = ar ? p.title_ar : p.title_en ?? p.title_ar;
+                const pendingDelete = !!p.deletion_requested_at;
+                return (
+                  <tr key={p.id} className="border-t border-border align-top">
+                    <td className="p-3 font-medium">
+                      {title}
+                      {pendingDelete && <Badge variant="warning" className="ms-2 align-middle">{tm("pendingDeletion")}</Badge>}
+                    </td>
+                    <td className="p-3 text-muted-foreground">{p.profiles?.display_name ?? "—"}</td>
+                    <td className="p-3"><Badge variant={p.status === "published" ? "success" : p.status === "pending_review" ? "warning" : "secondary"}>{enumLabel(te, "status", p.status)}</Badge></td>
+                    <td className="p-3">
+                      {pendingDelete ? (
+                        <span className="text-xs text-muted-foreground">{tm("pendingDeletionHint")}</span>
+                      ) : (
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {p.status !== "published" && <PostModerate id={p.id} />}
+                          <PostEditForm post={p} />
+                          <ContentDeleteButton type="post" id={p.id} title={title} />
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

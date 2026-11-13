@@ -399,7 +399,8 @@
         "pendingPayments": "Payments awaiting confirmation",
         "dueAthletes": "Athletes due",
         "myTraining": "My training",
-        "openClaims": "Open attendance alerts"
+        "openClaims": "Open attendance alerts",
+        "statDeletionRequests": "Pending delete requests"
     },
     "coach": {
         "title": "My athletes",
@@ -738,7 +739,9 @@
         "requestRole": "Request role",
         "myBranches": "My Branches",
         "myGroups": "My Groups",
-        "myTraining": "My Training"
+        "myTraining": "My Training",
+        "courses": "Courses",
+        "deletionRequests": "Delete requests"
     },
     "pages": {
         "approvals": {
@@ -824,6 +827,40 @@
             "max": "Max participants",
             "fees": "Fees",
             "free": "Free"
+        },
+        "adminCourses": {
+            "title": "Courses management",
+            "empty": "No courses."
+        },
+        "deletionRequests": {
+            "title": "Delete requests",
+            "intro": "Creators' requests to delete items that have registrations or payments. Approving deletes the item (soft delete, kept in the log); rejecting returns it to its owner unchanged.",
+            "empty": "No pending delete requests.",
+            "registrations": "{count} registrations/payments",
+            "requestedBy": "Requested by",
+            "requestedAt": "Requested on",
+            "reason": "Reason",
+            "noReason": "No reason given",
+            "approve": "Approve & delete",
+            "reject": "Reject",
+            "approveTitle": "Approve deletion",
+            "rejectTitle": "Reject delete request",
+            "approveHint": "The item leaves every list; registrants' records and payments stay in the database as they are.",
+            "rejectHint": "The item returns to its owner and the public lists unchanged.",
+            "noteRequiredLabel": "Rejection reason (required)",
+            "noteOptional": "Note (optional)",
+            "noteRequired": "Please write the rejection reason.",
+            "approveConfirm": "Confirm delete",
+            "rejectConfirm": "Confirm rejection",
+            "history": "Recent decisions",
+            "item": "Item",
+            "decision": "Decision",
+            "resolvedBy": "By",
+            "note": "Note",
+            "status": {
+                "approved": "Deleted",
+                "rejected": "Rejected"
+            }
         }
     },
     "meta": {
@@ -1026,5 +1063,36 @@
         "errClaimNotAllowed": "You can't send an alert for this session (it must be held, not cancelled, within the last 7 days, and not already marked present).",
         "errClaimExists": "You already have an open alert for this session.",
         "claimRespondBy": "Respond by {date}"
+    },
+    "manage": {
+        "edit": "Edit",
+        "editTitle": "Edit details",
+        "delete": "Delete",
+        "deleteTitle": "Confirm delete",
+        "checking": "Checking registrations and payments…",
+        "confirmNoRegs": "There are no registrations or payments on this item. It will be deleted now and kept in the audit log.",
+        "warnNeedsApproval": "Heads up: this item has {count} registrations or payments. It won't be deleted now; it will leave your list and a delete request goes to an admin. If approved it is deleted, if rejected it comes back unchanged.",
+        "warnAdmin": "Heads up: this item has {count} registrations or payments. Deleting won't touch their records or payments, and is kept in the audit log.",
+        "reason": "Reason (optional)",
+        "reasonPlaceholder": "Tell the admin why you want to delete it",
+        "sendRequest": "Send delete request",
+        "confirmDelete": "Confirm delete",
+        "cancel": "Cancel",
+        "close": "Close",
+        "save": "Save",
+        "requestedDone": "Your delete request was sent to an admin. The item is hidden from your list until they decide.",
+        "deletedDone": "Deleted.",
+        "pendingDeletion": "Awaiting delete approval",
+        "pendingDeletionHint": "Pending delete request — review it in Delete requests",
+        "auditNote": "Every change is kept in the audit log (who, when, before and after).",
+        "by": "By: {name}",
+        "titleAr": "Title (Arabic)",
+        "titleEn": "Title (English)",
+        "types": {
+            "tournament": "Tournament",
+            "event": "Event",
+            "course": "Course",
+            "post": "Post"
+        }
     }
 }

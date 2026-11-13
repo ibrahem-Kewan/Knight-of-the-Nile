@@ -1,22 +1,20 @@
 import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { EventsManager } from "@/components/events/events-manager";
+import { EventsManager, EVENT_MANAGE_COLUMNS } from "@/components/events/events-manager";
 
 export default async function JudgeEventsPage() {
   const me = await requireRole(["judge"]);
   const supabase = await createClient();
 
-  // Judge manages own events plus any coach-created event.
-  const { data: coaches } = await supabase.from("profiles").select("id").eq("role", "coach");
-  const creators = [me.id, ...((coaches ?? []) as { id: string }[]).map((c) => c.id)];
-
+  // A judge manages only the events they created (PR-11 — no longer coaches' ones).
   const [{ data: sports }, { data: events }] = await Promise.all([
     supabase.from("sports").select("id, name_ar, name_en").eq("is_active", true).order("sort_order"),
     supabase
       .from("events")
-      .select("id, title_ar, title_en, status, venue")
-      .in("created_by", creators)
+      .select(EVENT_MANAGE_COLUMNS)
+      .eq("created_by", me.id)
       .is("deleted_at", null)
+      .is("deletion_requested_at", null)
       .order("created_at", { ascending: false }),
   ]);
 

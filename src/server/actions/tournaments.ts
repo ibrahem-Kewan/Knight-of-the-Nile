@@ -18,17 +18,92 @@ async function loadCtx(id: string) {
   const supabase = await createClient();
   const { data: t } = await supabase
     .from("tournaments")
-    .select("id, created_by, audience, status")
+    .select("id, created_by, audience, status, deleted_at, deletion_requested_at")
     .eq("id", id)
     .single();
   if (!t) return null;
-  const tt = t as { id: string; created_by: string | null; audience: string; status: string };
+  const tt = t as {
+    id: string; created_by: string | null; audience: string; status: string;
+    deleted_at: string | null; deletion_requested_at: string | null;
+  };
+  // Deleted (or waiting for admin deletion approval) content is no longer editable.
+  if (tt.deleted_at || tt.deletion_requested_at) return null;
   let creatorRole: Role = "coach";
   if (tt.created_by) {
     const { data: c } = await supabase.from("profiles").select("role").eq("id", tt.created_by).single();
     creatorRole = ((c as { role: Role } | null)?.role ?? "coach") as Role;
   }
   return { ...tt, creator: { id: tt.created_by ?? "", role: creatorRole } };
+}
+
+/** Editable fields shared by create + update (status/audience/owner are not form fields). */
+function readFields(formData: FormData) {
+  const num = (k: string) => {
+    const v = formData.get(k);
+    return v ? Number(v) : null;
+  };
+  const str = (k: string) => {
+    const v = String(formData.get(k) || "").trim();
+    return v || null;
+  };
+  return {
+    titleAr: String(formData.get("title_ar") || "").trim(),
+    titleEn: String(formData.get("title_en") || "").trim(),
+    sportId: String(formData.get("sport_id") || ""),
+    disciplineId: String(formData.get("discipline_id") || ""),
+    scope: str("scope") || "local",
+    venue: str("venue"),
+    start_date: str("start_date"),
+    end_date: str("end_date"),
+    registration_end: str("registration_end"),
+    max_participants: num("max_participants"),
+    fees: num("fees") ?? 0,
+  };
+}
+
+/** Owner or admin edits a tournament (PR-11). Every change is audited by a DB trigger (0039). */
+export async function updateTournament(id: string, formData: FormData): Promise<Res> {
+  const me = await requireRole(CREATOR_ROLES);
+  const ctx = await loadCtx(id);
+  if (!ctx) return { error: "not-found" };
+  if (!canManageContent(me, ctx.creator)) return { error: "forbidden" };
+
+  const f = readFields(formData);
+  if (!f.titleAr || !f.sportId) return { error: "missing" };
+  if (f.fees < 0 || (f.max_participants !== null && f.max_participants < 1)) return { error: "invalid" };
+
+  const supabase = await createClient();
+  const { data: upd, error } = await supabase
+    .from("tournaments")
+    .update({
+      title_ar: f.titleAr,
+      title_en: f.titleEn || null,
+      sport_id: f.sportId,
+      scope: f.scope,
+      venue: f.venue,
+      start_date: f.start_date,
+      end_date: f.end_date,
+      registration_end: f.registration_end,
+      max_participants: f.max_participants,
+      fees: f.fees,
+    })
+    .eq("id", id)
+    .select("id");
+  if (error) { console.error("[tournaments]", error.message); return { error: "failed" }; }
+  if (!upd?.length) return { error: "forbidden" };
+
+  // Category: replace only when one was chosen (keeps the current one otherwise).
+  if (f.disciplineId) {
+    await supabase.from("tournament_disciplines").delete().eq("tournament_id", id);
+    await supabase.from("tournament_disciplines").insert({ tournament_id: id, discipline_id: f.disciplineId });
+  }
+
+  revalidatePath("/admin/tournaments");
+  revalidatePath("/coach/tournaments");
+  revalidatePath("/judge/tournaments");
+  revalidatePath("/tournaments");
+  revalidatePath("/");
+  return { ok: true };
 }
 
 export async function createTournament(formData: FormData): Promise<Res> {

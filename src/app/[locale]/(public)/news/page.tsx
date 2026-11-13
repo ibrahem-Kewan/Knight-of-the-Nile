@@ -12,6 +12,8 @@ export default async function NewsPage() {
     .from("posts")
     .select("id, slug, title_ar, title_en, type, published_at")
     .eq("status", "published")
+    .is("deleted_at", null)
+    .is("deletion_requested_at", null)
     .order("published_at", { ascending: false })
     .limit(30);
 

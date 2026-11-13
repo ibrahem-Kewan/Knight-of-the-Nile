@@ -28,7 +28,7 @@ export default async function TournamentDetail({
     .eq("slug", slug)
     .single();
 
-  if (!t || t.status === "draft") notFound();
+  if (!t || t.status === "draft" || t.deleted_at || t.deletion_requested_at) notFound();
 
   const title = locale === "ar" ? t.title_ar : t.title_en ?? t.title_ar;
   const isOpen = t.status === "registration_open";

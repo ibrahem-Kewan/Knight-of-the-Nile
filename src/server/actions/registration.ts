@@ -16,12 +16,16 @@ export async function registerToTournament(tournamentId: string, disciplineId: s
 
   const { data: tour } = await supabase
     .from("tournaments")
-    .select("status, audience, created_by")
+    .select("status, audience, created_by, deleted_at, deletion_requested_at")
     .eq("id", tournamentId)
     .single();
   if (!tour) return { error: "closed" };
-  const tt = tour as { status: string; audience: string | null; created_by: string | null };
-  if (tt.status !== "registration_open") return { error: "closed" };
+  const tt = tour as {
+    status: string; audience: string | null; created_by: string | null;
+    deleted_at: string | null; deletion_requested_at: string | null;
+  };
+  // Deleted or pending-deletion tournaments accept no new registrations (PR-11).
+  if (tt.deleted_at || tt.deletion_requested_at || tt.status !== "registration_open") return { error: "closed" };
 
   // Coach-scoped tournaments: only the creating coach's own athletes may register.
   if (tt.audience === "coach_athletes" && tt.created_by) {

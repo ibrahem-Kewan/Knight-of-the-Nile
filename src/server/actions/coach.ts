@@ -63,8 +63,14 @@ export async function coachRegisterAthlete(
     .maybeSingle();
   if (!link) return { error: "not-your-athlete" };
 
-  const { data: tour } = await supabase.from("tournaments").select("status").eq("id", tournamentId).single();
-  if (!tour || (tour as { status: string }).status !== "registration_open") return { error: "closed" };
+  const { data: tour } = await supabase
+    .from("tournaments")
+    .select("status, deleted_at, deletion_requested_at")
+    .eq("id", tournamentId)
+    .single();
+  const tt = tour as { status: string; deleted_at: string | null; deletion_requested_at: string | null } | null;
+  // Deleted or pending-deletion tournaments accept no new registrations (PR-11).
+  if (!tt || tt.deleted_at || tt.deletion_requested_at || tt.status !== "registration_open") return { error: "closed" };
 
   const { error } = await supabase.from("tournament_registrations").insert({
     tournament_id: tournamentId,

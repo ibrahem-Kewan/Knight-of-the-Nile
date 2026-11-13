@@ -6,19 +6,20 @@ export const CREATOR_ROLES: Role[] = ["super_admin", "admin", "judge", "coach"];
 export const isAdminRole = (role?: Role | null) =>
   role === "super_admin" || role === "admin";
 
+/** Content that its creator can edit / delete (PR-11). */
+export type ContentType = "tournament" | "event" | "course" | "post";
+
 /**
- * Hierarchy for managing OTHER people's content (tournaments, events, posts…):
- *   super_admin / admin → manage everything
- *   judge              → manage own + coaches' content (not admins/other judges)
- *   coach              → manage own content only
- * `me` always manages their own content.
+ * Who may edit / change status / delete a piece of content (PR-11, owner decision 13 Nov):
+ *   super_admin / admin → everything
+ *   anyone else         → only what they created themselves
+ * (The old "judge manages coaches' content" rule was removed.)
+ * Mirrors `can_manage_creator()` in the DB (migration 0039).
  */
 export function canManageContent(
   me: { id: string; role: Role },
-  creator: { id: string; role: Role } | null | undefined,
+  creator: { id: string; role?: Role } | null | undefined,
 ): boolean {
   if (isAdminRole(me.role)) return true;
-  if (creator && creator.id === me.id) return true;
-  if (me.role === "judge" && creator?.role === "coach") return true;
-  return false;
+  return !!creator?.id && creator.id === me.id;
 }

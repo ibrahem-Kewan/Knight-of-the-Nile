@@ -15,11 +15,12 @@ export default async function AdminOverview() {
     return count ?? 0;
   };
 
-  const [users, pending, tournaments, pendingResults] = await Promise.all([
+  const [users, pending, tournaments, pendingResults, deletionRequests] = await Promise.all([
     counts("profiles"),
     counts("profiles", (q) => q.eq("status", "pending_approval")),
-    counts("tournaments"),
+    counts("tournaments", (q) => q.is("deleted_at", null)),
     counts("results", (q) => q.in("status", ["submitted", "under_review"])),
+    counts("content_deletion_requests", (q) => q.eq("status", "pending")),
   ]);
 
   return (
@@ -30,6 +31,7 @@ export default async function AdminOverview() {
         <StatCard label={t("statPending")} value={pending} hint={t("hintNewAccounts")} href="/admin/approvals" actionLabel={t("viewDetails")} />
         <StatCard label={t("statTournaments")} value={tournaments} href="/admin/tournaments" actionLabel={t("viewDetails")} />
         <StatCard label={t("statPendingResults")} value={pendingResults} hint={t("hintNeedsApproval")} href="/admin/results" actionLabel={t("viewDetails")} />
+        <StatCard label={t("statDeletionRequests")} value={deletionRequests} hint={t("hintNeedsApproval")} href="/admin/deletion-requests" actionLabel={t("viewDetails")} />
       </div>
     </div>
   );

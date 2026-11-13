@@ -17,7 +17,8 @@ export default async function CoachOverview() {
   const { count: courses } = await supabase
     .from("courses")
     .select("id", { count: "exact", head: true })
-    .eq("owner_id", profile.id);
+    .eq("owner_id", profile.id)
+    .is("deleted_at", null);
 
   // Payments: declarations waiting for this coach, and athletes who are due across active groups.
   const { data: groupRows } = await supabase

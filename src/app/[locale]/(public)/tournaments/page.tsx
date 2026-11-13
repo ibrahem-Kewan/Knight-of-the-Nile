@@ -24,6 +24,8 @@ export default async function TournamentsPage() {
     .from("tournaments")
     .select("id, slug, title_ar, title_en, status, start_date, venue, cover_url")
     .neq("status", "draft")
+    .is("deleted_at", null)
+    .is("deletion_requested_at", null)
     .order("start_date", { ascending: false })
     .limit(50);
 

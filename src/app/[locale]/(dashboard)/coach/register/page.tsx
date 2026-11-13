@@ -17,7 +17,7 @@ export default async function CoachRegisterPage() {
   const { data: tournaments } = await supabase
     .from("tournaments")
     .select("id, title_ar, title_en, sport_id")
-    .eq("status", "registration_open").is("deleted_at", null);
+    .eq("status", "registration_open").is("deleted_at", null).is("deletion_requested_at", null);
 
   const { data: disciplines } = await supabase
     .from("disciplines")

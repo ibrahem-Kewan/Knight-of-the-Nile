@@ -23,7 +23,7 @@ export default async function EventDetail({ params }: { params: Promise<{ slug: 
     .eq("slug", slug)
     .single();
 
-  if (!e || e.status === "draft") notFound();
+  if (!e || e.status === "draft" || e.deleted_at || e.deletion_requested_at) notFound();
 
   const title = locale === "ar" ? e.title_ar : e.title_en ?? e.title_ar;
   const isOpen = e.status === "registration_open";

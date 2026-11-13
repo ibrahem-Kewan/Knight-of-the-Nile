@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import {
   AlertTriangle, Award, CalendarDays, CheckCircle, Circle, ClipboardList, Crosshair, Dumbbell, Globe,
   GraduationCap, IdCard, LayoutDashboard, ListChecks, MapPin, Medal, Newspaper, ScrollText, Target,
-  Trophy, UserCog, Users, UsersRound, Wallet, type LucideIcon,
+  Trash2, Trophy, UserCog, Users, UsersRound, Wallet, type LucideIcon,
 } from "lucide-react";
 import { usePathname, Link } from "@/lib/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -13,7 +13,7 @@ import type { NavItem } from "@/config/navigation";
 // Explicit icon map (instead of `import * as Icons`) keeps the client bundle small.
 const ICONS: Record<string, LucideIcon> = {
   AlertTriangle, Award, CalendarDays, CheckCircle, ClipboardList, Crosshair, Dumbbell, Globe, GraduationCap,
-  IdCard, LayoutDashboard, ListChecks, MapPin, Medal, Newspaper, ScrollText, Target, Trophy, UserCog, Users, UsersRound, Wallet,
+  IdCard, LayoutDashboard, ListChecks, MapPin, Medal, Newspaper, ScrollText, Target, Trash2, Trophy, UserCog, Users, UsersRound, Wallet,
 };
 
 export const navIcon = (name: string): LucideIcon => ICONS[name] ?? Circle;

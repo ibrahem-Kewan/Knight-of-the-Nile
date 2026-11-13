@@ -17,6 +17,8 @@ export default async function CoursesPage() {
     .from("courses")
     .select("id, slug, title_ar, title_en, price, currency, level")
     .eq("status", "published")
+    .is("deleted_at", null)
+    .is("deletion_requested_at", null)
     .limit(30);
 
   return (

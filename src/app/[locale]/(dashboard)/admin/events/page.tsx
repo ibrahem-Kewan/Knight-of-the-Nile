@@ -1,6 +1,6 @@
 import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { EventsManager } from "@/components/events/events-manager";
+import { EventsManager, EVENT_MANAGE_COLUMNS } from "@/components/events/events-manager";
 
 export default async function AdminEventsPage() {
   await requireRole(["super_admin", "admin"]);
@@ -10,7 +10,7 @@ export default async function AdminEventsPage() {
     supabase.from("sports").select("id, name_ar, name_en").eq("is_active", true).order("sort_order"),
     supabase
       .from("events")
-      .select("id, title_ar, title_en, status, venue")
+      .select(EVENT_MANAGE_COLUMNS)
       .is("deleted_at", null)
       .order("created_at", { ascending: false }),
   ]);
