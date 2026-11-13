@@ -6,6 +6,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { Menu, X } from "lucide-react";
 import { Link, usePathname } from "@/lib/i18n/navigation";
 import { cn } from "@/lib/utils";
+import { InstallAppCard } from "@/components/layout/install-app-card";
 
 /** Public site navigation for screens below lg (the desktop nav is hidden there). */
 export function SiteMobileMenu({ links }: { links: { href: string; label: string }[] }) {
@@ -61,6 +62,7 @@ export function SiteMobileMenu({ links }: { links: { href: string; label: string
               })}
             </ul>
           </nav>
+          <InstallAppCard />
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
