@@ -1,4 +1,5 @@
 import { getLocale, getTranslations } from "next-intl/server";
+import { enumLabel, money } from "@/lib/i18n/labels";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/auth/session";
@@ -17,6 +18,8 @@ export default async function TournamentDetail({
   const locale = await getLocale();
   const tr = await getTranslations("treg");
   const ck = await getTranslations("checkout");
+  const tp = await getTranslations("pages.tournament");
+  const te = await getTranslations("enums");
   const supabase = await createClient();
 
   const { data: t } = await supabase
@@ -44,7 +47,7 @@ export default async function TournamentDetail({
   return (
     <div className="container max-w-3xl px-4 sm:px-6 lg:px-10 xl:px-14 py-8 sm:py-10 lg:py-12">
       <div className="mb-4 flex items-center gap-3">
-        <Badge variant="secondary">{t.scope}</Badge>
+        <Badge variant="secondary">{enumLabel(te, "scope", t.scope)}</Badge>
         <span className="text-sm text-muted-foreground">{t.venue}</span>
       </div>
       <h1 className="mb-2 font-display text-3xl text-gold">{title}</h1>
@@ -53,20 +56,20 @@ export default async function TournamentDetail({
       </p>
       <dl className="mb-8 grid grid-cols-2 gap-4 rounded-lg border border-border bg-card p-5 text-sm">
         <div>
-          <dt className="text-muted-foreground">{locale === "ar" ? "تاريخ البداية" : "Start date"}</dt>
+          <dt className="text-muted-foreground">{tp("startDate")}</dt>
           <dd>{t.start_date ? new Date(t.start_date).toLocaleDateString(locale) : "—"}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">{locale === "ar" ? "تاريخ النهاية" : "End date"}</dt>
+          <dt className="text-muted-foreground">{tp("endDate")}</dt>
           <dd>{t.end_date ? new Date(t.end_date).toLocaleDateString(locale) : "—"}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">{locale === "ar" ? "الحد الأقصى" : "Max participants"}</dt>
+          <dt className="text-muted-foreground">{tp("max")}</dt>
           <dd>{t.max_participants ?? "—"}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">{locale === "ar" ? "الرسوم" : "Fees"}</dt>
-          <dd>{Number(t.fees) > 0 ? `${t.fees} ${t.currency}` : (locale === "ar" ? "مجاني" : "Free")}</dd>
+          <dt className="text-muted-foreground">{tp("fees")}</dt>
+          <dd>{Number(t.fees) > 0 ? money(te, t.fees, t.currency) : tp("free")}</dd>
         </div>
       </dl>
 

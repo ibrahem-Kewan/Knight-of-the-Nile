@@ -1,5 +1,6 @@
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+import type { Metadata } from "next";
+import { getMessages, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { IBM_Plex_Sans_Arabic, IBM_Plex_Sans, Almarai } from "next/font/google";
 import { routing, dirFor } from "@/lib/i18n/routing";
@@ -57,6 +58,20 @@ export default async function LocaleLayout({
       </body>
     </html>
   );
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "meta" });
+  return {
+    title: { default: t("title"), template: t("titleTemplate") },
+    description: t("description"),
+    appleWebApp: { capable: true, statusBarStyle: "black", title: t("title") },
+  };
 }
 
 export function generateStaticParams() {

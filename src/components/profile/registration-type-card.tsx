@@ -13,10 +13,13 @@ export function RegistrationTypeCard({
   initialType,
   initialCoachId,
   coaches,
+  awaitingCoach = null,
 }: {
   initialType: RegType;
   initialCoachId: string;
   coaches: Coach[];
+  /** Name of the coach whose reply is pending; non-null locks the card. */
+  awaitingCoach?: string | null;
 }) {
   const t = useTranslations("auth");
   const [pending, start] = useTransition();
@@ -31,6 +34,7 @@ export function RegistrationTypeCard({
   ];
   const teamNeedsCoach = regType === "team" && !coachId;
   const unchanged = regType === initialType && (regType === "individual" || coachId === initialCoachId);
+  const locked = awaitingCoach !== null;
 
   return (
     <form
@@ -49,11 +53,21 @@ export function RegistrationTypeCard({
         <h2 className="font-semibold">{t("regTypeTitle")}</h2>
         <p className="mt-1 text-xs text-muted-foreground">{t("regTypeHint")}</p>
       </div>
-      <div role="radiogroup" aria-label={t("registrationType")} className="grid grid-cols-2 gap-3">
+      {locked && (
+        <p role="status" className="rounded-md border border-gold/40 bg-gold/10 p-3 text-sm text-foreground">
+          {t("regTypeLocked", { coach: awaitingCoach })}
+        </p>
+      )}
+      <fieldset
+        disabled={locked || pending}
+        role="radiogroup"
+        aria-label={t("registrationType")}
+        className="grid min-w-0 grid-cols-2 gap-3 disabled:opacity-60"
+      >
         {options.map((o) => (
           <label
             key={o.value}
-            className={`flex h-10 cursor-pointer items-center justify-center rounded-md border text-sm transition-colors ${
+            className={`flex h-10 items-center ${locked ? "cursor-not-allowed" : "cursor-pointer"} justify-center rounded-md border text-sm transition-colors ${
               regType === o.value
                 ? "border-gold bg-gold/10 font-medium text-gold"
                 : "border-border bg-background text-muted-foreground hover:bg-muted/60"
@@ -70,7 +84,7 @@ export function RegistrationTypeCard({
             {o.label}
           </label>
         ))}
-      </div>
+      </fieldset>
       {regType === "team" && (
         <div className="space-y-1.5">
           <Label htmlFor="coach_id_edit">{t("chooseCoachRequired")}</Label>
@@ -81,6 +95,7 @@ export function RegistrationTypeCard({
               id="coach_id_edit"
               name="coach_id"
               required
+              disabled={locked}
               value={coachId}
               onChange={(e) => setCoachId(e.target.value)}
               className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm"
@@ -96,7 +111,7 @@ export function RegistrationTypeCard({
       )}
       {msg && <p className="text-sm text-success">{msg}</p>}
       {err && <p className="text-sm text-danger">{err}</p>}
-      <Button type="submit" disabled={pending || unchanged || teamNeedsCoach}>
+      <Button type="submit" disabled={locked || pending || unchanged || teamNeedsCoach}>
         {t("regTypeSave")}
       </Button>
     </form>

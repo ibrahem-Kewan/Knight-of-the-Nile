@@ -8,8 +8,9 @@ export const loginSchema = z.object({
 export const registrationTypes = ["individual", "team"] as const;
 
 export const registerSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8, { message: "8 أحرف على الأقل" }),
+  // Normalised so "A@x.com " and "a@x.com" are the same account.
+  email: z.string().trim().toLowerCase().email(),
+  password: z.string().min(8, { message: "errPasswordShort" }),
   firstName: z.string().min(2),
   lastName: z.string().min(2),
   // 8–15 digits, optional leading +, spaces/dashes allowed in input

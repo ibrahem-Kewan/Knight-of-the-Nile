@@ -26,7 +26,7 @@ export async function submitInstapayPayment(input: {
     ref_id: input.refId || null,
     external_ref: input.externalRef.trim(),
   });
-  if (error) return { error: error.message };
+  if (error) { console.error("[payments]", error.message); return { error: "failed" }; }
   return { ok: true };
 }
 
@@ -46,7 +46,7 @@ export async function updatePaymentSettings(formData: FormData): Promise<Res> {
       updated_at: new Date().toISOString(),
     })
     .eq("id", 1);
-  if (error) return { error: error.message };
+  if (error) { console.error("[payments]", error.message); return { error: "failed" }; }
   revalidatePath("/admin/payments");
   return { ok: true };
 }
@@ -59,7 +59,7 @@ export async function markPaymentPaid(paymentId: string): Promise<Res> {
     .from("payments")
     .update({ status: "paid", paid_at: new Date().toISOString() })
     .eq("id", paymentId);
-  if (error) return { error: error.message };
+  if (error) { console.error("[payments]", error.message); return { error: "failed" }; }
   revalidatePath("/admin/payments");
   return { ok: true };
 }

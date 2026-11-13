@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
 import { createTournament } from "@/server/actions/tournaments";
 import { Button } from "@/components/ui/button";
+import { errorLabel } from "@/lib/i18n/labels";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
@@ -20,6 +21,7 @@ export function CreateTournamentForm({
   disciplines?: Discipline[];
 }) {
   const t = useTranslations("tadmin");
+  const tErr = useTranslations("errors");
   const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [pending, start] = useTransition();
@@ -46,7 +48,7 @@ export function CreateTournamentForm({
           setErr(null);
           const res = await createTournament(fd);
           if (res?.ok) setOpen(false);
-          else setErr(res?.error ?? "error");
+          else setErr(errorLabel(tErr, res?.error));
         })
       }
       className="rounded-lg border border-border bg-card p-6"

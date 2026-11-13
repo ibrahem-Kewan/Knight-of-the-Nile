@@ -73,7 +73,7 @@ export async function createTournament(formData: FormData): Promise<Res> {
     })
     .select("id")
     .single();
-  if (error) return { error: error.message };
+  if (error) { console.error("[tournaments]", error.message); return { error: "failed" }; }
 
   // Optional category (discipline) at creation.
   if (disciplineId) {
@@ -101,7 +101,7 @@ export async function setTournamentDiscipline(tournamentId: string, disciplineId
   const { error } = await supabase
     .from("tournament_disciplines")
     .insert({ tournament_id: tournamentId, discipline_id: disciplineId });
-  if (error) return { error: error.message };
+  if (error) { console.error("[tournaments]", error.message); return { error: "failed" }; }
 
   revalidatePath("/admin/tournaments");
   revalidatePath("/coach/tournaments");

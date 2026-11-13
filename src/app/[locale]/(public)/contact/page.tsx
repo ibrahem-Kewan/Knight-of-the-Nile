@@ -20,7 +20,7 @@ export default async function ContactPage() {
           </div>
           <div>
             <h3 className="text-sm font-semibold text-muted-foreground">{t("citiesLabel")}</h3>
-            <p className="mt-1 flex items-center gap-2"><MapPin className="h-4 w-4 text-gold" /> القاهرة · الأقصر · أسوان</p>
+            <p className="mt-1 flex items-center gap-2"><MapPin className="h-4 w-4 text-gold" /> {t("cities")}</p>
           </div>
           <div>
             <h3 className="text-sm font-semibold text-muted-foreground">{t("followLabel")}</h3>

@@ -1,11 +1,23 @@
+import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/lib/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { RegisterForm } from "@/components/auth/register-form";
+import { roleHome } from "@/config/roles";
 
 export default async function RegisterPage() {
   const t = await getTranslations("auth");
   const supabase = await createClient();
+
+  // One account per person: signed-in users go to their dashboard instead of registering again.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) {
+    const { data: me } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+    redirect(roleHome[(me?.role ?? "athlete") as keyof typeof roleHome] ?? "/");
+  }
+
   const { data: coachRows } = await supabase
     .from("profiles")
     .select("id, display_name, first_name_ar, last_name_ar")

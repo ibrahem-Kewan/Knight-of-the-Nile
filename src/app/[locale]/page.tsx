@@ -7,6 +7,7 @@ import { TargetTabla60, TargetFace80 } from "@/components/home/targets";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { enumLabel } from "@/lib/i18n/labels";
 import {
   Target,
   Flag,
@@ -24,7 +25,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-type Category = { key: string; icon: LucideIcon; en: string; cover: string; chips?: string[]; elite?: boolean; contain?: boolean };
+type Category = { key: string; icon: LucideIcon; cover: string; chips?: string[]; elite?: boolean; contain?: boolean };
 type CourseTeaser = { key: string; icon: LucideIcon };
 
 export default async function HomePage() {
@@ -32,6 +33,7 @@ export default async function HomePage() {
   const t = await getTranslations("home");
   const ts = await getTranslations("sports");
   const td = await getTranslations("disciplines");
+  const te = await getTranslations("enums");
   const isAr = locale === "ar";
   const Arrow = isAr ? ArrowLeft : ArrowRight;
   const supabase = await createClient();
@@ -46,12 +48,12 @@ export default async function HomePage() {
     .limit(3);
 
   const distances = [
-    { n: "01", ar: "تمهيدي", en: "Novice", m: "10m" },
-    { n: "02", ar: "ناشئين", en: "Junior", m: "20m" },
-    { n: "03", ar: "متقدم", en: "Senior", m: "25m" },
-    { n: "04", ar: "خبير", en: "Expert", m: "50m" },
-    { n: "05", ar: "أساتذة", en: "Master", m: "70m" },
-    { n: "06", ar: "أسطورة", en: "Legend", m: "100m" },
+    { n: "01", key: "novice", m: 10 },
+    { n: "02", key: "junior", m: 20 },
+    { n: "03", key: "senior", m: 25 },
+    { n: "04", key: "expert", m: 50 },
+    { n: "05", key: "master", m: 70 },
+    { n: "06", key: "legend", m: 100 },
   ];
 
   // Three official top-level categories: الفروسية (equestrian) · الرماية (archery, split
@@ -59,9 +61,9 @@ export default async function HomePage() {
   // disciplines.key in the database (supabase/seed.sql) and the "sports" / "disciplines"
   // message namespaces, so this stays in sync with the admin sports & tournament-category UI.
   const categories: Category[] = [
-    { key: "equestrian", icon: Flag, en: "Equestrian", cover: assets.covers.horse, chips: [td("jumping")] },
-    { key: "archery", icon: Target, en: "Archery", cover: assets.covers.target, chips: [td("ground_archery"), td("horseback_archery")] },
-    { key: "black_knight", icon: Shield, en: "Black Knight", cover: assets.covers.blackKnight, elite: true, contain: true },
+    { key: "equestrian", icon: Flag, cover: assets.covers.horse, chips: [td("jumping")] },
+    { key: "archery", icon: Target, cover: assets.covers.target, chips: [td("ground_archery"), td("horseback_archery")] },
+    { key: "black_knight", icon: Shield, cover: assets.covers.blackKnight, elite: true, contain: true },
   ];
 
   // Courses are not live yet: this is a teaser section only (no links, no disabled
@@ -72,14 +74,6 @@ export default async function HomePage() {
     { key: "quiz", icon: ClipboardCheck },
     { key: "cert", icon: Award },
   ];
-
-  const statusLabels: Record<string, { ar: string; en: string }> = {
-    registration_open: { ar: "التسجيل مفتوح", en: "Registration open" },
-    ongoing: { ar: "جارية", en: "Ongoing" },
-    completed: { ar: "منتهية", en: "Completed" },
-    published: { ar: "منشورة", en: "Published" },
-    registration_closed: { ar: "التسجيل مغلق", en: "Closed" },
-  };
 
   return (
     <>
@@ -127,7 +121,6 @@ export default async function HomePage() {
                   <c.icon className="h-6 w-6" />
                 </div>
                 <CardTitle className={c.elite ? "text-gold" : ""}>{ts(c.key as never)}</CardTitle>
-                <p className={`text-xs uppercase tracking-wide ${c.elite ? "text-sand/60" : "text-muted-foreground"}`}>{c.en}</p>
               </CardHeader>
               <CardContent>
                 <p className={`text-sm ${c.elite ? "text-sand/80" : "text-muted-foreground"}`}>{ts(`${c.key}Desc` as never)}</p>
@@ -165,7 +158,7 @@ export default async function HomePage() {
                     <Trophy className="h-10 w-10 text-gold" />
                   </div>
                   <CardHeader>
-                    <Badge variant="secondary" className="mb-1 w-fit">{statusLabels[tr.status]?.[isAr ? "ar" : "en"] ?? tr.status}</Badge>
+                    <Badge variant="secondary" className="mb-1 w-fit">{enumLabel(te, "tournamentStatus", tr.status)}</Badge>
                     <CardTitle className="text-lg">{isAr ? tr.title_ar : tr.title_en ?? tr.title_ar}</CardTitle>
                   </CardHeader>
                   <CardContent className="flex flex-col gap-1 text-sm text-muted-foreground">
@@ -224,8 +217,8 @@ export default async function HomePage() {
             {distances.map((d) => (
               <div key={d.n} className="rounded-lg border border-border bg-card p-5 text-center transition-colors hover:border-gold">
                 <div className="text-xs text-muted-foreground">{d.n}</div>
-                <div className="mt-1 font-medium">{isAr ? d.ar : d.en}</div>
-                <div className="mt-2 font-display text-2xl text-gold">{d.m}</div>
+                <div className="mt-1 font-medium">{t(`dist.${d.key}` as never)}</div>
+                <div className="mt-2 font-display text-2xl text-gold">{t("meters", { n: d.m })}</div>
               </div>
             ))}
           </div>
@@ -245,7 +238,7 @@ export default async function HomePage() {
               <p className="mt-4 max-w-md leading-relaxed text-muted-foreground">{t("spec60Para")}</p>
             </div>
             <div>
-              <TargetTabla60 className="mx-auto w-full max-w-[220px] sm:max-w-[260px]" />
+              <TargetTabla60 label={t("target60Aria")} className="mx-auto w-full max-w-[220px] sm:max-w-[260px]" />
             </div>
           </div>
           <div className="grid items-center gap-10 lg:grid-cols-2">
@@ -254,7 +247,7 @@ export default async function HomePage() {
               <p className="mt-4 max-w-md leading-relaxed text-muted-foreground">{t("spec80Para")}</p>
             </div>
             <div>
-              <TargetFace80 className="mx-auto w-full max-w-[220px] sm:max-w-[260px]" />
+              <TargetFace80 label={t("target80Aria")} className="mx-auto w-full max-w-[220px] sm:max-w-[260px]" />
             </div>
           </div>
         </div>
@@ -270,9 +263,9 @@ export default async function HomePage() {
             {assets.gallery.map((g) => (
               <figure key={g.src} className="group relative aspect-[3/4] overflow-hidden rounded-lg">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={g.src} alt={isAr ? g.ar : g.en} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <img src={g.src} alt={t(`gallery.${g.key}` as never)} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                 <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/90 to-transparent p-4 font-display text-gold">
-                  {isAr ? g.ar : g.en}
+                  {t(`gallery.${g.key}` as never)}
                 </figcaption>
               </figure>
             ))}

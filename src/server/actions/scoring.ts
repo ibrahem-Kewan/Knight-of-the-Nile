@@ -8,6 +8,9 @@ type Res = { ok?: boolean; error?: string };
 
 export async function finalizeResult(registrationId: string, points: number): Promise<Res> {
   const me = await requireRole(["coach", "judge", "super_admin", "admin"]);
+  if (typeof points !== "number" || !Number.isFinite(points) || points < 0) {
+    return { error: "errInvalidPoints" };
+  }
   const supabase = await createClient();
 
   const { data: reg } = await supabase
@@ -15,7 +18,7 @@ export async function finalizeResult(registrationId: string, points: number): Pr
     .select("id, tournament_id, athlete_id, discipline_id")
     .eq("id", registrationId)
     .single();
-  if (!reg) return { error: "not-found" };
+  if (!reg) return { error: "errGeneric" };
   const r = reg as { tournament_id: string; athlete_id: string; discipline_id: string };
 
   // A coach may only grade athletes who belong to them.
@@ -28,7 +31,7 @@ export async function finalizeResult(registrationId: string, points: number): Pr
       .eq("is_current", true)
       .eq("status", "active")
       .maybeSingle();
-    if (!link) return { error: "not-your-athlete" };
+    if (!link) return { error: "errForbidden" };
   }
 
   // upsert a result row for this registration
@@ -50,13 +53,18 @@ export async function finalizeResult(registrationId: string, points: number): Pr
       })
       .select("id")
       .single();
-    if (error) return { error: error.message };
+    if (error) { console.error("[scoring]", error.message); return { error: "errGeneric" }; }
     resultId = (ins as { id: string }).id;
   }
 
   // finalize -> awards ranking points + recomputes rankings (SECURITY DEFINER fn)
   const { error: rpcErr } = await supabase.rpc("approve_result", { p_result: resultId, p_points: points });
-  if (rpcErr) return { error: rpcErr.message };
+  if (rpcErr) {
+    if (rpcErr.code === "42501") return { error: "errForbidden" };
+    if (rpcErr.code === "22023") return { error: "errInvalidPoints" };
+    console.error("[scoring]", rpcErr.message);
+    return { error: "errGeneric" };
+  }
 
   revalidatePath("/judge/scoring");
   revalidatePath("/rankings");

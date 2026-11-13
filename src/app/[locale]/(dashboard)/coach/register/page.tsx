@@ -1,12 +1,11 @@
-import { getLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { CoachRegisterForm } from "@/components/coach/coach-register-form";
 
 export default async function CoachRegisterPage() {
   const me = await requireRole(["coach"]);
-  const locale = await getLocale();
-  const ar = locale === "ar";
+  const t = await getTranslations("pages.coachRegister");
   const supabase = await createClient();
 
   const { data: links } = await supabase
@@ -27,7 +26,7 @@ export default async function CoachRegisterPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-2xl text-gold">{ar ? "تسجيل متدرب في بطولة" : "Register an athlete"}</h1>
+      <h1 className="font-display text-2xl text-gold">{t("title")}</h1>
       <CoachRegisterForm
         athletes={athletes}
         tournaments={(tournaments ?? []) as any}

@@ -17,6 +17,7 @@ export function ScoreRow({
   const [points, setPoints] = useState(initialPoints != null ? String(initialPoints) : "");
   const [isFinal, setIsFinal] = useState(finalized);
   const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   return (
     <tr className="border-t border-border">
@@ -29,7 +30,13 @@ export function ScoreRow({
           onChange={(e) => setPoints(e.target.value)}
           className="h-9 w-28"
           disabled={pending}
+          aria-invalid={error ? true : undefined}
         />
+        {error && (
+          <p role="alert" className="mt-1 max-w-xs break-words text-xs text-danger">
+            {t.has(error) ? t(error) : t("errGeneric")}
+          </p>
+        )}
       </td>
       <td className="p-3">
         {isFinal ? (
@@ -40,8 +47,10 @@ export function ScoreRow({
             disabled={pending || points === ""}
             onClick={() =>
               start(async () => {
+                setError(null);
                 const res = await finalizeResult(registrationId, Number(points));
                 if (res?.ok) setIsFinal(true);
+                else setError(res?.error ?? "errGeneric");
               })
             }
           >

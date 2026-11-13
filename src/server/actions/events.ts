@@ -64,7 +64,7 @@ export async function createEvent(formData: FormData): Promise<Res> {
     status: "draft",
     created_by: me.id,
   });
-  if (error) return { error: error.message };
+  if (error) { console.error("[events]", error.message); return { error: "failed" }; }
 
   revalidatePath("/admin/events");
   revalidatePath("/coach/events");

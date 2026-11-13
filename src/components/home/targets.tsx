@@ -5,13 +5,13 @@ const GOLD = "#E3B505";
 const NAVY = "#16205C";
 const GRAY = "#D7D7D7";
 
-export function TargetTabla60({ className }: { className?: string }) {
+export function TargetTabla60({ className, label }: { className?: string; label: string }) {
   const cx = 200, cy = 200;
   const spokes = Array.from({ length: 10 }, (_, k) => (k * 360) / 10);
   const ticks = Array.from({ length: 10 }, (_, k) => (k * 360) / 10 + 18);
   const rad = (a: number) => (a * Math.PI) / 180;
   return (
-    <svg viewBox="0 0 400 400" className={className} role="img" aria-label="Target Tabla 60x60">
+    <svg viewBox="0 0 400 400" className={className} role="img" aria-label={label}>
       <circle cx={cx} cy={cy} r="196" fill={GOLD} />
       <circle cx={cx} cy={cy} r="182" fill={BLUE} />
       {/* radial gold spokes */}
@@ -42,9 +42,9 @@ export function TargetTabla60({ className }: { className?: string }) {
   );
 }
 
-export function TargetFace80({ className }: { className?: string }) {
+export function TargetFace80({ className, label }: { className?: string; label: string }) {
   return (
-    <svg viewBox="0 0 400 400" className={className} role="img" aria-label="Target face 80x80">
+    <svg viewBox="0 0 400 400" className={className} role="img" aria-label={label}>
       <rect x="8" y="8" width="384" height="384" fill="#E2231A" />
       <rect x="58" y="58" width="284" height="284" fill="#1FA64A" />
       <rect x="108" y="108" width="184" height="184" fill="#111111" />

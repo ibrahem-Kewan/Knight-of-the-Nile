@@ -12,11 +12,11 @@ export async function loginAction(_prev: ActionState, formData: FormData): Promi
     email: formData.get("email"),
     password: formData.get("password"),
   });
-  if (!parsed.success) return { error: "بيانات غير صحيحة" };
+  if (!parsed.success) return { error: "errLoginInvalid" };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
-  if (error) return { error: "فشل تسجيل الدخول. تحقق من البريد وكلمة المرور." };
+  if (error) return { error: "errLoginFailed" };
 
   const {
     data: { user },
@@ -32,6 +32,14 @@ export async function loginAction(_prev: ActionState, formData: FormData): Promi
 }
 
 export async function registerAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  // One account per person: a signed-in user cannot register again from this session.
+  {
+    const {
+      data: { user: current },
+    } = await (await createClient()).auth.getUser();
+    if (current) return { error: "errAlreadySignedIn" };
+  }
+
   const parsed = registerSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
@@ -43,7 +51,7 @@ export async function registerAction(_prev: ActionState, formData: FormData): Pr
   if (!parsed.success) {
     // No default type: the user must choose one explicitly.
     if (!formData.get("registration_type")) return { error: "errTypeRequired" };
-    return { error: "تحقق من صحة الحقول (كلمة المرور 8 أحرف على الأقل، ورقم هاتف صحيح)." };
+    return { error: "errInvalidFields" };
   }
   const isTeam = parsed.data.registrationType === "team";
 
@@ -67,7 +75,15 @@ export async function registerAction(_prev: ActionState, formData: FormData): Pr
     email: parsed.data.email,
     password: parsed.data.password,
   });
-  if (error) return { error: "تعذّر إنشاء الحساب. قد يكون البريد مستخدمًا." };
+  if (error) {
+    // The email already has an account (pending coach approval or not): no second registration.
+    if (error.code === "user_already_exists" || error.code === "email_exists" || /already registered/i.test(error.message)) {
+      return { error: "errEmailTaken" };
+    }
+    return { error: "errSignupFailed" };
+  }
+  // With email confirmation on, Supabase hides duplicates by returning a user with no identities.
+  if (data.user && (data.user.identities?.length ?? 0) === 0) return { error: "errEmailTaken" };
 
   // Update the auto-created profile with name + optional chosen coach
   if (data.user) {

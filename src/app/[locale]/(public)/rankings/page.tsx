@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 export default async function RankingsPage() {
   const locale = await getLocale();
   const t = await getTranslations("nav");
+  const tp = await getTranslations("pages.publicRankings");
+  const tt = await getTranslations("table");
   const supabase = await createClient();
 
   const { data: rows } = await supabase
@@ -18,16 +20,16 @@ export default async function RankingsPage() {
     <div className="container px-4 sm:px-6 lg:px-10 xl:px-14 py-8 sm:py-10 lg:py-12">
       <h1 className="mb-6 font-display text-3xl text-gold">{t("rankings")}</h1>
       {!rows?.length ? (
-        <p className="text-muted-foreground">لا توجد تصنيفات بعد.</p>
+        <p className="text-muted-foreground">{tp("empty")}</p>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-start">
               <tr>
                 <th className="p-3 text-start">#</th>
-                <th className="p-3 text-start">اللاعب</th>
-                <th className="p-3 text-start">الرياضة</th>
-                <th className="p-3 text-start">النقاط</th>
+                <th className="p-3 text-start">{tt("athlete")}</th>
+                <th className="p-3 text-start">{tt("sport")}</th>
+                <th className="p-3 text-start">{tt("points")}</th>
               </tr>
             </thead>
             <tbody>

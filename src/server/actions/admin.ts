@@ -26,10 +26,11 @@ function revalidate() {
 export async function approveUser(userId: string): Promise<Res> {
   const admin = await requireRole(["super_admin", "admin"]);
   const supabase = await createClient();
-  await supabase
+  const { error } = await supabase
     .from("profiles")
     .update({ status: "active", approved_by: admin.id, approved_at: new Date().toISOString() })
     .eq("id", userId);
+  if (error) return { error: "errForbidden" };
   revalidate();
   return { ok: true };
 }
@@ -37,7 +38,8 @@ export async function approveUser(userId: string): Promise<Res> {
 export async function rejectUser(userId: string): Promise<Res> {
   await requireRole(["super_admin", "admin"]);
   const supabase = await createClient();
-  await supabase.from("profiles").update({ status: "rejected" }).eq("id", userId);
+  const { error } = await supabase.from("profiles").update({ status: "rejected" }).eq("id", userId);
+  if (error) return { error: "errForbidden" };
   revalidate();
   return { ok: true };
 }
@@ -46,11 +48,12 @@ export async function rejectUser(userId: string): Promise<Res> {
 export async function setUserStatus(userId: string, status: "active" | "suspended"): Promise<Res> {
   const me = await requireRole(["super_admin", "admin"]);
   const target = await loadTarget(userId);
-  if (!target) return { error: "not found" };
+  if (!target) return { error: "not-found" };
   if (target.role === PROTECTED) return { error: "super-protected" };
   if (target.role === "admin" && me.role !== "super_admin") return { error: "super-only" };
   const supabase = await createClient();
-  await supabase.from("profiles").update({ status }).eq("id", userId);
+  const { error } = await supabase.from("profiles").update({ status }).eq("id", userId);
+  if (error) return { error: "errForbidden" };
   revalidate();
   return { ok: true };
 }
@@ -59,7 +62,7 @@ export async function setUserStatus(userId: string, status: "active" | "suspende
 export async function setUserRole(userId: string, role: Role): Promise<Res> {
   const me = await requireRole(["super_admin", "admin"]);
   const target = await loadTarget(userId);
-  if (!target) return { error: "not found" };
+  if (!target) return { error: "not-found" };
 
   // never touch a super admin
   if (target.role === PROTECTED || userId === me.id) return { error: "super-protected" };
@@ -71,7 +74,8 @@ export async function setUserRole(userId: string, role: Role): Promise<Res> {
   if (role === "super_admin") return { error: "forbidden" };
 
   const supabase = await createClient();
-  await supabase.from("profiles").update({ role }).eq("id", userId);
+  const { error } = await supabase.from("profiles").update({ role }).eq("id", userId);
+  if (error) return { error: "errForbidden" };
   revalidate();
   return { ok: true };
 }
@@ -80,7 +84,7 @@ export async function setUserRole(userId: string, role: Role): Promise<Res> {
 export async function deleteUser(userId: string): Promise<Res> {
   const me = await requireRole(["super_admin", "admin"]);
   const target = await loadTarget(userId);
-  if (!target) return { error: "not found" };
+  if (!target) return { error: "not-found" };
   if (target.role === PROTECTED) return { error: "super-protected" }; // main admin can't be deleted
   if (target.role === "admin" && me.role !== "super_admin") return { error: "super-only" };
   if (userId === me.id) return { error: "self" };
@@ -91,7 +95,11 @@ export async function deleteUser(userId: string): Promise<Res> {
   } catch {
     // fallback: soft-deactivate if service role unavailable
     const supabase = await createClient();
-    await supabase.from("profiles").update({ status: "rejected", deleted_at: new Date().toISOString() }).eq("id", userId);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ status: "rejected", deleted_at: new Date().toISOString() })
+      .eq("id", userId);
+    if (error) return { error: "errForbidden" };
   }
   revalidate();
   return { ok: true };
@@ -110,11 +118,14 @@ export async function approveRoleRequest(reqId: string): Promise<Res> {
   const r = req as { profile_id: string; requested_role: Role };
   if (r.requested_role === "admin" || r.requested_role === "super_admin") return { error: "forbidden" };
 
-  await supabase.from("profiles").update({ role: r.requested_role }).eq("id", r.profile_id);
-  await supabase
+  // DB trigger 0030 enforces who may change profiles.role; do not mark the request approved on failure.
+  const { error: roleErr } = await supabase.from("profiles").update({ role: r.requested_role }).eq("id", r.profile_id);
+  if (roleErr) return { error: "errForbidden" };
+  const { error: reqErr } = await supabase
     .from("role_requests")
     .update({ status: "approved", reviewed_by: me.id, reviewed_at: new Date().toISOString() })
     .eq("id", reqId);
+  if (reqErr) return { error: "errForbidden" };
   revalidate();
   return { ok: true };
 }

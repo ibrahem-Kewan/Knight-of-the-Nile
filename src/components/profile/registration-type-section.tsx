@@ -28,6 +28,16 @@ export async function RegistrationTypeSection({ athleteId }: { athleteId: string
   }));
   const regType = (me as any)?.registration_type === "team" ? "team" : "individual";
   const coachId = ((link as any)?.coach_id ?? (me as any)?.primary_coach_id ?? "") as string;
+  // A request still awaiting the coach's reply locks the card (server action + RLS 0029 enforce it too).
+  const awaitingCoach =
+    (link as any)?.status === "pending" ? (coaches.find((c) => c.id === coachId)?.name ?? "—") : null;
 
-  return <RegistrationTypeCard initialType={regType} initialCoachId={coachId} coaches={coaches} />;
+  return (
+    <RegistrationTypeCard
+      initialType={regType}
+      initialCoachId={coachId}
+      coaches={coaches}
+      awaitingCoach={awaitingCoach}
+    />
+  );
 }

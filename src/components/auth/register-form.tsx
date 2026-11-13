@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { useTranslations } from "next-intl";
 import { registerAction } from "@/server/actions/auth";
+import { Link } from "@/lib/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +21,7 @@ export function RegisterForm({ coaches = [] }: { coaches?: Coach[] }) {
     { value: "individual", label: t("typeIndividual") },
     { value: "team", label: t("typeTeam") },
   ];
-  const errorText = state?.error ? (t.has(state.error) ? t(state.error) : state.error) : null;
+  const errorText = state?.error ? (t.has(state.error) ? t(state.error) : t("errSignupFailed")) : null;
 
   return (
     <form action={action} className="space-y-4">
@@ -105,7 +106,19 @@ export function RegisterForm({ coaches = [] }: { coaches?: Coach[] }) {
         </div>
       )}
       <p className="rounded-md bg-muted/60 p-3 text-xs text-muted-foreground">{t("athleteNote")}</p>
-      {errorText && <p className="text-sm text-danger">{errorText}</p>}
+      {errorText && (
+        <p role="alert" className="text-sm text-danger">
+          {errorText}
+          {state?.error === "errEmailTaken" && (
+            <>
+              {" "}
+              <Link href="/login" className="font-medium text-nile underline">
+                {t("login")}
+              </Link>
+            </>
+          )}
+        </p>
+      )}
       <Button type="submit" className="w-full" size="lg" disabled={pending || (regType === "team" && coaches.length === 0)}>
         {t("register")}
       </Button>

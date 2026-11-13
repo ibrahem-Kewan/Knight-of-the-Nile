@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import {
   approveUser, rejectUser, setUserStatus, setUserRole, deleteUser,
@@ -17,7 +17,12 @@ export function UserActions({
 }) {
   const t = useTranslations("admin");
   const [pending, start] = useTransition();
-  const run = (fn: () => Promise<unknown>) => () => start(() => { void fn(); });
+  const [err, setErr] = useState<string | null>(null);
+  const exec = async (fn: () => Promise<{ ok?: boolean; error?: string }>) => {
+    const r = await fn();
+    setErr(r.error ? (t.has(r.error) ? t(r.error) : r.error) : null);
+  };
+  const run = (fn: () => Promise<{ ok?: boolean; error?: string }>) => () => start(() => exec(fn));
 
   if (role === "super_admin") {
     return <span className="text-xs text-muted-foreground">{isSelf ? t("you") : t("mainAdmin")}</span>;
@@ -57,7 +62,7 @@ export function UserActions({
           aria-label={t("role")}
           defaultValue={role}
           disabled={pending}
-          onChange={(e) => start(() => { void setUserRole(id, e.target.value as Role); })}
+          onChange={(e) => start(() => exec(() => setUserRole(id, e.target.value as Role)))}
           className="h-8 rounded-md border border-border bg-background px-2 text-xs"
         >
           <option value="athlete">{t("roleAthlete")}</option>
@@ -78,11 +83,13 @@ export function UserActions({
         </Button>
       )}
 
+      {err && <p role="alert" className="w-full text-xs text-danger break-words">{err}</p>}
+
       {/* delete */}
       {canActOnTarget && !isSelf && (
         <Button
           size="sm" variant="destructive" disabled={pending}
-          onClick={() => { if (confirm(t("confirmDelete"))) start(() => { void deleteUser(id); }); }}
+          onClick={() => { if (confirm(t("confirmDelete"))) start(() => exec(() => deleteUser(id))); }}
         >
           <Trash2 className="h-3.5 w-3.5" /> {t("delete")}
         </Button>

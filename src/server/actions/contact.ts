@@ -18,7 +18,7 @@ export async function sendContact(_prev: ContactState, formData: FormData): Prom
     subject: formData.get("subject"),
     message: formData.get("message"),
   });
-  if (!parsed.success) return { error: "تحقق من صحة الحقول" };
+  if (!parsed.success) return { error: "errInvalid" };
 
   // TODO: wire to email provider / contact_messages table later.
   console.log("[contact]", parsed.data);

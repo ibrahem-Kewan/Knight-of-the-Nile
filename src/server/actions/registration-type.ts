@@ -1,5 +1,7 @@
 "use server";
 
+// Note: this file never sends role/status/approved_*/deleted_at/created_by; DB trigger 0030 enforces it.
+
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth/session";
@@ -15,6 +17,17 @@ export async function changeRegistrationType(formData: FormData): Promise<Res> {
   const supabase = await createClient();
   const today = new Date().toISOString().slice(0, 10);
 
+  // A coach request awaiting a reply locks the registration: no new request, no coach change,
+  // no switch to individual until the coach approves or rejects it (RLS 0029 enforces the same).
+  const { data: openRequest } = await supabase
+    .from("coach_athletes")
+    .select("id")
+    .eq("athlete_id", me.id)
+    .eq("status", "pending")
+    .limit(1)
+    .maybeSingle();
+  if (openRequest) return { error: "errPendingCoach" };
+
   if (type === "individual") {
     const { error } = await supabase
       .from("profiles")
@@ -26,7 +39,7 @@ export async function changeRegistrationType(formData: FormData): Promise<Res> {
       .from("coach_athletes")
       .update({ is_current: false, status: "ended", ended_at: today })
       .eq("athlete_id", me.id)
-      .in("status", ["pending", "active"]);
+      .eq("status", "active");
   } else {
     const coachId = String(formData.get("coach_id") || "").trim();
     if (!coachId) return { error: "errCoachRequired" };
@@ -45,15 +58,15 @@ export async function changeRegistrationType(formData: FormData): Promise<Res> {
       .update({ is_current: false, status: "ended", ended_at: today })
       .eq("athlete_id", me.id)
       .neq("coach_id", coachId)
-      .in("status", ["pending", "active"]);
+      .eq("status", "active");
 
-    // Keep an existing pending/active link to the same coach; otherwise request a new one.
+    // Keep an existing active link to the same coach; otherwise request a new one.
     const { data: existing } = await supabase
       .from("coach_athletes")
       .select("id")
       .eq("athlete_id", me.id)
       .eq("coach_id", coachId)
-      .in("status", ["pending", "active"])
+      .eq("status", "active")
       .limit(1)
       .maybeSingle();
     if (!existing) {
@@ -65,13 +78,19 @@ export async function changeRegistrationType(formData: FormData): Promise<Res> {
       });
       if (insErr) {
         if (insErr.code !== "23505") return { error: "errGeneric" };
-        // Same-day link already exists (unique coach/athlete/started_at): reopen it as pending.
-        await supabase
+        // Same-day link already exists (unique coach/athlete/started_at), already answered
+        // (rejected/ended): reopen it as a new pending request.
+        const { data: reopened, error: reErr } = await supabase
           .from("coach_athletes")
           .update({ status: "pending", is_current: false, ended_at: null })
           .eq("athlete_id", me.id)
           .eq("coach_id", coachId)
-          .eq("started_at", today);
+          .eq("started_at", today)
+          .neq("status", "pending")
+          .select("id");
+        // Nothing reopened = a pending request already exists (e.g. double submit).
+        if (reErr && reErr.code !== "23505") return { error: "errGeneric" };
+        if (reErr || !reopened?.length) return { error: "errPendingCoach" };
       }
     }
 

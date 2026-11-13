@@ -1,10 +1,10 @@
-export function HeroArt({ className }: { className?: string }) {
+export function HeroArt({ className, label }: { className?: string; label: string }) {
   return (
     <svg
       viewBox="0 0 520 420"
       className={className}
       role="img"
-      aria-label="فارس النيل"
+      aria-label={label}
       xmlns="http://www.w3.org/2000/svg"
     >
       <defs>

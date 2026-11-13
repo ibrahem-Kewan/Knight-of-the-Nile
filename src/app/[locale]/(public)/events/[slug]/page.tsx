@@ -1,4 +1,5 @@
 import { getLocale, getTranslations } from "next-intl/server";
+import { money } from "@/lib/i18n/labels";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/auth/session";
@@ -13,6 +14,7 @@ export default async function EventDetail({ params }: { params: Promise<{ slug: 
   const locale = await getLocale();
   const t = await getTranslations("events");
   const ck = await getTranslations("checkout");
+  const te = await getTranslations("enums");
   const supabase = await createClient();
 
   const { data: e } = await supabase
@@ -52,7 +54,7 @@ export default async function EventDetail({ params }: { params: Promise<{ slug: 
         </div>
         <div>
           <dt className="text-muted-foreground">{t("fees")}</dt>
-          <dd>{Number(e.fees) > 0 ? `${e.fees} ${e.currency}` : t("free")}</dd>
+          <dd>{Number(e.fees) > 0 ? money(te, e.fees, e.currency) : t("free")}</dd>
         </div>
       </dl>
 

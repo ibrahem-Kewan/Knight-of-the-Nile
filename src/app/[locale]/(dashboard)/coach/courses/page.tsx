@@ -1,4 +1,5 @@
 import { getLocale, getTranslations } from "next-intl/server";
+import { money } from "@/lib/i18n/labels";
 import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +12,7 @@ export default async function CoachCoursesPage() {
   const locale = await getLocale();
   const ar = locale === "ar";
   const t = await getTranslations("courses");
+  const te = await getTranslations("enums");
   const supabase = await createClient();
 
   const [{ data: sports }, { data: courses }] = await Promise.all([
@@ -33,7 +35,7 @@ export default async function CoachCoursesPage() {
               <CardContent className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Badge variant={c.status === "published" ? "success" : "secondary"}>{t(`st_${c.status}` as never)}</Badge>
-                  <span className="text-sm">{Number(c.price) > 0 ? `${c.price} ${c.currency}` : t("free")}</span>
+                  <span className="text-sm">{Number(c.price) > 0 ? money(te, c.price, c.currency) : t("free")}</span>
                 </div>
                 <CourseStatusButton id={c.id} status={c.status} />
               </CardContent>

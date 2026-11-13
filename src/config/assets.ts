@@ -10,11 +10,12 @@ import blackKnightImg from "@/assets/branding/black-knight.jpg";
 export const assets = {
   logo: logoImg.src,
   hero: horseArcherImg.src,
+  // Captions live in messages/*.json under home.gallery.<key>.
   gallery: [
-    { src: galleryMorningImg.src, ar: "تدريب الفجر", en: "Morning Drill" },
-    { src: galleryPrecisionImg.src, ar: "الدقة", en: "Precision" },
-    { src: galleryGearImg.src, ar: "العتاد", en: "Heritage Gear" },
-    { src: horseArcherImg.src, ar: "الانطلاق", en: "The Charge" },
+    { src: galleryMorningImg.src, key: "morning" },
+    { src: galleryPrecisionImg.src, key: "precision" },
+    { src: galleryGearImg.src, key: "gear" },
+    { src: horseArcherImg.src, key: "charge" },
   ],
   // Category cover images (Arabic-themed, real project photos).
   covers: {

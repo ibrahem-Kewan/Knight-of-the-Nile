@@ -21,7 +21,9 @@ export function LoginForm() {
         <Label htmlFor="password">{t("password")}</Label>
         <Input id="password" name="password" type="password" required autoComplete="current-password" placeholder="••••••••" />
       </div>
-      {state?.error && <p className="text-sm text-danger">{state.error}</p>}
+      {state?.error && (
+        <p className="text-sm text-danger">{t.has(state.error) ? t(state.error as never) : t("errLoginFailed")}</p>
+      )}
       <Button type="submit" className="w-full" size="lg" disabled={pending}>
         {t("login")}
       </Button>

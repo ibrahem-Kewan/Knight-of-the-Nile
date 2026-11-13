@@ -11,6 +11,7 @@ const statusKey: Record<string, string> = {
   ongoing: "stOngoing",
   completed: "stCompleted",
   published: "stPublished",
+  cancelled: "stCancelled",
 };
 
 export default async function TournamentsPage() {

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default async function NewsPage() {
   const locale = await getLocale();
   const t = await getTranslations("nav");
+  const tp = await getTranslations("pages.publicNews");
   const supabase = await createClient();
 
   const { data: posts } = await supabase
@@ -18,7 +19,7 @@ export default async function NewsPage() {
     <div className="container px-4 sm:px-6 lg:px-10 xl:px-14 py-8 sm:py-10 lg:py-12">
       <h1 className="mb-6 font-display text-3xl text-gold">{t("news")}</h1>
       {!posts?.length ? (
-        <p className="text-muted-foreground">لا توجد منشورات بعد.</p>
+        <p className="text-muted-foreground">{tp("empty")}</p>
       ) : (
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {posts.map((p) => (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import * as Dialog from "@radix-ui/react-dialog";
 import { ChevronDown, X } from "lucide-react";
 import type { NavItem } from "@/config/navigation";
@@ -14,13 +14,13 @@ import { DashboardNavList, navIcon, useActiveNavItem } from "@/components/layout
 export function DashboardMobileNav({ items }: { items: NavItem[] }) {
   const t = useTranslations("dash");
   const tn = useTranslations("nav");
-  const locale = useLocale();
+  const tl = useTranslations("dashNav");
   const [open, setOpen] = useState(false);
   const current = useActiveNavItem(items);
 
   if (!items.length) return null;
   const CurrentIcon = navIcon(current.icon);
-  const currentLabel = locale === "ar" ? current.labelAr : current.labelEn;
+  const currentLabel = tl(current.labelKey as never);
 
   return (
     <div className="sticky top-16 z-30 border-b border-border bg-background/90 px-4 py-2 backdrop-blur lg:hidden">

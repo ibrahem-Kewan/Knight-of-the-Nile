@@ -1,5 +1,7 @@
 "use server";
 
+// Note: this file never sends role/status/approved_*/deleted_at/created_by; DB trigger 0030 enforces it.
+
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireAuth } from "@/lib/auth/session";
@@ -48,13 +50,13 @@ export async function updateMyProfile(formData: FormData): Promise<Res> {
       social,
     })
     .eq("id", me.id);
-  if (error) return { error: error.message };
+  if (error) { console.error("[profile]", error.message); return { error: "failed" }; }
 
   // Optional login-email change (triggers Supabase confirmation email).
   const email = str(formData, "email");
   if (email && email !== me.email) {
     const { error: authErr } = await supabase.auth.updateUser({ email });
-    if (authErr) return { error: authErr.message };
+    if (authErr) { console.error("[profile]", authErr.message); return { error: "failed" }; }
     await supabase.from("profiles").update({ email }).eq("id", me.id);
   }
 
@@ -71,6 +73,6 @@ export async function changeMyPassword(formData: FormData): Promise<Res> {
 
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ password: pw });
-  if (error) return { error: error.message };
+  if (error) { console.error("[profile]", error.message); return { error: "failed" }; }
   return { ok: true };
 }

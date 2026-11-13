@@ -1,4 +1,5 @@
-import { getLocale, getTranslations } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
+import { enumLabel, money } from "@/lib/i18n/labels";
 import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { PaymentSettingsForm } from "@/components/admin/payment-settings-form";
@@ -7,8 +8,8 @@ import { Badge } from "@/components/ui/badge";
 
 export default async function AdminPaymentsPage() {
   await requireRole(["super_admin", "admin"]);
-  const locale = await getLocale();
   const t = await getTranslations("payadmin");
+  const te = await getTranslations("enums");
   const supabase = await createClient();
 
   const [{ data: settings }, { data: payments }] = await Promise.all([
@@ -45,10 +46,10 @@ export default async function AdminPaymentsPage() {
                 {payments.map((p: any) => (
                   <tr key={p.id} className="border-t border-border">
                     <td className="p-3">{p.profiles?.display_name ?? p.profiles?.email ?? "—"}</td>
-                    <td className="p-3 text-muted-foreground">{p.context}</td>
-                    <td className="p-3">{Number(p.amount)} {p.currency}</td>
+                    <td className="p-3 text-muted-foreground">{enumLabel(te, "context", p.context)}</td>
+                    <td className="p-3">{money(te, p.amount, p.currency)}</td>
                     <td className="p-3 text-muted-foreground" dir="ltr">{p.external_ref ?? "—"}</td>
-                    <td className="p-3"><Badge variant={p.status === "paid" ? "success" : "secondary"}>{t(`st_${p.status}` as never)}</Badge></td>
+                    <td className="p-3"><Badge variant={p.status === "paid" ? "success" : "secondary"}>{enumLabel(te, "status", p.status)}</Badge></td>
                     <td className="p-3">{p.status !== "paid" && <MarkPaidButton id={p.id} />}</td>
                   </tr>
                 ))}

@@ -42,7 +42,7 @@ export async function createCourse(formData: FormData): Promise<Res> {
     certificate_enabled: String(formData.get("certificate_enabled") || "") === "on",
     status: "draft",
   });
-  if (error) return { error: error.message };
+  if (error) { console.error("[courses]", error.message); return { error: "failed" }; }
 
   revalidatePath("/coach/courses");
   revalidatePath("/admin/courses");
@@ -53,7 +53,7 @@ export async function setCourseStatus(id: string, status: string): Promise<Res> 
   await requireRole(CREATOR_ROLES);
   const supabase = await createClient();
   const { error } = await supabase.from("courses").update({ status }).eq("id", id);
-  if (error) return { error: error.message };
+  if (error) { console.error("[courses]", error.message); return { error: "failed" }; }
   revalidatePath("/coach/courses");
   revalidatePath("/courses");
   return { ok: true };

@@ -1,4 +1,5 @@
 import { getLocale, getTranslations } from "next-intl/server";
+import { money } from "@/lib/i18n/labels";
 import { createClient } from "@/lib/supabase/server";
 import { Link } from "@/lib/i18n/navigation";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ export default async function CoursesPage() {
   const locale = await getLocale();
   const nav = await getTranslations("nav");
   const t = await getTranslations("courses");
+  const te = await getTranslations("enums");
   const supabase = await createClient();
 
   const { data: courses } = await supabase
@@ -34,7 +36,7 @@ export default async function CoursesPage() {
                 </CardHeader>
                 <CardContent className="mt-auto space-y-3 text-sm">
                   <div className="flex items-center justify-between">
-                    <Badge>{paid ? `${c.price} ${c.currency}` : t("free")}</Badge>
+                    <Badge>{paid ? money(te, c.price, c.currency) : t("free")}</Badge>
                     {c.level && <span className="text-muted-foreground">{c.level}</span>}
                   </div>
                   {paid && (

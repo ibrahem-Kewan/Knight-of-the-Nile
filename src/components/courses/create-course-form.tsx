@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { createCourse } from "@/server/actions/courses";
 import { Button } from "@/components/ui/button";
+import { errorLabel } from "@/lib/i18n/labels";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
@@ -12,6 +13,7 @@ type Sport = { id: string; name_ar: string; name_en: string };
 
 export function CreateCourseForm({ sports = [] }: { sports?: Sport[] }) {
   const t = useTranslations("courses");
+  const tErr = useTranslations("errors");
   const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [pending, start] = useTransition();
@@ -32,7 +34,7 @@ export function CreateCourseForm({ sports = [] }: { sports?: Sport[] }) {
           setErr(null);
           const res = await createCourse(fd);
           if (res?.ok) setOpen(false);
-          else setErr(res?.error ?? "error");
+          else setErr(errorLabel(tErr, res?.error));
         })
       }
       className="rounded-lg border border-border bg-card p-6"

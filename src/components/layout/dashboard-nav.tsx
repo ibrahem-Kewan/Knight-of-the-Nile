@@ -1,10 +1,10 @@
 "use client";
 
-import { useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import {
-  AlertTriangle, Award, CalendarDays, CheckCircle, Circle, ClipboardList, Crosshair, Globe,
-  GraduationCap, IdCard, LayoutDashboard, ListChecks, Medal, Newspaper, ScrollText, Target,
-  Trophy, UserCog, Users, Wallet, type LucideIcon,
+  AlertTriangle, Award, CalendarDays, CheckCircle, Circle, ClipboardList, Crosshair, Dumbbell, Globe,
+  GraduationCap, IdCard, LayoutDashboard, ListChecks, MapPin, Medal, Newspaper, ScrollText, Target,
+  Trophy, UserCog, Users, UsersRound, Wallet, type LucideIcon,
 } from "lucide-react";
 import { usePathname, Link } from "@/lib/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -12,8 +12,8 @@ import type { NavItem } from "@/config/navigation";
 
 // Explicit icon map (instead of `import * as Icons`) keeps the client bundle small.
 const ICONS: Record<string, LucideIcon> = {
-  AlertTriangle, Award, CalendarDays, CheckCircle, ClipboardList, Crosshair, Globe, GraduationCap,
-  IdCard, LayoutDashboard, ListChecks, Medal, Newspaper, ScrollText, Target, Trophy, UserCog, Users, Wallet,
+  AlertTriangle, Award, CalendarDays, CheckCircle, ClipboardList, Crosshair, Dumbbell, Globe, GraduationCap,
+  IdCard, LayoutDashboard, ListChecks, MapPin, Medal, Newspaper, ScrollText, Target, Trophy, UserCog, Users, UsersRound, Wallet,
 };
 
 export const navIcon = (name: string): LucideIcon => ICONS[name] ?? Circle;
@@ -39,7 +39,7 @@ export function DashboardNavList({
   onNavigate?: () => void;
   className?: string;
 }) {
-  const locale = useLocale();
+  const t = useTranslations("dashNav");
   const pathname = usePathname();
 
   return (
@@ -59,7 +59,7 @@ export function DashboardNavList({
               )}
             >
               <Icon className="h-4 w-4 shrink-0" aria-hidden />
-              <span className="truncate">{locale === "ar" ? item.labelAr : item.labelEn}</span>
+              <span className="truncate">{t(item.labelKey as never)}</span>
             </Link>
           </li>
         );
