@@ -230,7 +230,9 @@
         "resetLinkInvalidTitle": "Invalid reset link",
         "resetLinkInvalid": "This password reset link is invalid, has expired or was already used. Please request a new one.",
         "requestNewLink": "Request a new link",
-        "passwordResetDone": "Your password has been changed. Log in with your new password."
+        "passwordResetDone": "Your password has been changed. Log in with your new password.",
+        "errDbOutdated": "Saving failed because the database needs an update. Please contact the site admin.",
+        "errForbidden": "You are not allowed to do this"
     },
     "footer": {
         "tagline": "The Arabic and global reference for archery, horseback archery and equestrian.",
