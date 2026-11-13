@@ -2,6 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { enumLabel } from "@/lib/i18n/labels";
 import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { isPendingDeletion } from "@/lib/content/state";
 import { Badge } from "@/components/ui/badge";
 import { PostModerate } from "@/components/admin/post-moderate";
 import { PostEditForm } from "@/components/content/post-edit-form";
@@ -18,7 +19,7 @@ export default async function AdminNewsPage() {
   const supabase = await createClient();
   const { data: posts } = await supabase
     .from("posts")
-    .select("id, title_ar, title_en, type, status, created_at, deletion_requested_at, profiles(display_name)")
+    .select("*, profiles(display_name)")
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(100);
@@ -40,7 +41,7 @@ export default async function AdminNewsPage() {
             <tbody>
               {posts.map((p: any) => {
                 const title = ar ? p.title_ar : p.title_en ?? p.title_ar;
-                const pendingDelete = !!p.deletion_requested_at;
+                const pendingDelete = isPendingDeletion(p);
                 return (
                   <tr key={p.id} className="border-t border-border align-top">
                     <td className="p-3 font-medium">

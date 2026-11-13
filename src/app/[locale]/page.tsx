@@ -1,6 +1,7 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/lib/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { withoutPendingDeletion } from "@/lib/content/state";
 import { getProfile } from "@/lib/auth/session";
 import { assets } from "@/config/assets";
 import { TargetTabla60, TargetFace80 } from "@/components/home/targets";
@@ -40,14 +41,16 @@ export default async function HomePage() {
   const profile = await getProfile();
   const isLoggedIn = Boolean(profile);
 
-  const { data: tournaments } = await supabase
+  // Featured: take a few extra, drop pending deletions in JS (works before migration 0039), keep 3.
+  const { data: tournamentRows, error: tournamentsError } = await supabase
     .from("tournaments")
-    .select("id, slug, title_ar, title_en, status, start_date, venue")
+    .select("*")
     .neq("status", "draft")
     .is("deleted_at", null)
-    .is("deletion_requested_at", null)
     .order("start_date", { ascending: false })
-    .limit(3);
+    .limit(6);
+  if (tournamentsError) console.error("[home]", tournamentsError.message);
+  const tournaments = withoutPendingDeletion(tournamentRows).slice(0, 3);
 
   const distances = [
     { n: "01", key: "novice", m: 10 },

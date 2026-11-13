@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { withoutPendingDeletion } from "@/lib/content/state";
 import { CoachRegisterForm } from "@/components/coach/coach-register-form";
 
 export default async function CoachRegisterPage() {
@@ -14,10 +15,11 @@ export default async function CoachRegisterPage() {
     .eq("coach_id", me.id).eq("is_current", true);
   const athletes = (links ?? []).map((l: any) => ({ id: l.athlete_id, name: l.profiles?.display_name ?? "—" }));
 
-  const { data: tournaments } = await supabase
+  const { data: tournamentRows } = await supabase
     .from("tournaments")
-    .select("id, title_ar, title_en, sport_id")
-    .eq("status", "registration_open").is("deleted_at", null).is("deletion_requested_at", null);
+    .select("*")
+    .eq("status", "registration_open").is("deleted_at", null);
+  const tournaments = withoutPendingDeletion(tournamentRows);
 
   const { data: disciplines } = await supabase
     .from("disciplines")

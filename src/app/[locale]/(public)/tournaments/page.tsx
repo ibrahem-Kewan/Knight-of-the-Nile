@@ -1,5 +1,6 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
+import { withoutPendingDeletion } from "@/lib/content/state";
 import { Link } from "@/lib/i18n/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,14 +21,15 @@ export default async function TournamentsPage() {
   const tt = await getTranslations("tadmin");
   const supabase = await createClient();
 
-  const { data: tournaments } = await supabase
+  const { data: tournamentsRows, error: tournamentsError } = await supabase
     .from("tournaments")
-    .select("id, slug, title_ar, title_en, status, start_date, venue, cover_url")
+    .select("*")
     .neq("status", "draft")
     .is("deleted_at", null)
-    .is("deletion_requested_at", null)
     .order("start_date", { ascending: false })
     .limit(50);
+  if (tournamentsError) console.error("[tournaments]", tournamentsError.message);
+  const tournaments = withoutPendingDeletion(tournamentsRows);
 
   return (
     <div className="container px-4 sm:px-6 lg:px-10 xl:px-14 py-8 sm:py-10 lg:py-12">

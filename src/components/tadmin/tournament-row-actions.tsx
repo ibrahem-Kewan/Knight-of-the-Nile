@@ -2,10 +2,9 @@
 
 import { useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { setTournamentStatus, assignJudge, setTournamentDiscipline } from "@/server/actions/tournaments";
+import { setTournamentStatus, setTournamentDiscipline } from "@/server/actions/tournaments";
 import { Button } from "@/components/ui/button";
 
-type Judge = { id: string; name: string };
 type Discipline = { id: string; sport_id: string; name_ar: string; name_en: string };
 
 const NEXT: Record<string, { to: string; key: string }[]> = {
@@ -19,14 +18,12 @@ const NEXT: Record<string, { to: string; key: string }[]> = {
 export function TournamentRowActions({
   id,
   status,
-  judges,
   sportId,
   disciplines = [],
   currentDisciplineId = "",
 }: {
   id: string;
   status: string;
-  judges: Judge[];
   sportId?: string;
   disciplines?: Discipline[];
   currentDisciplineId?: string;
@@ -58,17 +55,6 @@ export function TournamentRowActions({
           ))}
         </select>
       )}
-      <select
-        defaultValue=""
-        disabled={pending}
-        onChange={(e) => { if (e.target.value) start(() => { void assignJudge(id, e.target.value); }); }}
-        className="h-8 rounded-md border border-border bg-background px-2 text-xs"
-      >
-        <option value="">{t("assignJudge")}</option>
-        {judges.map((j) => (
-          <option key={j.id} value={j.id}>{j.name}</option>
-        ))}
-      </select>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { enumLabel } from "@/lib/i18n/labels";
 import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { withoutPendingDeletion } from "@/lib/content/state";
 import { Badge } from "@/components/ui/badge";
 import { PostEditForm } from "@/components/content/post-edit-form";
 import { ContentDeleteButton } from "@/components/shared/content-delete-button";
@@ -14,11 +15,12 @@ export default async function CoachPostsPage() {
   const tt = await getTranslations("table");
   const te = await getTranslations("enums");
   const supabase = await createClient();
-  const { data: posts } = await supabase
-    .from("posts").select("id, title_ar, title_en, status, type, created_at").eq("author_id", me.id)
+  const { data: postRows, error } = await supabase
+    .from("posts").select("*").eq("author_id", me.id)
     .is("deleted_at", null)
-    .is("deletion_requested_at", null)
     .order("created_at", { ascending: false });
+  if (error) console.error("[coach/posts]", error.message);
+  const posts = withoutPendingDeletion(postRows);
 
   return (
     <div className="space-y-6">

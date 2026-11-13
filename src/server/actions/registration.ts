@@ -16,7 +16,7 @@ export async function registerToTournament(tournamentId: string, disciplineId: s
 
   const { data: tour } = await supabase
     .from("tournaments")
-    .select("status, audience, created_by, deleted_at, deletion_requested_at")
+    .select("*")
     .eq("id", tournamentId)
     .single();
   if (!tour) return { error: "closed" };
@@ -26,6 +26,13 @@ export async function registerToTournament(tournamentId: string, disciplineId: s
   };
   // Deleted or pending-deletion tournaments accept no new registrations (PR-11).
   if (tt.deleted_at || tt.deletion_requested_at || tt.status !== "registration_open") return { error: "closed" };
+
+  // Branch-local tournament (PR-12): only current members of that branch's groups. DB trigger 0040 re-checks.
+  const branchId = (tour as { branch_id?: string | null }).branch_id;
+  if (branchId) {
+    const { data: inBranch } = await supabase.rpc("is_branch_athlete", { b: branchId, a: me.id });
+    if (!inBranch) return { error: "not-branch-athlete" };
+  }
 
   // Coach-scoped tournaments: only the creating coach's own athletes may register.
   if (tt.audience === "coach_athletes" && tt.created_by) {

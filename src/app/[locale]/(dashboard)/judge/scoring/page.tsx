@@ -40,7 +40,7 @@ export default async function ScoringPage() {
   const { data: regs } = ids.length
     ? await supabase
         .from("tournament_registrations")
-        .select("id, tournament_id, status, profiles(display_name, first_name_ar, last_name_ar), disciplines(name_ar, name_en)")
+        .select("id, tournament_id, status, profiles!tournament_registrations_athlete_id_fkey(display_name, first_name_ar, last_name_ar), disciplines(name_ar, name_en)")
         .in("tournament_id", ids)
         .neq("status", "rejected")
     : { data: [] as any[] };

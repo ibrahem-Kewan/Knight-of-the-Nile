@@ -65,12 +65,19 @@ export async function coachRegisterAthlete(
 
   const { data: tour } = await supabase
     .from("tournaments")
-    .select("status, deleted_at, deletion_requested_at")
+    .select("*")
     .eq("id", tournamentId)
     .single();
   const tt = tour as { status: string; deleted_at: string | null; deletion_requested_at: string | null } | null;
   // Deleted or pending-deletion tournaments accept no new registrations (PR-11).
   if (!tt || tt.deleted_at || tt.deletion_requested_at || tt.status !== "registration_open") return { error: "closed" };
+
+  // Branch-local tournament (PR-12): only current members of that branch's groups. DB trigger 0040 re-checks.
+  const branchId = (tour as { branch_id?: string | null }).branch_id;
+  if (branchId) {
+    const { data: inBranch } = await supabase.rpc("is_branch_athlete", { b: branchId, a: athleteId });
+    if (!inBranch) return { error: "not-branch-athlete" };
+  }
 
   const { error } = await supabase.from("tournament_registrations").insert({
     tournament_id: tournamentId,

@@ -10,7 +10,7 @@ export default async function AdminTournamentsPage() {
   const supabase = await createClient();
 
   // Admin manages every tournament (incl. ones waiting for deletion approval — shown with a badge).
-  const [{ data: sports }, { data: disciplines }, { data: tournaments }, { data: judges }] = await Promise.all([
+  const [{ data: sports }, { data: disciplines }, { data: tournaments }, { data: judges }, { data: coachRows }] = await Promise.all([
     supabase.from("sports").select("id, name_ar, name_en").eq("is_active", true).order("sort_order"),
     supabase.from("disciplines").select("id, sport_id, name_ar, name_en").eq("is_active", true),
     supabase
@@ -19,9 +19,11 @@ export default async function AdminTournamentsPage() {
       .is("deleted_at", null)
       .order("created_at", { ascending: false }),
     supabase.from("profiles").select("id, display_name, first_name_ar").eq("role", "judge").eq("status", "active"),
+    supabase.from("profiles").select("id, display_name, first_name_ar").eq("role", "coach").eq("status", "active"),
   ]);
 
   const judgeList = (judges ?? []).map((j: any) => ({ id: j.id, name: j.display_name ?? j.first_name_ar ?? "—" }));
+  const coachList = (coachRows ?? []).map((c: any) => ({ id: c.id, name: c.display_name ?? c.first_name_ar ?? "—" }));
   const disc = (disciplines ?? []) as any[];
 
   return (
@@ -35,7 +37,7 @@ export default async function AdminTournamentsPage() {
       {!tournaments?.length ? (
         <p className="text-muted-foreground">{t("noTournaments")}</p>
       ) : (
-        <TournamentsTable tournaments={tournaments} sports={(sports ?? []) as any} disciplines={disc} judges={judgeList} />
+        <TournamentsTable tournaments={tournaments} sports={(sports ?? []) as any} disciplines={disc} judgeCandidates={judgeList} coachCandidates={coachList} />
       )}
     </div>
   );

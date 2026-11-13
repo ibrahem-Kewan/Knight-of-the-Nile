@@ -2,13 +2,14 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { money } from "@/lib/i18n/labels";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { isPendingDeletion } from "@/lib/content/state";
 import { CreateCourseForm } from "@/components/courses/create-course-form";
 import { CourseStatusButton } from "@/components/courses/course-status-button";
 import { ContentDeleteButton } from "@/components/shared/content-delete-button";
 
 /** Columns every courses manage page must select (incl. edit-form values). */
-export const COURSE_MANAGE_COLUMNS =
-  "id, owner_id, title_ar, title_en, status, price, currency, sport_id, level, certificate_enabled, description, deletion_requested_at";
+// `*` so the page works before migration 0039 — see src/lib/content/state.ts.
+export const COURSE_MANAGE_COLUMNS = "*";
 
 type Sport = { id: string; name_ar: string; name_en: string };
 
@@ -18,7 +19,6 @@ export async function CoursesGrid({
   sports,
   owners,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   courses: any[];
   sports: Sport[];
   owners?: Record<string, string>;
@@ -33,7 +33,7 @@ export async function CoursesGrid({
     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {courses.map((c) => {
         const title = ar ? c.title_ar : c.title_en ?? c.title_ar;
-        const pendingDelete = !!c.deletion_requested_at;
+        const pendingDelete = isPendingDeletion(c);
         return (
           <Card key={c.id} className="flex flex-col">
             <CardHeader className="space-y-1">

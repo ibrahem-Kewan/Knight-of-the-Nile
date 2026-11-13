@@ -21,17 +21,17 @@ export async function finalizeResult(registrationId: string, points: number): Pr
   if (!reg) return { error: "errGeneric" };
   const r = reg as { tournament_id: string; athlete_id: string; discipline_id: string };
 
-  // A coach may only grade athletes who belong to them.
+  // A coach judges only tournaments where he is judging staff — his own branch-local tournaments
+  // or ones he was added to (PR-12). DB: results_coach_judge_write + approve_result (0040).
   if (me.role === "coach") {
-    const { data: link } = await supabase
-      .from("coach_athletes")
+    const { data: staff } = await supabase
+      .from("tournament_staff")
       .select("id")
-      .eq("coach_id", me.id)
-      .eq("athlete_id", r.athlete_id)
-      .eq("is_current", true)
-      .eq("status", "active")
+      .eq("tournament_id", r.tournament_id)
+      .eq("profile_id", me.id)
+      .in("role_in_tournament", ["judge", "scorer"])
       .maybeSingle();
-    if (!link) return { error: "errForbidden" };
+    if (!staff) return { error: "errForbidden" };
   }
 
   // upsert a result row for this registration
@@ -67,6 +67,7 @@ export async function finalizeResult(registrationId: string, points: number): Pr
   }
 
   revalidatePath("/judge/scoring");
+  revalidatePath("/coach/scoring");
   revalidatePath("/rankings");
   return { ok: true };
 }

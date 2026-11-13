@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { withoutPendingDeletion } from "@/lib/content/state";
 import { EventsManager, EVENT_MANAGE_COLUMNS } from "@/components/events/events-manager";
 
 export default async function CoachEventsPage() {
@@ -13,9 +14,8 @@ export default async function CoachEventsPage() {
       .select(EVENT_MANAGE_COLUMNS)
       .eq("created_by", me.id)
       .is("deleted_at", null)
-      .is("deletion_requested_at", null)
       .order("created_at", { ascending: false }),
   ]);
 
-  return <EventsManager sports={(sports ?? []) as any} events={(events ?? []) as any} />;
+  return <EventsManager sports={(sports ?? []) as any} events={withoutPendingDeletion(events) as any} />;
 }

@@ -11,24 +11,25 @@ export default async function CoachScoringPage() {
   const t = await getTranslations("scoring");
   const supabase = await createClient();
 
-  // The coach's own (approved) athletes.
-  const { data: links } = await supabase
-    .from("coach_athletes")
-    .select("athlete_id")
-    .eq("coach_id", me.id)
-    .eq("is_current", true)
-    .eq("status", "active");
-  const athleteIds = (links ?? []).map((l: any) => l.athlete_id);
+  // PR-12: the coach judges only tournaments where he is judging staff (his own branch-local
+  // tournaments are assigned automatically; other coaches can add him). All registrants there.
+  const { data: staff } = await supabase
+    .from("tournament_staff")
+    .select("tournament_id")
+    .eq("profile_id", me.id)
+    .in("role_in_tournament", ["judge", "scorer"]);
+  const judgedIds = [...new Set((staff ?? []).map((s: any) => s.tournament_id as string))];
 
-  const { data: regs } = athleteIds.length
+  const { data: regs, error } = judgedIds.length
     ? await supabase
         .from("tournament_registrations")
-        .select("id, tournament_id, athlete_id, profiles(display_name, first_name_ar, last_name_ar), disciplines(name_ar, name_en), tournaments(title_ar, title_en, status)")
-        .in("athlete_id", athleteIds)
+        .select("id, tournament_id, athlete_id, profiles!tournament_registrations_athlete_id_fkey(display_name, first_name_ar, last_name_ar), disciplines(name_ar, name_en), tournaments(title_ar, title_en, status, deleted_at)")
+        .in("tournament_id", judgedIds)
         .neq("status", "rejected")
-    : { data: [] as any[] };
+    : { data: [] as any[], error: null };
+  if (error) console.error("[coach/scoring]", error.message);
 
-  const rows = (regs ?? []).filter((r: any) => SCORABLE.includes(r.tournaments?.status));
+  const rows = (regs ?? []).filter((r: any) => SCORABLE.includes(r.tournaments?.status) && !r.tournaments?.deleted_at);
 
   const regIds = rows.map((r: any) => r.id);
   const { data: results } = regIds.length
@@ -47,9 +48,12 @@ export default async function CoachScoringPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="font-display text-2xl text-gold">{t("title")}</h1>
+      <div className="space-y-1">
+        <h1 className="font-display text-2xl text-gold">{t("title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("coachJudgeNote")}</p>
+      </div>
       {byTour.size === 0 ? (
-        <p className="text-muted-foreground">{t("noRegs")}</p>
+        <p className="text-muted-foreground">{judgedIds.length ? t("noRegs") : t("coachNoJudging")}</p>
       ) : (
         [...byTour.entries()].map(([tid, group]) => (
           <section key={tid} className="space-y-3">

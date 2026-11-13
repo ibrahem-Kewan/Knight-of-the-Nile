@@ -17,7 +17,7 @@ async function loadCtx(id: string) {
   const supabase = await createClient();
   const { data: e } = await supabase
     .from("events")
-    .select("id, created_by, status, deleted_at, deletion_requested_at")
+    .select("*")
     .eq("id", id)
     .single();
   if (!e) return null;
@@ -147,7 +147,7 @@ export async function registerToEvent(eventId: string): Promise<Res> {
   const supabase = await createClient();
   const { data: ev } = await supabase
     .from("events")
-    .select("status, deleted_at, deletion_requested_at")
+    .select("*")
     .eq("id", eventId)
     .single();
   const evr = ev as { status: string; deleted_at: string | null; deletion_requested_at: string | null } | null;

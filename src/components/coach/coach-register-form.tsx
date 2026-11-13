@@ -16,6 +16,7 @@ export function CoachRegisterForm({
   const locale = useLocale();
   const ar = locale === "ar";
   const t = useTranslations("pages.coachRegister");
+  const tErr = useTranslations("errors");
   const [athlete, setAthlete] = useState(athletes[0]?.id ?? "");
   const [tournament, setTournament] = useState(tournaments[0]?.id ?? "");
   const sportId = tournaments.find((tour) => tour.id === tournament)?.sport_id;
@@ -61,7 +62,7 @@ export function CoachRegisterForm({
             const res = await coachRegisterAthlete(athlete, tournament, disc || discList[0]?.id);
             if (res?.ok) setMsg({ ok: true, text: t("success") });
             else if (res?.error === "already") setMsg({ text: t("already") });
-            else setMsg({ text: t("failed") });
+            else setMsg({ text: tErr.has(res?.error ?? "") ? tErr(res?.error as never) : t("failed") });
           })
         }
       >

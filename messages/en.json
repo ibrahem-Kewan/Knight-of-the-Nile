@@ -318,7 +318,7 @@
         "sport": "Sport",
         "category": "Category",
         "categoryNone": "No category",
-        "coachScopeNote": "Your tournaments are visible to your athletes only.",
+        "coachScopeNote": "Your tournaments are local, one per branch: that branch's athletes register and you are the judge; you can add other coaches as judges.",
         "scope": "Scope",
         "venue": "Venue",
         "start": "Start date",
@@ -351,7 +351,17 @@
         "stRegClosed": "Registration closed",
         "stOngoing": "Ongoing",
         "stCompleted": "Completed",
-        "stCancelled": "Cancelled"
+        "stCancelled": "Cancelled",
+        "branch": "Branch",
+        "branchPick": "Choose a branch",
+        "branchHint": "A local tournament for this branch: only its groups' athletes can register, and you are its judge.",
+        "branchLabel": "Branch: {name}",
+        "needBranch": "Local tournaments are held per branch; add an active branch first to create one.",
+        "goBranches": "Manage my branches",
+        "judges": "Judges",
+        "noJudges": "No judges yet",
+        "mainJudge": "main judge",
+        "removeJudge": "Remove judge"
     },
     "treg": {
         "register": "Register for tournament",
@@ -585,7 +595,9 @@
         "enterPoints": "Enter points then finalize",
         "errInvalidPoints": "Points must be a number zero or more",
         "errForbidden": "You are not allowed to approve this result",
-        "errGeneric": "Could not save the change, please try again."
+        "errGeneric": "Could not save the change, please try again.",
+        "coachJudgeNote": "You judge the tournaments where you are a judge: your branches' local tournaments, or ones another coach added you to.",
+        "coachNoJudging": "You are not a judge in any tournament yet. Create a local tournament for your branch to judge it."
     },
     "enums": {
         "status": {
@@ -689,7 +701,12 @@
         "invalid": "Invalid request.",
         "pending-exists": "You already have a request under review.",
         "short": "Password must be at least 8 characters.",
-        "mismatch": "Passwords do not match."
+        "mismatch": "Passwords do not match.",
+        "errBranchInvalid": "Choose one of your active branches.",
+        "errJudgeInvalid": "This person can't be a judge for this tournament.",
+        "errJudgeIsCreator": "The tournament's creator is its main judge and can't be removed.",
+        "not-branch-athlete": "This tournament is only for athletes in this branch's groups.",
+        "no-judge": "Choose a judge first."
     },
     "table": {
         "name": "Name",

@@ -13,6 +13,8 @@ import { Pencil, Plus } from "lucide-react";
 
 type Sport = { id: string; name_ar: string; name_en: string };
 type Discipline = { id: string; sport_id: string; name_ar: string; name_en: string };
+/** One of the coach's active branches (PR-12). */
+export type BranchOption = { id: string; name_ar: string; name_en: string | null };
 
 /** Current values of a tournament being edited (PR-11). Dates may be full timestamps. */
 export type TournamentInitial = {
@@ -28,19 +30,26 @@ export type TournamentInitial = {
   end_date: string | null;
   registration_end: string | null;
   fees: number | string | null;
+  branch_id?: string | null;
 };
 
 const day = (v: string | null | undefined) => (v ? v.slice(0, 10) : "");
 
-/** Create form (inline) — or, when `initial` is given, an edit form inside a dialog. */
+/**
+ * Create form (inline) — or, when `initial` is given, an edit form inside a dialog.
+ * `branches` (coach only, PR-12): the tournament is branch-local — a required branch field
+ * replaces the scope field (scope is always local; the coach is its judge).
+ */
 export function CreateTournamentForm({
   sports,
   disciplines = [],
   initial,
+  branches,
 }: {
   sports: Sport[];
   disciplines?: Discipline[];
   initial?: TournamentInitial;
+  branches?: BranchOption[];
 }) {
   const t = useTranslations("tadmin");
   const tm = useTranslations("manage");
@@ -109,20 +118,39 @@ export function CreateTournamentForm({
             ))}
           </select>
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor={fid("scope")}>{t("scope")}</Label>
-          <select
-            id={fid("scope")}
-            name="scope"
-            defaultValue={initial?.scope ?? "local"}
-            className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm"
-          >
-            <option value="local">{t("scopeLocal")}</option>
-            <option value="governorate">{t("scopeGov")}</option>
-            <option value="country">{t("scopeCountry")}</option>
-            <option value="international">{t("scopeIntl")}</option>
-          </select>
-        </div>
+        {branches ? (
+          <div className="space-y-1.5">
+            <Label htmlFor={fid("branch_id")}>{t("branch")}</Label>
+            <select
+              id={fid("branch_id")}
+              name="branch_id"
+              required
+              defaultValue={initial?.branch_id ?? (branches.length === 1 ? branches[0].id : "")}
+              className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm"
+            >
+              <option value="" disabled>{t("branchPick")}</option>
+              {branches.map((b) => (
+                <option key={b.id} value={b.id}>{locale === "ar" ? b.name_ar : b.name_en ?? b.name_ar}</option>
+              ))}
+            </select>
+            <p className="text-xs text-muted-foreground">{t("branchHint")}</p>
+          </div>
+        ) : (
+          <div className="space-y-1.5">
+            <Label htmlFor={fid("scope")}>{t("scope")}</Label>
+            <select
+              id={fid("scope")}
+              name="scope"
+              defaultValue={initial?.scope ?? "local"}
+              className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm"
+            >
+              <option value="local">{t("scopeLocal")}</option>
+              <option value="governorate">{t("scopeGov")}</option>
+              <option value="country">{t("scopeCountry")}</option>
+              <option value="international">{t("scopeIntl")}</option>
+            </select>
+          </div>
+        )}
         <div className="space-y-1.5">
           <Label htmlFor={fid("venue")}>{t("venue")}</Label>
           <Input id={fid("venue")} name="venue" defaultValue={initial?.venue ?? ""} />

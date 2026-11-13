@@ -1,5 +1,6 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
+import { withoutPendingDeletion } from "@/lib/content/state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function NewsPage() {
@@ -8,14 +9,15 @@ export default async function NewsPage() {
   const tp = await getTranslations("pages.publicNews");
   const supabase = await createClient();
 
-  const { data: posts } = await supabase
+  const { data: postsRows, error: postsError } = await supabase
     .from("posts")
-    .select("id, slug, title_ar, title_en, type, published_at")
+    .select("*")
     .eq("status", "published")
     .is("deleted_at", null)
-    .is("deletion_requested_at", null)
     .order("published_at", { ascending: false })
     .limit(30);
+  if (postsError) console.error("[news]", postsError.message);
+  const posts = withoutPendingDeletion(postsRows);
 
   return (
     <div className="container px-4 sm:px-6 lg:px-10 xl:px-14 py-8 sm:py-10 lg:py-12">

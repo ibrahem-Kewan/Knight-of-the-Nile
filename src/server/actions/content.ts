@@ -33,7 +33,7 @@ export async function updatePost(postId: string, formData: FormData): Promise<Re
   const supabase = await createClient();
   const { data } = await supabase
     .from("posts")
-    .select("id, author_id, deleted_at, deletion_requested_at")
+    .select("*")
     .eq("id", postId)
     .maybeSingle();
   const post = data as { author_id: string; deleted_at: string | null; deletion_requested_at: string | null } | null;

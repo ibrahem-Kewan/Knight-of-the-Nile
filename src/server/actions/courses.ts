@@ -54,7 +54,7 @@ async function loadCtx(id: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("courses")
-    .select("id, owner_id, description, deleted_at, deletion_requested_at")
+    .select("*")
     .eq("id", id)
     .maybeSingle();
   const c = data as {

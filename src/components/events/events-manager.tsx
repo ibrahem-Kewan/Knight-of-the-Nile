@@ -3,6 +3,7 @@ import { CreateEventForm } from "@/components/events/create-event-form";
 import { EventRowActions } from "@/components/events/event-row-actions";
 import { ContentDeleteButton } from "@/components/shared/content-delete-button";
 import { Badge } from "@/components/ui/badge";
+import { isPendingDeletion } from "@/lib/content/state";
 
 const statusKey: Record<string, string> = {
   draft: "stDraft", published: "stPublished", registration_open: "stRegOpen",
@@ -10,8 +11,8 @@ const statusKey: Record<string, string> = {
 };
 
 /** Columns every events manage page must select (incl. edit-form values). */
-export const EVENT_MANAGE_COLUMNS =
-  "id, title_ar, title_en, status, venue, sport_id, start_date, end_date, registration_end, max_participants, fees, deletion_requested_at";
+// `*` so the page works before migration 0039 — see src/lib/content/state.ts.
+export const EVENT_MANAGE_COLUMNS = "*";
 
 type Sport = { id: string; name_ar: string; name_en: string };
 type EventRow = {
@@ -46,7 +47,7 @@ export async function EventsManager({ sports, events }: { sports: Sport[]; event
             <tbody>
               {events.map((e) => {
                 const title = locale === "ar" ? e.title_ar : e.title_en ?? e.title_ar;
-                const pendingDelete = !!e.deletion_requested_at;
+                const pendingDelete = isPendingDeletion(e);
                 return (
                   <tr key={e.id} className="border-t border-border align-top">
                     <td className="p-3 font-medium">

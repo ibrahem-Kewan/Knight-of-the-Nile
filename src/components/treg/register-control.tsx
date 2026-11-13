@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { errorLabel } from "@/lib/i18n/labels";
 import { registerToTournament } from "@/server/actions/registration";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
@@ -10,6 +11,7 @@ type Discipline = { id: string; name_ar: string; name_en: string };
 
 export function RegisterControl({ tournamentId, disciplines }: { tournamentId: string; disciplines: Discipline[] }) {
   const t = useTranslations("treg");
+  const tErr = useTranslations("errors");
   const locale = useLocale();
   const [disc, setDisc] = useState(disciplines[0]?.id ?? "");
   const [done, setDone] = useState(false);
@@ -49,7 +51,7 @@ export function RegisterControl({ tournamentId, disciplines }: { tournamentId: s
               if (res?.ok) setDone(true);
               else if (res?.error === "already") setErr(t("already"));
               else if (res?.error === "closed") setErr(t("closed"));
-              else setErr(t("onlyAthletes"));
+              else setErr(errorLabel(tErr, res?.error));
             })
           }
         >

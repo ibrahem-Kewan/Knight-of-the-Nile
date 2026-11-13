@@ -18,7 +18,7 @@ async function loadCtx(id: string) {
   const supabase = await createClient();
   const { data: t } = await supabase
     .from("tournaments")
-    .select("id, created_by, audience, status, deleted_at, deletion_requested_at")
+    .select("*")
     .eq("id", id)
     .single();
   if (!t) return null;
@@ -36,6 +36,26 @@ async function loadCtx(id: string) {
   return { ...tt, creator: { id: tt.created_by ?? "", role: creatorRole } };
 }
 
+/** PR-12: a coach's tournament belongs to one of HIS active branches (DB re-checks via trigger 0040). */
+async function validBranch(coachId: string, branchId: string): Promise<boolean> {
+  if (!branchId) return false;
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("coach_branches")
+    .select("id")
+    .eq("id", branchId)
+    .eq("coach_id", coachId)
+    .eq("is_active", true)
+    .maybeSingle();
+  return !!data;
+}
+
+function writeError(error: { code?: string; message: string }): string {
+  console.error("[tournaments]", error.message);
+  if (error.message.includes("tournament_branch_invalid")) return "errBranchInvalid";
+  return "failed";
+}
+
 /** Editable fields shared by create + update (status/audience/owner are not form fields). */
 function readFields(formData: FormData) {
   const num = (k: string) => {
@@ -51,6 +71,8 @@ function readFields(formData: FormData) {
     titleEn: String(formData.get("title_en") || "").trim(),
     sportId: String(formData.get("sport_id") || ""),
     disciplineId: String(formData.get("discipline_id") || ""),
+    hasBranch: formData.has("branch_id"),
+    branchId: String(formData.get("branch_id") || ""),
     scope: str("scope") || "local",
     venue: str("venue"),
     start_date: str("start_date"),
@@ -72,14 +94,24 @@ export async function updateTournament(id: string, formData: FormData): Promise<
   if (!f.titleAr || !f.sportId) return { error: "missing" };
   if (f.fees < 0 || (f.max_participants !== null && f.max_participants < 1)) return { error: "invalid" };
 
+  // Coach tournaments: branch-local (PR-12). The branch field is only sent by the coach's own form;
+  // an admin editing it leaves the branch as it is.
+  const coachOwned = ctx.creator.role === "coach";
+  const branchPatch: { branch_id?: string } = {};
+  if (f.hasBranch && coachOwned) {
+    if (!(await validBranch(ctx.creator.id, f.branchId))) return { error: "errBranchInvalid" };
+    branchPatch.branch_id = f.branchId;
+  }
+
   const supabase = await createClient();
   const { data: upd, error } = await supabase
     .from("tournaments")
     .update({
+      ...branchPatch,
       title_ar: f.titleAr,
       title_en: f.titleEn || null,
       sport_id: f.sportId,
-      scope: f.scope,
+      scope: coachOwned ? "local" : f.scope,
       venue: f.venue,
       start_date: f.start_date,
       end_date: f.end_date,
@@ -89,7 +121,7 @@ export async function updateTournament(id: string, formData: FormData): Promise<
     })
     .eq("id", id)
     .select("id");
-  if (error) { console.error("[tournaments]", error.message); return { error: "failed" }; }
+  if (error) return { error: writeError(error) };
   if (!upd?.length) return { error: "forbidden" };
 
   // Category: replace only when one was chosen (keeps the current one otherwise).
@@ -125,8 +157,12 @@ export async function createTournament(formData: FormData): Promise<Res> {
     return v || null;
   };
 
-  // Coach tournaments are for that coach's own athletes by default.
-  const audience = me.role === "coach" ? "coach_athletes" : (str("audience") || "public");
+  // Coach tournaments are branch-local (PR-12): the coach picks one of his active branches, only
+  // that branch's athletes can register, scope is local and the coach is its judge (trigger 0040).
+  const isCoach = me.role === "coach";
+  const audience = isCoach ? "coach_athletes" : (str("audience") || "public");
+  const branchId = String(formData.get("branch_id") || "");
+  if (isCoach && !(await validBranch(me.id, branchId))) return { error: "errBranchInvalid" };
 
   const { data: ins, error } = await supabase
     .from("tournaments")
@@ -135,7 +171,8 @@ export async function createTournament(formData: FormData): Promise<Res> {
       title_en: titleEn || null,
       slug: slugify(titleEn || titleAr),
       sport_id: sportId,
-      scope: str("scope") || "local",
+      ...(isCoach ? { branch_id: branchId } : {}),
+      scope: isCoach ? "local" : str("scope") || "local",
       venue: str("venue"),
       start_date: str("start_date"),
       end_date: str("end_date"),
@@ -148,7 +185,7 @@ export async function createTournament(formData: FormData): Promise<Res> {
     })
     .select("id")
     .single();
-  if (error) { console.error("[tournaments]", error.message); return { error: "failed" }; }
+  if (error) return { error: writeError(error) };
 
   // Optional category (discipline) at creation.
   if (disciplineId) {
@@ -199,17 +236,51 @@ export async function setTournamentStatus(id: string, status: string): Promise<R
   return { ok: true };
 }
 
-export async function assignJudge(tournamentId: string, judgeId: string): Promise<Res> {
-  const me = await requireRole(["super_admin", "admin", "judge"]);
-  if (!judgeId) return { error: "no-judge" };
+/**
+ * Add / remove a tournament judge (PR-12). Manager = admin or the creator. A coach's tournament
+ * takes other active coaches as judges; other tournaments take judges. The creator coach is
+ * always the judge of his own tournament and cannot be removed. DB: set_tournament_judge (0040),
+ * audited in audit_logs.
+ */
+async function changeJudge(tournamentId: string, profileId: string, add: boolean): Promise<Res> {
+  const me = await requireRole(CREATOR_ROLES);
+  if (!profileId) return { error: "no-judge" };
   const ctx = await loadCtx(tournamentId);
   if (!ctx) return { error: "not-found" };
   if (!canManageContent(me, ctx.creator)) return { error: "forbidden" };
+  if (!add && profileId === ctx.creator.id) return { error: "errJudgeIsCreator" };
 
   const supabase = await createClient();
-  await supabase
-    .from("tournament_staff")
-    .insert({ tournament_id: tournamentId, profile_id: judgeId, role_in_tournament: "judge" });
+  if (add) {
+    const { data: p } = await supabase.from("profiles").select("role, status").eq("id", profileId).maybeSingle();
+    const pr = p as { role: Role; status: string } | null;
+    const wanted: Role = ctx.creator.role === "coach" ? "coach" : "judge";
+    if (!pr || pr.status !== "active" || pr.role !== wanted) return { error: "errJudgeInvalid" };
+  }
+  const { error } = await supabase.rpc("set_tournament_judge", {
+    p_tournament: tournamentId,
+    p_profile: profileId,
+    p_add: add,
+  });
+  if (error) {
+    console.error("[tournaments]", error.message);
+    if (error.code === "42501") return { error: "forbidden" };
+    if (error.message.includes("judge_is_creator")) return { error: "errJudgeIsCreator" };
+    if (error.message.includes("judge_invalid")) return { error: "errJudgeInvalid" };
+    return { error: "failed" };
+  }
   revalidatePath("/admin/tournaments");
+  revalidatePath("/coach/tournaments");
+  revalidatePath("/judge/tournaments");
+  revalidatePath("/coach/scoring");
+  revalidatePath("/judge/scoring");
   return { ok: true };
+}
+
+export async function assignJudge(tournamentId: string, judgeId: string): Promise<Res> {
+  return changeJudge(tournamentId, judgeId, true);
+}
+
+export async function removeJudge(tournamentId: string, judgeId: string): Promise<Res> {
+  return changeJudge(tournamentId, judgeId, false);
 }

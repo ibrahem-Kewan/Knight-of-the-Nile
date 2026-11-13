@@ -1,6 +1,7 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { money } from "@/lib/i18n/labels";
 import { createClient } from "@/lib/supabase/server";
+import { withoutPendingDeletion } from "@/lib/content/state";
 import { Link } from "@/lib/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,13 +14,14 @@ export default async function CoursesPage() {
   const te = await getTranslations("enums");
   const supabase = await createClient();
 
-  const { data: courses } = await supabase
+  const { data: coursesRows, error: coursesError } = await supabase
     .from("courses")
-    .select("id, slug, title_ar, title_en, price, currency, level")
+    .select("*")
     .eq("status", "published")
     .is("deleted_at", null)
-    .is("deletion_requested_at", null)
     .limit(30);
+  if (coursesError) console.error("[courses]", coursesError.message);
+  const courses = withoutPendingDeletion(coursesRows);
 
   return (
     <div className="container px-4 sm:px-6 lg:px-10 xl:px-14 py-8 sm:py-10 lg:py-12">
