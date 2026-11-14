@@ -1129,7 +1129,9 @@
         "city": "City / center",
         "cityPlaceholder": "e.g. Zagazig",
         "errCityInvalid": "City / center must be 2 to 80 characters.",
-        "errCityNeedsGovernorate": "Choose a governorate before entering a city / center."
+        "errCityNeedsGovernorate": "Choose a governorate before entering a city / center.",
+        "errDbOutdated": "The database needs an update before a city / center can be saved. Save the branch without it for now, or contact the administration.",
+        "saving": "Saving…"
     },
     "manage": {
         "edit": "Edit",

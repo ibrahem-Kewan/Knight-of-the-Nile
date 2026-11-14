@@ -59,14 +59,22 @@ export function BranchForm({ governorates, branch }: { governorates: Governorate
 
   return (
     <form
-      action={(fd) =>
+      // onSubmit (not `action`): React 19 resets a form after an action, which wiped the
+      // fields and desynced the governorate select whenever saving failed.
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
         start(async () => {
           setErr(null);
-          const res = branch ? await updateBranch(branch.id, fd) : await createBranch(fd);
-          if (res?.ok) setOpen(false);
-          else setErr(res?.error ?? "errGeneric");
-        })
-      }
+          try {
+            const res = branch ? await updateBranch(branch.id, fd) : await createBranch(fd);
+            if (res?.ok) setOpen(false);
+            else setErr(res?.error ?? "errGeneric");
+          } catch {
+            setErr("errGeneric");
+          }
+        });
+      }}
       className="min-w-0 rounded-lg border border-border bg-card p-4 sm:p-6"
     >
       <h3 className="mb-4 font-semibold">{editing ? t("editBranch") : t("newBranch")}</h3>
@@ -121,9 +129,15 @@ export function BranchForm({ governorates, branch }: { governorates: Governorate
           <Input id={`b_addr_${p}`} name="address" maxLength={200} defaultValue={branch?.address ?? ""} />
         </div>
       </div>
-      {err && <p role="alert" className="mt-3 text-sm text-danger">{t.has(err) ? t(err) : t("errGeneric")}</p>}
+      {err && (
+        <p role="alert" aria-live="polite" className="mt-3 text-sm text-danger">
+          {t.has(err) ? t(err) : t("errGeneric")}
+        </p>
+      )}
       <div className="mt-5 flex flex-wrap gap-2">
-        <Button type="submit" className="min-h-11" disabled={pending}>{t("save")}</Button>
+        <Button type="submit" className="min-h-11" disabled={pending} aria-busy={pending}>
+          {pending ? t("saving") : t("save")}
+        </Button>
         <Button type="button" variant="outline" className="min-h-11" onClick={() => setOpen(false)}>{t("cancel")}</Button>
       </div>
     </form>

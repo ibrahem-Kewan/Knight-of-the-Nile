@@ -49,10 +49,25 @@ function parseBranch(fd: FormData): { input?: BranchInput; error?: string } {
 }
 
 // ---- coach branches ----
-function branchDbError(code: string | undefined): string {
-  if (code === "42501") return "errForbidden";
-  if (code === "23514") return "errInvalid";
+type DbError = { code?: string; message?: string; details?: string | null; hint?: string | null };
+
+// PostgREST answers PGRST204 (schema cache) or Postgres 42703 when a column is missing,
+// i.e. a migration (here 0042: coach_branches.city) was not applied to this database yet.
+const isMissingColumn = (e: DbError | null) => !!e && (e.code === "PGRST204" || e.code === "42703");
+
+function branchDbError(where: string, e: DbError): string {
+  console.error(`[training] ${where} failed`, { code: e.code, message: e.message, details: e.details, hint: e.hint });
+  if (e.code === "42501") return "errForbidden";
+  if (e.code === "23514") return "errInvalid";
+  if (isMissingColumn(e)) return "errDbOutdated";
   return "errGeneric";
+}
+
+/** The payload without `city`, for databases where migration 0042 is not applied yet. */
+function withoutCity(input: BranchInput): Omit<BranchInput, "city"> {
+  const rest: Partial<BranchInput> = { ...input };
+  delete rest.city;
+  return rest as Omit<BranchInput, "city">;
 }
 
 export async function createBranch(fd: FormData): Promise<Res> {
@@ -61,8 +76,12 @@ export async function createBranch(fd: FormData): Promise<Res> {
   if (!input) return { error: invalid ?? "errInvalid" };
 
   const supabase = await createClient();
-  const { error } = await supabase.from("coach_branches").insert({ ...input, coach_id: me.id });
-  if (error) return { error: branchDbError(error.code) };
+  let { error } = await supabase.from("coach_branches").insert({ ...input, coach_id: me.id });
+  // Before 0042 the column does not exist: a branch without a city must still be creatable.
+  if (isMissingColumn(error) && input.city === null) {
+    ({ error } = await supabase.from("coach_branches").insert({ ...withoutCity(input), coach_id: me.id }));
+  }
+  if (error) return { error: branchDbError("createBranch", error) };
 
   revalidatePath("/coach/branches");
   return { ok: true };
@@ -83,8 +102,11 @@ export async function updateBranch(id: string, fd: FormData): Promise<Res> {
     .maybeSingle();
   if (!own) return { error: "errNotFound" };
 
-  const { error } = await supabase.from("coach_branches").update(input).eq("id", id).eq("coach_id", me.id);
-  if (error) return { error: branchDbError(error.code) };
+  let { error } = await supabase.from("coach_branches").update(input).eq("id", id).eq("coach_id", me.id);
+  if (isMissingColumn(error) && input.city === null) {
+    ({ error } = await supabase.from("coach_branches").update(withoutCity(input)).eq("id", id).eq("coach_id", me.id));
+  }
+  if (error) return { error: branchDbError("updateBranch", error) };
 
   revalidatePath("/coach/branches");
   return { ok: true };
@@ -108,7 +130,7 @@ export async function setBranchActive(id: string, active: boolean): Promise<Res>
     .update({ is_active: active })
     .eq("id", id)
     .eq("coach_id", me.id);
-  if (error) return { error: error.code === "42501" ? "errForbidden" : "errGeneric" };
+  if (error) return { error: branchDbError("setBranchActive", error) };
 
   revalidatePath("/coach/branches");
   return { ok: true };

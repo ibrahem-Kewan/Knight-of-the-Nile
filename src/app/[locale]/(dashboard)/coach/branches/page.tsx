@@ -20,17 +20,23 @@ export default async function CoachBranchesPage() {
   const ar = locale === "ar";
   const supabase = await createClient();
 
-  const [{ data: branchRows }, { data: govRows }] = await Promise.all([
+  const [{ data: branchRows, error: branchErr }, { data: govRows, error: govErr }] = await Promise.all([
     supabase
       .from("coach_branches")
-      .select("id, name_ar, name_en, governorate_id, city, address, map_url, is_active")
+      // "*" on purpose: naming `city` explicitly fails the whole query before migration 0042.
+      .select("*")
       .eq("coach_id", me.id)
       .order("is_active", { ascending: false })
       .order("created_at", { ascending: true }),
     supabase.from("governorates").select("id, name_ar, name_en, is_active").order("name_ar"),
   ]);
 
-  const branches = (branchRows ?? []) as Branch[];
+  if (branchErr) console.error("[coach/branches] branches query failed", branchErr);
+  if (govErr) console.error("[coach/branches] governorates query failed", govErr);
+  const branches = ((branchRows ?? []) as (Omit<Branch, "city"> & { city?: string | null })[]).map((b) => ({
+    ...b,
+    city: b.city ?? null,
+  })) as Branch[];
   const allGovs = (govRows ?? []) as (Governorate & { is_active: boolean })[];
   const govName = new Map(allGovs.map((g) => [g.id, ar ? g.name_ar : g.name_en]));
   const activeGovs: Governorate[] = allGovs.filter((g) => g.is_active);

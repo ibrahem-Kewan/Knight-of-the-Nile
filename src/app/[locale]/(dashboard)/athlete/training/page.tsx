@@ -73,7 +73,8 @@ export default async function AthleteTrainingPage() {
 
   const [{ data: branchRows }, { data: sportRows }, { data: coachRows }, { data: sessionRows }, { data: cycleRows }, billingResults] =
     await Promise.all([
-      supabase.from("coach_branches").select("id, name_ar, name_en, governorate_id, city, address, map_url").in("id", branchIds),
+      // "*" on purpose: naming `city` explicitly fails the whole query before migration 0042.
+      supabase.from("coach_branches").select("*").in("id", branchIds),
       sportIds.length ? supabase.from("sports").select("id, name_ar, name_en").in("id", sportIds) : Promise.resolve({ data: [] as Named[] }),
       supabase.from("profiles").select("id, display_name").in("id", coachIds),
       supabase
