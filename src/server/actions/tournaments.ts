@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { writeErrorCode } from "@/lib/db/write-error";
 import { requireRole } from "@/lib/auth/session";
 import { CREATOR_ROLES, canManageContent } from "@/lib/auth/permissions";
 import type { Role } from "@/config/roles";
@@ -54,6 +55,33 @@ function writeError(error: { code?: string; message: string }): string {
   console.error("[tournaments]", error.message);
   if (error.message.includes("tournament_branch_invalid")) return "errBranchInvalid";
   return "failed";
+}
+
+/**
+ * Replace the tournament's single category. Inserts the new one before deleting the others,
+ * so a failed insert never leaves the tournament without a category.
+ */
+async function replaceDiscipline(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tournamentId: string,
+  disciplineId: string,
+): Promise<string | null> {
+  const { data: cur, error: readErr } = await supabase
+    .from("tournament_disciplines")
+    .select("id, discipline_id")
+    .eq("tournament_id", tournamentId);
+  if (readErr) return writeErrorCode("tournaments.category.read", readErr);
+  const rows = (cur ?? []) as { id: string; discipline_id: string }[];
+  if (!rows.some((r) => r.discipline_id === disciplineId)) {
+    const { error } = await supabase.from("tournament_disciplines").insert({ tournament_id: tournamentId, discipline_id: disciplineId });
+    if (error) return writeErrorCode("tournaments.category.insert", error);
+  }
+  const others = rows.filter((r) => r.discipline_id !== disciplineId).map((r) => r.id);
+  if (others.length) {
+    const { error } = await supabase.from("tournament_disciplines").delete().in("id", others);
+    if (error) return writeErrorCode("tournaments.category.delete", error);
+  }
+  return null;
 }
 
 /** Editable fields shared by create + update (status/audience/owner are not form fields). */
@@ -126,8 +154,8 @@ export async function updateTournament(id: string, formData: FormData): Promise<
 
   // Category: replace only when one was chosen (keeps the current one otherwise).
   if (f.disciplineId) {
-    await supabase.from("tournament_disciplines").delete().eq("tournament_id", id);
-    await supabase.from("tournament_disciplines").insert({ tournament_id: id, discipline_id: f.disciplineId });
+    const catErr = await replaceDiscipline(supabase, id, f.disciplineId);
+    if (catErr) return { error: catErr };
   }
 
   revalidatePath("/admin/tournaments");
@@ -189,9 +217,11 @@ export async function createTournament(formData: FormData): Promise<Res> {
 
   // Optional category (discipline) at creation.
   if (disciplineId) {
-    await supabase
+    const { error: catErr } = await supabase
       .from("tournament_disciplines")
       .insert({ tournament_id: (ins as { id: string }).id, discipline_id: disciplineId });
+    // The tournament itself is saved; report the category failure instead of hiding it.
+    if (catErr) return { error: writeErrorCode("tournaments.createTournament.category", catErr) };
   }
 
   revalidatePath("/admin/tournaments");
@@ -209,11 +239,8 @@ export async function setTournamentDiscipline(tournamentId: string, disciplineId
   if (!disciplineId) return { error: "no-discipline" };
 
   const supabase = await createClient();
-  await supabase.from("tournament_disciplines").delete().eq("tournament_id", tournamentId);
-  const { error } = await supabase
-    .from("tournament_disciplines")
-    .insert({ tournament_id: tournamentId, discipline_id: disciplineId });
-  if (error) { console.error("[tournaments]", error.message); return { error: "failed" }; }
+  const catErr = await replaceDiscipline(supabase, tournamentId, disciplineId);
+  if (catErr) return { error: catErr };
 
   revalidatePath("/admin/tournaments");
   revalidatePath("/coach/tournaments");
@@ -228,7 +255,9 @@ export async function setTournamentStatus(id: string, status: string): Promise<R
   if (!canManageContent(me, ctx.creator)) return { error: "forbidden" };
 
   const supabase = await createClient();
-  await supabase.from("tournaments").update({ status }).eq("id", id);
+  const { data: upd, error } = await supabase.from("tournaments").update({ status }).eq("id", id).select("id");
+  if (error) return { error: writeErrorCode("tournaments.setTournamentStatus", error) };
+  if (!upd?.length) return { error: "forbidden" };
   revalidatePath("/admin/tournaments");
   revalidatePath("/coach/tournaments");
   revalidatePath("/judge/tournaments");

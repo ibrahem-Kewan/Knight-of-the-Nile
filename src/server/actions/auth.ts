@@ -87,7 +87,7 @@ export async function registerAction(_prev: ActionState, formData: FormData): Pr
 
   // Update the auto-created profile with name + optional chosen coach
   if (data.user) {
-    await supabase
+    const { error: profErr } = await supabase
       .from("profiles")
       .update({
         first_name_ar: parsed.data.firstName,
@@ -99,15 +99,17 @@ export async function registerAction(_prev: ActionState, formData: FormData): Pr
         // everyone registers as athlete; coach/judge via role request approved by admin
       })
       .eq("id", data.user.id);
+    if (profErr) console.error("[register] profile update failed", profErr.code, profErr.message);
 
     // If a coach was chosen, create a pending link the coach must approve.
     if (coachId) {
-      await supabase.from("coach_athletes").insert({
+      const { error: linkErr } = await supabase.from("coach_athletes").insert({
         coach_id: coachId,
         athlete_id: data.user.id,
         status: "pending",
         is_current: false,
       });
+      if (linkErr) console.error("[register] coach link insert failed", linkErr.code, linkErr.message);
     }
   }
 

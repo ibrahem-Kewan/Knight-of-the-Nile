@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { writeErrorCode } from "@/lib/db/write-error";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/auth/session";
 import type { Role } from "@/config/roles";
@@ -133,10 +134,14 @@ export async function approveRoleRequest(reqId: string): Promise<Res> {
 export async function rejectRoleRequest(reqId: string): Promise<Res> {
   const me = await requireRole(["super_admin", "admin"]);
   const supabase = await createClient();
-  await supabase
+  const { data: upd, error } = await supabase
     .from("role_requests")
     .update({ status: "rejected", reviewed_by: me.id, reviewed_at: new Date().toISOString() })
-    .eq("id", reqId);
+    .eq("id", reqId)
+    .eq("status", "pending") // never overwrite an already approved/rejected request
+    .select("id");
+  if (error) return { error: writeErrorCode("admin.rejectRoleRequest", error) };
+  if (!upd?.length) return { error: "invalid" };
   revalidate();
   return { ok: true };
 }

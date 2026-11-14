@@ -1,9 +1,9 @@
 "use client";
 
-import { useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { setEventStatus } from "@/server/actions/events";
 import { Button } from "@/components/ui/button";
+import { ActionError, useAction } from "@/components/shared/action-error";
 
 const NEXT: Record<string, { to: string; key: string }[]> = {
   draft: [{ to: "published", key: "publish" }],
@@ -15,21 +15,22 @@ const NEXT: Record<string, { to: string; key: string }[]> = {
 
 export function EventRowActions({ id, status }: { id: string; status: string }) {
   const t = useTranslations("events");
-  const [pending, start] = useTransition();
+  const { pending, error, run } = useAction();
   const transitions = NEXT[status] ?? [];
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       {transitions.map((tr) => (
-        <Button key={tr.to} size="sm" disabled={pending} onClick={() => start(() => { void setEventStatus(id, tr.to); })}>
+        <Button key={tr.to} size="sm" disabled={pending} onClick={() => run(() => setEventStatus(id, tr.to))}>
           {t(tr.key as never)}
         </Button>
       ))}
       {status !== "cancelled" && status !== "completed" && (
-        <Button size="sm" variant="outline" disabled={pending} onClick={() => start(() => { void setEventStatus(id, "cancelled"); })}>
+        <Button size="sm" variant="outline" disabled={pending} onClick={() => run(() => setEventStatus(id, "cancelled"))}>
           {t("cancelEvent")}
         </Button>
       )}
+      <ActionError code={error} />
     </div>
   );
 }

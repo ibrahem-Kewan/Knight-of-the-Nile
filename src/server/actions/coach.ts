@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { writeErrorCode } from "@/lib/db/write-error";
 import { requireRole } from "@/lib/auth/session";
 
 type Res = { ok?: boolean; error?: string };
@@ -17,10 +18,14 @@ export async function approveAthleteLink(linkId: string): Promise<Res> {
     .maybeSingle();
   if (!link || (link as { coach_id: string }).coach_id !== me.id) return { error: "forbidden" };
 
-  await supabase
+  const { data: upd, error } = await supabase
     .from("coach_athletes")
     .update({ status: "active", is_current: true, approved_by: me.id, approved_at: new Date().toISOString() })
-    .eq("id", linkId);
+    .eq("id", linkId)
+    .eq("status", "pending")
+    .select("id");
+  if (error) return { error: writeErrorCode("coach.approveAthleteLink", error) };
+  if (!upd?.length) return { error: "invalid" };
   revalidatePath("/coach/athletes");
   return { ok: true };
 }
@@ -35,10 +40,14 @@ export async function rejectAthleteLink(linkId: string): Promise<Res> {
     .maybeSingle();
   if (!link || (link as { coach_id: string }).coach_id !== me.id) return { error: "forbidden" };
 
-  await supabase
+  const { data: upd, error } = await supabase
     .from("coach_athletes")
     .update({ status: "rejected", is_current: false })
-    .eq("id", linkId);
+    .eq("id", linkId)
+    .eq("status", "pending")
+    .select("id");
+  if (error) return { error: writeErrorCode("coach.rejectAthleteLink", error) };
+  if (!upd?.length) return { error: "invalid" };
   revalidatePath("/coach/athletes");
   return { ok: true };
 }

@@ -11,16 +11,22 @@ export default async function RoleRequestsPage() {
   const t = await getTranslations("admin");
   const supabase = await createClient();
 
-  const { data: reqs } = await supabase
+  const { data: reqData, error: reqsErr } = await supabase
     .from("role_requests")
-    .select("id, requested_role, note, created_at, profiles(display_name, email)")
+    .select("id, requested_role, note, created_at, profiles!role_requests_profile_id_fkey(display_name, email)")
     .eq("status", "pending")
     .order("created_at", { ascending: true });
+  if (reqsErr) console.error("[admin/role-requests]", reqsErr.code, reqsErr.message);
+  type RequestRow = {
+    id: string; requested_role: string; note: string | null; created_at: string;
+    profiles: { display_name: string | null; email: string | null } | null;
+  };
+  const reqs = (reqData ?? []) as unknown as RequestRow[];
 
   return (
     <div className="space-y-6">
       <h1 className="font-display text-2xl text-gold">{t("roleRequests")}</h1>
-      {!reqs?.length ? (
+      {!reqs.length ? (
         <p className="text-muted-foreground">{t("noRequests")}</p>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border">
@@ -34,7 +40,7 @@ export default async function RoleRequestsPage() {
               </tr>
             </thead>
             <tbody>
-              {reqs.map((r: any) => (
+              {reqs.map((r) => (
                 <tr key={r.id} className="border-t border-border">
                   <td className="p-3 font-medium">{r.profiles?.display_name ?? "—"}</td>
                   <td className="p-3 text-muted-foreground">{r.profiles?.email}</td>

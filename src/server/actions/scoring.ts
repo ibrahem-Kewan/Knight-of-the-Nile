@@ -39,7 +39,13 @@ export async function finalizeResult(registrationId: string, points: number): Pr
 
   let resultId: string | undefined = (existing as { id: string } | null)?.id;
   if (resultId) {
-    await supabase.from("results").update({ total_points: points, status: "submitted" }).eq("id", resultId);
+    const { data: upd, error } = await supabase
+      .from("results")
+      .update({ total_points: points, status: "submitted" })
+      .eq("id", resultId)
+      .select("id");
+    if (error) { console.error("[scoring]", error.message); return { error: "errGeneric" }; }
+    if (!upd?.length) return { error: "errForbidden" };
   } else {
     const { data: ins, error } = await supabase
       .from("results")

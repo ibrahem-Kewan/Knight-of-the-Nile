@@ -752,7 +752,8 @@
         "errJudgeIsCreator": "The tournament's creator is its main judge and can't be removed.",
         "not-branch-athlete": "This tournament is only for athletes in this branch's groups.",
         "no-judge": "Choose a judge first.",
-        "errDbOutdated": "This feature needs a database update first — please contact the administration."
+        "errDbOutdated": "This feature needs a database update first — please contact the administration.",
+        "locked": "This item has a pending deletion request and can't be changed right now."
     },
     "table": {
         "name": "Name",

@@ -17,17 +17,24 @@ export default async function AdminNewsPage() {
   const te = await getTranslations("enums");
   const tm = await getTranslations("manage");
   const supabase = await createClient();
-  const { data: posts } = await supabase
+  const { data: posts, error: postsErr } = await supabase
     .from("posts")
-    .select("*, profiles(display_name)")
+    .select("*, profiles!posts_author_id_fkey(display_name)")
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(100);
+  if (postsErr) console.error("[admin/news]", postsErr.code, postsErr.message);
+
+  type PostRow = {
+    id: string; title_ar: string; title_en: string | null; type: string; status: string;
+    deletion_requested_at?: string | null; profiles: { display_name: string | null } | null;
+  };
+  const rows = (posts ?? []) as unknown as PostRow[];
 
   return (
     <div className="space-y-6">
       <h1 className="font-display text-2xl text-gold">{t("title")}</h1>
-      {!posts?.length ? (
+      {!rows.length ? (
         <p className="text-muted-foreground">{t("empty")}</p>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border">
@@ -39,7 +46,7 @@ export default async function AdminNewsPage() {
               <th className="p-3 text-start">{tt("actions")}</th>
             </tr></thead>
             <tbody>
-              {posts.map((p: any) => {
+              {rows.map((p) => {
                 const title = ar ? p.title_ar : p.title_en ?? p.title_ar;
                 const pendingDelete = isPendingDeletion(p);
                 return (

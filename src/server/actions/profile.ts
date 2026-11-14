@@ -60,7 +60,9 @@ export async function updateMyProfile(formData: FormData): Promise<Res> {
   if (email && email !== me.email) {
     const { error: authErr } = await supabase.auth.updateUser({ email });
     if (authErr) { console.error("[profile]", authErr.message); return { error: "failed" }; }
-    await supabase.from("profiles").update({ email }).eq("id", me.id);
+    // Mirror only; auth.users is the source of truth, so a failure here is logged, not fatal.
+    const { error: mirrorErr } = await supabase.from("profiles").update({ email }).eq("id", me.id);
+    if (mirrorErr) console.error("[profile] email mirror failed", mirrorErr.message);
   }
 
   revalidatePath("/", "layout");

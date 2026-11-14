@@ -1,9 +1,9 @@
 "use client";
 
-import { useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { setTournamentStatus, setTournamentDiscipline } from "@/server/actions/tournaments";
 import { Button } from "@/components/ui/button";
+import { ActionError, useAction } from "@/components/shared/action-error";
 
 type Discipline = { id: string; sport_id: string; name_ar: string; name_en: string };
 
@@ -30,14 +30,14 @@ export function TournamentRowActions({
 }) {
   const t = useTranslations("tadmin");
   const locale = useLocale();
-  const [pending, start] = useTransition();
+  const { pending, error, run } = useAction();
   const transitions = NEXT[status] ?? [];
   const catOptions = disciplines.filter((d) => !sportId || d.sport_id === sportId);
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       {transitions.map((tr) => (
-        <Button key={tr.to} size="sm" disabled={pending} onClick={() => start(() => { void setTournamentStatus(id, tr.to); })}>
+        <Button key={tr.to} size="sm" disabled={pending} onClick={() => run(() => setTournamentStatus(id, tr.to))}>
           {t(tr.key as never)}
         </Button>
       ))}
@@ -45,7 +45,7 @@ export function TournamentRowActions({
         <select
           defaultValue={currentDisciplineId}
           disabled={pending}
-          onChange={(e) => { if (e.target.value) start(() => { void setTournamentDiscipline(id, e.target.value); }); }}
+          onChange={(e) => { const v = e.target.value; if (v) run(() => setTournamentDiscipline(id, v)); }}
           className="h-8 rounded-md border border-border bg-background px-2 text-xs"
           title={t("category")}
         >
@@ -55,6 +55,7 @@ export function TournamentRowActions({
           ))}
         </select>
       )}
+      <ActionError code={error} />
     </div>
   );
 }

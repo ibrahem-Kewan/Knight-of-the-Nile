@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { writeErrorCode } from "@/lib/db/write-error";
 import { requireRole, getProfile } from "@/lib/auth/session";
 import { CREATOR_ROLES, canManageContent } from "@/lib/auth/permissions";
 import type { Role } from "@/config/roles";
@@ -131,7 +132,9 @@ export async function setEventStatus(id: string, status: string): Promise<Res> {
   if (!canManageContent(me, ctx.creator)) return { error: "forbidden" };
 
   const supabase = await createClient();
-  await supabase.from("events").update({ status }).eq("id", id);
+  const { data: upd, error } = await supabase.from("events").update({ status }).eq("id", id).select("id");
+  if (error) return { error: writeErrorCode("events.setEventStatus", error) };
+  if (!upd?.length) return { error: "forbidden" };
   revalidatePath("/admin/events");
   revalidatePath("/coach/events");
   revalidatePath("/judge/events");
