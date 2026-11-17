@@ -4,6 +4,7 @@ import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { AthleteLinkActions } from "@/components/coach/athlete-link-actions";
 import { AthleteGroupCard, type CardAthlete } from "@/components/training/athlete-group-card";
+import { cairoToday } from "@/lib/training/dates";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,8 +15,8 @@ const selectCls =
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 type Branch = { id: string; name_ar: string; name_en: string | null };
-type Group = { id: string; branch_id: string; name_ar: string; name_en: string | null; is_active: boolean };
-type Membership = { id: string; group_id: string; athlete_id: string };
+type Group = { id: string; branch_id: string; name_ar: string; name_en: string | null; is_active: boolean; starts_on: string };
+type Membership = { id: string; group_id: string; athlete_id: string; start_date?: string | null };
 type AthleteProfile = { id: string; display_name: string | null; email: string | null; phone: string | null };
 
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
@@ -53,7 +54,7 @@ export default async function CoachAthletesPage({ searchParams }: Props) {
     supabase.from("coach_branches").select("id, name_ar, name_en").eq("coach_id", me.id),
     supabase
       .from("training_groups")
-      .select("id, branch_id, name_ar, name_en, is_active")
+      .select("id, branch_id, name_ar, name_en, is_active, starts_on")
       .eq("coach_id", me.id)
       .order("is_active", { ascending: false })
       .order("created_at", { ascending: true }),
@@ -63,19 +64,22 @@ export default async function CoachAthletesPage({ searchParams }: Props) {
   const groups = (groupRows ?? []) as Group[];
   const athleteIds = Array.from(new Set((links ?? []).map((l: { athlete_id: string }) => l.athlete_id)));
 
-  const [{ data: profileRows }, { data: memberRows }] = await Promise.all([
+  const [{ data: profileRows }, { data: memberRows, error: memberErr }] = await Promise.all([
     athleteIds.length
       ? supabase.from("profiles").select("id, display_name, email, phone").in("id", athleteIds)
       : Promise.resolve({ data: [] as AthleteProfile[] }),
     athleteIds.length && groups.length
       ? supabase
           .from("training_group_members")
-          .select("id, group_id, athlete_id")
+          .select("*")
           .in("athlete_id", athleteIds)
           .in("group_id", groups.map((g) => g.id))
           .is("left_at", null)
-      : Promise.resolve({ data: [] as Membership[] }),
+      : Promise.resolve({ data: [] as Membership[], error: null }),
   ]);
+
+  if (memberErr) console.error("[coach/athletes] memberships query failed", { code: memberErr.code, message: memberErr.message });
+  const today = cairoToday();
 
   const branchName = (b: Branch) => (ar ? b.name_ar : b.name_en || b.name_ar);
   const groupName = (g: Group) => (ar ? g.name_ar : g.name_en || g.name_ar);
@@ -196,13 +200,16 @@ export default async function CoachAthletesPage({ searchParams }: Props) {
                   <AthleteGroupCard
                     key={a.id}
                     athlete={a}
+                    today={today}
                     memberships={(byAthlete.get(a.id) ?? []).map((m) => ({
                       id: m.id,
                       groupName: groupById.get(m.group_id) ? groupName(groupById.get(m.group_id)!) : "—",
+                      startDate: m.start_date ?? null,
+                      startsOn: groupById.get(m.group_id)?.starts_on ?? null,
                     }))}
                     addable={groups
                       .filter((g) => g.is_active && !(byAthlete.get(a.id) ?? []).some((m) => m.group_id === g.id))
-                      .map((g) => ({ id: g.id, label: `${groupName(g)} - ${branchLabel(g.branch_id)}` }))}
+                      .map((g) => ({ id: g.id, label: `${groupName(g)} - ${branchLabel(g.branch_id)}`, startsOn: g.starts_on }))}
                   />
                 ))}
               </ul>

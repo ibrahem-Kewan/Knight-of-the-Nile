@@ -1,181 +1,82 @@
-"use client";
+import { getLocale } from "next-intl/server";
+import { createClient } from "@/lib/supabase/server";
+import { cairoDateOf } from "@/lib/training/dates";
+import { AttendanceSheetClient, type AttendanceMember } from "./attendance-sheet-client";
 
-import { useId, useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
-import { Star } from "lucide-react";
-import { saveAttendance, type AttendanceInput } from "@/server/actions/training";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+export type { AttendanceMember } from "./attendance-sheet-client";
 
-export type AttendanceMember = {
-  athleteId: string;
-  name: string;
-  status: "present" | "absent" | null;
-  score: string;
-  performance: number | null;
-  note: string;
-};
+type MemberRow = { athlete_id: string; joined_at: string; left_at: string | null; start_date?: string | null };
 
-type Row = Omit<AttendanceMember, "athleteId" | "name">;
+/**
+ * Server wrapper: the page lists members by their old joined_at window, so here the eligible list is re-derived
+ * from start_date (PR-15). Back-dated athletes the page did not list are added; athletes whose start day is still
+ * ahead are dropped. Saving is enforced again by saveAttendance and the DB guard.
+ */
+export async function AttendanceSheet({ sessionId, members }: { sessionId: string; members: AttendanceMember[] }) {
+  const fallback = <AttendanceSheetClient sessionId={sessionId} members={members} />;
+  const supabase = await createClient();
 
-const AR_DIGITS = "٠١٢٣٤٥٦٧٨٩";
-const normalizeNumber = (v: string) =>
-  v
-    .trim()
-    .replace(/[٠-٩]/g, (d) => String(AR_DIGITS.indexOf(d)))
-    .replace(/[٫,]/g, ".");
+  const { data: session, error: sErr } = await supabase
+    .from("training_sessions")
+    .select("id, group_id, scheduled_at")
+    .eq("id", sessionId)
+    .maybeSingle();
+  if (sErr || !session) {
+    if (sErr) console.error("[attendance-sheet] session query failed", { code: sErr.code, message: sErr.message });
+    return fallback;
+  }
 
-const segCls = (on: boolean, tone: "success" | "danger") =>
-  `min-h-11 flex-1 rounded-md border px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${
-    on
-      ? tone === "success"
-        ? "border-success bg-success text-white"
-        : "border-danger bg-danger text-white"
-      : "border-border bg-background hover:bg-muted"
-  }`;
+  const { data: rows, error: mErr } = await supabase.from("training_group_members").select("*").eq("group_id", session.group_id);
+  if (mErr) {
+    console.error("[attendance-sheet] members query failed", { code: mErr.code, message: mErr.message });
+    return fallback;
+  }
 
-export function AttendanceSheet({ sessionId, members }: { sessionId: string; members: AttendanceMember[] }) {
-  const t = useTranslations("training");
-  const uid = useId();
-  const [pending, start] = useTransition();
-  const [rows, setRows] = useState<Record<string, Row>>(() =>
-    Object.fromEntries(members.map((m) => [m.athleteId, { status: m.status, score: m.score, performance: m.performance, note: m.note }])),
+  const at = session.scheduled_at as string;
+  const day = cairoDateOf(at);
+  const eligible = new Set(
+    ((rows ?? []) as MemberRow[])
+      .filter((r) => (r.start_date ? r.start_date <= day : r.joined_at <= at) && (!r.left_at || r.left_at > at))
+      .map((r) => r.athlete_id),
   );
-  const [err, setErr] = useState<string | null>(null);
-  const [ok, setOk] = useState(false);
-  const [missing, setMissing] = useState<Set<string>>(new Set());
 
-  const patch = (id: string, p: Partial<Row>) => {
-    setOk(false);
-    setMissing((s) => {
-      if (!s.has(id)) return s;
-      const n = new Set(s);
-      n.delete(id);
-      return n;
-    });
-    setRows((r) => ({ ...r, [id]: { ...r[id], ...p } }));
-  };
+  const kept = members.filter((m) => eligible.has(m.athleteId));
+  const listed = new Set(members.map((m) => m.athleteId));
+  const missingIds = [...eligible].filter((id) => !listed.has(id));
 
-  const allPresent = () => {
-    setOk(false);
-    setRows((r) => Object.fromEntries(Object.entries(r).map(([id, v]) => [id, { ...v, status: "present" as const }])));
-  };
+  let added: AttendanceMember[] = [];
+  if (missingIds.length) {
+    const locale = await getLocale();
+    const [{ data: profs, error: pErr }, { data: atts, error: aErr }] = await Promise.all([
+      supabase.from("profiles").select("id, display_name").in("id", missingIds),
+      supabase
+        .from("session_attendance")
+        .select("athlete_id, status, score, performance, note")
+        .eq("session_id", sessionId)
+        .in("athlete_id", missingIds),
+    ]);
+    if (pErr) console.error("[attendance-sheet] profiles query failed", { code: pErr.code, message: pErr.message });
+    if (aErr) console.error("[attendance-sheet] attendance query failed", { code: aErr.code, message: aErr.message });
+    const nameById = new Map(((profs ?? []) as { id: string; display_name: string | null }[]).map((p) => [p.id, p.display_name ?? "\u2014"]));
+    const attBy = new Map(
+      ((atts ?? []) as { athlete_id: string; status: "present" | "absent" | null; score: number | null; performance: number | null; note: string | null }[]).map(
+        (a) => [a.athlete_id, a],
+      ),
+    );
+    added = missingIds
+      .map((id): AttendanceMember => {
+        const a = attBy.get(id);
+        return {
+          athleteId: id,
+          name: nameById.get(id) ?? "\u2014",
+          status: a?.status ?? null,
+          score: a?.score === null || a?.score === undefined ? "" : String(a.score),
+          performance: a?.performance ?? null,
+          note: a?.note ?? "",
+        };
+      })
+      .sort((x, y) => x.name.localeCompare(y.name, locale));
+  }
 
-  const marked = members.filter((m) => rows[m.athleteId]?.status).length;
-  const presentCount = members.filter((m) => rows[m.athleteId]?.status === "present").length;
-
-  const onSave = () => {
-    setErr(null);
-    setOk(false);
-    const incomplete = members.filter((m) => {
-      const r = rows[m.athleteId];
-      return !r.status && (r.score.trim() !== "" || r.performance !== null || r.note.trim() !== "");
-    });
-    if (incomplete.length) {
-      setMissing(new Set(incomplete.map((m) => m.athleteId)));
-      setErr("errChooseStatus");
-      return;
-    }
-    setMissing(new Set());
-    const payload: AttendanceInput[] = [];
-    for (const m of members) {
-      const r = rows[m.athleteId];
-      if (!r.status) continue;
-      let score: number | null = null;
-      const raw = normalizeNumber(r.score);
-      if (raw !== "") {
-        score = Number(raw);
-        if (!/^\d+(\.\d{1,2})?$/.test(raw) || !Number.isFinite(score)) {
-          setErr("errScore");
-          return;
-        }
-      }
-      payload.push({ athleteId: m.athleteId, status: r.status, score, performance: r.performance, note: r.note });
-    }
-    if (!payload.length) return;
-    start(async () => {
-      const res = await saveAttendance(sessionId, payload);
-      if (res?.ok) setOk(true);
-      else setErr(res?.error && t.has(res.error) ? res.error : "errGeneric");
-    });
-  };
-
-  return (
-    <div className="min-w-0 space-y-3 pb-24">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-muted-foreground" aria-live="polite">
-          {t("presentCount", { present: presentCount, total: members.length })}
-        </p>
-        <Button type="button" variant="outline" className="min-h-11" onClick={allPresent} disabled={pending}>
-          {t("allPresent")}
-        </Button>
-      </div>
-
-      <ul className="grid min-w-0 gap-3 md:grid-cols-2">
-        {members.map((m) => {
-          const r = rows[m.athleteId];
-          const id = `${uid}-${m.athleteId}`;
-          return (
-            <li key={m.athleteId} className={`min-w-0 space-y-3 rounded-lg border bg-card p-3 sm:p-4 ${missing.has(m.athleteId) ? "border-danger ring-1 ring-danger" : "border-border"}`}>
-              <p className="break-words font-medium">{m.name}</p>
-              <div className="flex gap-2" role="group" aria-label={m.name}>
-                <button type="button" aria-pressed={r.status === "present"} className={segCls(r.status === "present", "success")} onClick={() => patch(m.athleteId, { status: "present" })} disabled={pending}>
-                  {t("present")}
-                </button>
-                <button type="button" aria-pressed={r.status === "absent"} className={segCls(r.status === "absent", "danger")} onClick={() => patch(m.athleteId, { status: "absent" })} disabled={pending}>
-                  {t("absent")}
-                </button>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor={`${id}-score`}>{t("score")}</Label>
-                <Input id={`${id}-score`} inputMode="decimal" dir="ltr" className="h-11 text-start" value={r.score} onChange={(e) => patch(m.athleteId, { score: e.target.value })} disabled={pending} />
-              </div>
-              <div className="space-y-1.5">
-                <p className="text-sm font-medium leading-none">{t("performance")}</p>
-                <div className="flex flex-wrap items-center gap-1" role="group" aria-label={t("performance")}>
-                  {[1, 2, 3, 4, 5].map((n) => {
-                    const on = (r.performance ?? 0) >= n;
-                    return (
-                      <button
-                        key={n}
-                        type="button"
-                        aria-pressed={r.performance === n}
-                        aria-label={t("starsLabel", { n })}
-                        onClick={() => patch(m.athleteId, { performance: r.performance === n ? null : n })}
-                        disabled={pending}
-                        className="flex h-11 w-11 items-center justify-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-                      >
-                        <Star className={`h-6 w-6 ${on ? "fill-gold text-gold" : "text-muted-foreground"}`} aria-hidden />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor={`${id}-note`}>{t("note")}</Label>
-                <Input id={`${id}-note`} maxLength={300} className="h-11" value={r.note} onChange={(e) => patch(m.athleteId, { note: e.target.value })} disabled={pending} />
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-
-      <div className="sticky bottom-0 z-10 -mx-1 space-y-2 border-t border-border bg-background/95 p-3 backdrop-blur">
-        {err && (
-          <p role="alert" className="text-sm text-danger">
-            {t.has(err) ? t(err) : t("errGeneric")}
-          </p>
-        )}
-        {ok && (
-          <p role="status" className="text-sm font-medium text-success">
-            {t("attendanceSaved")}
-          </p>
-        )}
-        <Button type="button" className="min-h-11 w-full sm:w-auto" onClick={onSave} disabled={pending || !marked}>
-          {t("saveAttendance")}
-        </Button>
-      </div>
-    </div>
-  );
+  return <AttendanceSheetClient sessionId={sessionId} members={[...kept, ...added]} />;
 }

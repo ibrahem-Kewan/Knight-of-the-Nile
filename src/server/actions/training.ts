@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth/session";
+import { cairoToday, cairoDateOf, addDays, isYmd, START_BACK_DAYS, START_AHEAD_DAYS } from "@/lib/training/dates";
 
 type Res = { ok?: true; error?: string };
 
@@ -310,26 +311,50 @@ export async function setGroupActive(id: string, active: boolean): Promise<Res> 
 }
 
 // ---- group members ----
+const MEMBER_MSG_KEYS = [
+  "errStartTooEarly",
+  "errStartTooLate",
+  "errStartBeforeGroup",
+  "errStartAfterAttendance",
+  "errReasonRequired",
+  "errNoChange",
+  "errMemberNotFound",
+] as const;
+
 const memberDbError = (code?: string, message?: string): string => {
   if (code === "23505") return "errAlreadyMember";
+  const key = MEMBER_MSG_KEYS.find((k) => message?.includes(k));
+  if (key) return key;
+  // Column or function missing = migration 0044 not applied yet.
+  if (code === "PGRST204" || code === "42703" || code === "PGRST202" || code === "42883") return "errDbUpdateNeeded";
   if (message?.includes("errNotYourAthlete")) return "errNotYourAthlete";
   if (message?.includes("errGroupInactive")) return "errGroupInactive";
   return code === "42501" ? "errForbidden" : code === "22023" || code === "23514" ? "errInvalid" : "errGeneric";
 };
 
-export async function addToGroup(groupId: string, athleteId: string): Promise<Res> {
+export async function addToGroup(groupId: string, athleteId: string, startDate?: string): Promise<Res> {
   const me = await requireRole(["coach"]);
   if (!UUID_RE.test(groupId) || !UUID_RE.test(athleteId)) return { error: "errInvalid" };
 
   const supabase = await createClient();
   const { data: group } = await supabase
     .from("training_groups")
-    .select("id, is_active")
+    .select("id, is_active, starts_on")
     .eq("id", groupId)
     .eq("coach_id", me.id)
     .maybeSingle();
   if (!group) return { error: "errGroupNotFound" };
   if (!group.is_active) return { error: "errGroupInactive" };
+
+  if (startDate) {
+    if (!isYmd(startDate)) return { error: "errInvalid" };
+    const today = cairoToday();
+    if (startDate < addDays(today, -START_BACK_DAYS)) return { error: "errStartTooEarly" };
+    if (startDate > addDays(today, START_AHEAD_DAYS) && !(group.starts_on && startDate <= (group.starts_on as string))) {
+      return { error: "errStartTooLate" };
+    }
+    if (group.starts_on && startDate < (group.starts_on as string)) return { error: "errStartBeforeGroup" };
+  }
 
   const { data: link } = await supabase
     .from("coach_athletes")
@@ -352,11 +377,138 @@ export async function addToGroup(groupId: string, athleteId: string): Promise<Re
 
   const { error } = await supabase
     .from("training_group_members")
-    .insert({ group_id: groupId, athlete_id: athleteId, added_by: me.id });
-  if (error) return { error: memberDbError(error.code, error.message) };
+    .insert({ group_id: groupId, athlete_id: athleteId, added_by: me.id, ...(startDate ? { start_date: startDate } : {}) });
+  if (error) {
+    console.error("[training] addToGroup failed", { code: error.code, message: error.message });
+    return { error: memberDbError(error.code, error.message) };
+  }
 
   revalidatePath("/coach/athletes");
   revalidatePath(`/coach/groups/${groupId}`);
+  revalidatePath("/coach/groups/[id]", "page");
+  revalidatePath("/athlete/training");
+  return { ok: true };
+}
+
+export type StartPreview = {
+  errorCode: string | null;
+  consumedBefore: number;
+  consumedAfter: number;
+  remainingBefore: number;
+  remainingAfter: number;
+  unpaidBefore: number;
+  unpaidAfter: number;
+};
+
+type OwnMembership = { m: Record<string, unknown> & { id: string; group_id: string; athlete_id: string; start_date: string }; group: { id: string; starts_on: string | null } };
+
+async function ownOpenMembership(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  membershipId: string,
+  coachId: string,
+): Promise<OwnMembership | { error: string }> {
+  const { data: m, error } = await supabase.from("training_group_members").select("*").eq("id", membershipId).maybeSingle();
+  if (error) {
+    console.error("[training] membership load failed", { code: error.code, message: error.message });
+    return { error: "errGeneric" };
+  }
+  if (!m || m.left_at) return { error: "errMemberNotFound" };
+  if (!("start_date" in m) || !m.start_date) return { error: "errDbUpdateNeeded" };
+  const { data: group, error: gErr } = await supabase
+    .from("training_groups")
+    .select("id, starts_on")
+    .eq("id", m.group_id)
+    .eq("coach_id", coachId)
+    .maybeSingle();
+  if (gErr) {
+    console.error("[training] group load failed", { code: gErr.code, message: gErr.message });
+    return { error: "errGeneric" };
+  }
+  if (!group) return { error: "errForbidden" };
+  return { m: m as OwnMembership["m"], group: group as OwnMembership["group"] };
+}
+
+type PreviewRow = {
+  error_code: string | null;
+  consumed_before: number;
+  consumed_after: number;
+  remaining_before: number;
+  remaining_after: number;
+  unpaid_before: number;
+  unpaid_after: number;
+};
+
+async function callPreview(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  membershipId: string,
+  date: string,
+): Promise<{ preview?: StartPreview; error?: string }> {
+  const { data, error } = await supabase.rpc("preview_member_start_date", { p_member: membershipId, p_date: date });
+  if (error) {
+    console.error("[training] preview_member_start_date failed", { code: error.code, message: error.message });
+    return { error: memberDbError(error.code, error.message) };
+  }
+  const row = (Array.isArray(data) ? data[0] : data) as PreviewRow | null | undefined;
+  if (!row) return { error: "errGeneric" };
+  return {
+    preview: {
+      errorCode: row.error_code,
+      consumedBefore: row.consumed_before,
+      consumedAfter: row.consumed_after,
+      remainingBefore: row.remaining_before,
+      remainingAfter: row.remaining_after,
+      unpaidBefore: row.unpaid_before,
+      unpaidAfter: row.unpaid_after,
+    },
+  };
+}
+
+export async function previewMemberStartDate(
+  membershipId: string,
+  date: string,
+): Promise<{ ok?: true; error?: string; preview?: StartPreview }> {
+  const me = await requireRole(["coach"]);
+  if (!UUID_RE.test(membershipId) || !isYmd(date)) return { error: "errInvalid" };
+  const supabase = await createClient();
+  const own = await ownOpenMembership(supabase, membershipId, me.id);
+  if ("error" in own) return { error: own.error };
+  const r = await callPreview(supabase, membershipId, date);
+  if (r.error) return { error: r.error };
+  return { ok: true, preview: r.preview };
+}
+
+export async function setMemberStartDate(membershipId: string, date: string, reasonRaw: string): Promise<Res> {
+  const me = await requireRole(["coach"]);
+  if (!UUID_RE.test(membershipId) || !isYmd(date)) return { error: "errInvalid" };
+  const reason = String(reasonRaw ?? "").trim();
+  if (reason.length < 3 || reason.length > 300) return { error: "errReasonRequired" };
+
+  const supabase = await createClient();
+  const own = await ownOpenMembership(supabase, membershipId, me.id);
+  if ("error" in own) return { error: own.error };
+  const { m, group } = own;
+  if (date === m.start_date) return { error: "errNoChange" };
+  const today = cairoToday();
+  if (date > addDays(today, START_AHEAD_DAYS) && !(group.starts_on && date <= group.starts_on)) return { error: "errStartTooLate" };
+  if (date < addDays(today, -START_BACK_DAYS) && date < m.start_date) return { error: "errStartTooEarly" };
+  if (group.starts_on && date < group.starts_on) return { error: "errStartBeforeGroup" };
+
+  // Server-side attendance check (present / accepted claim inside the old window) via the read-only preview.
+  const pv = await callPreview(supabase, membershipId, date);
+  if (pv.error) return { error: pv.error };
+  if (pv.preview?.errorCode) return { error: pv.preview.errorCode };
+
+  const { error } = await supabase.rpc("set_member_start_date", { p_member: membershipId, p_date: date, p_reason: reason });
+  if (error) {
+    console.error("[training] set_member_start_date failed", { code: error.code, message: error.message });
+    return { error: memberDbError(error.code, error.message) };
+  }
+
+  revalidatePath("/coach/athletes");
+  revalidatePath("/coach/groups/[id]", "page");
+  revalidatePath("/coach/groups/[id]/sessions/[sessionId]", "page");
+  revalidatePath("/athlete/training");
+  revalidatePath("/coach");
   return { ok: true };
 }
 
@@ -523,13 +675,25 @@ export async function saveAttendance(sessionId: string, rows: AttendanceInput[])
   if (at > Date.now() + ATTENDANCE_OPEN_AHEAD_MS) return { error: "errAttendance" };
   if (Date.now() > at + EDIT_WINDOW_MS) return { error: "errTooLate" };
 
-  const { data: memberRows, error: memErr } = await supabase
+  let { data: memberRows, error: memErr } = await supabase
     .from("training_group_members")
     .select("athlete_id")
     .eq("group_id", session.group_id)
-    .lte("joined_at", session.scheduled_at)
+    .lte("start_date", cairoDateOf(session.scheduled_at))
     .or(`left_at.is.null,left_at.gt.${session.scheduled_at}`);
-  if (memErr) return { error: "errGeneric" };
+  if (isMissingColumn(memErr)) {
+    // Database not migrated to 0044 yet: fall back to the old joined_at window.
+    ({ data: memberRows, error: memErr } = await supabase
+      .from("training_group_members")
+      .select("athlete_id")
+      .eq("group_id", session.group_id)
+      .lte("joined_at", session.scheduled_at)
+      .or(`left_at.is.null,left_at.gt.${session.scheduled_at}`));
+  }
+  if (memErr) {
+    console.error("[training] saveAttendance members failed", { code: memErr.code, message: memErr.message });
+    return { error: "errGeneric" };
+  }
   const eligible = new Set((memberRows ?? []).map((m) => m.athlete_id as string));
 
   const seen = new Set<string>();
@@ -600,14 +764,29 @@ export async function createAttendanceClaim(sessionId: string, messageRaw: strin
     return { error: "errClaimNotAllowed" };
   }
 
-  const { data: member } = await supabase
+  let { data: member, error: memberErr } = await supabase
     .from("training_group_members")
     .select("id")
     .eq("group_id", session.group_id)
     .eq("athlete_id", me.id)
-    .lte("joined_at", session.scheduled_at)
+    .lte("start_date", cairoDateOf(session.scheduled_at as string))
     .or(`left_at.is.null,left_at.gt.${session.scheduled_at}`)
     .limit(1);
+  if (isMissingColumn(memberErr)) {
+    // Database not migrated to 0044 yet: fall back to the old joined_at window.
+    ({ data: member, error: memberErr } = await supabase
+      .from("training_group_members")
+      .select("id")
+      .eq("group_id", session.group_id)
+      .eq("athlete_id", me.id)
+      .lte("joined_at", session.scheduled_at)
+      .or(`left_at.is.null,left_at.gt.${session.scheduled_at}`)
+      .limit(1));
+  }
+  if (memberErr) {
+    console.error("[training] createAttendanceClaim member failed", { code: memberErr.code, message: memberErr.message });
+    return { error: "errGeneric" };
+  }
   if (!member?.length) return { error: "errClaimNotAllowed" };
 
   const [{ data: att }, { data: prior }] = await Promise.all([

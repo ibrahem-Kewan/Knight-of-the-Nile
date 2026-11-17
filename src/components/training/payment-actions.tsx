@@ -133,7 +133,13 @@ export function VoidButton({ cycleId }: { cycleId: string }) {
 }
 
 /** Coach records a payment directly (confirmed at once). Amount and sessions come from the group, never the form. */
-export function RecordPaymentForm({ groupId, members }: { groupId: string; members: { id: string; name: string }[] }) {
+export function RecordPaymentForm({
+  groupId,
+  members,
+}: {
+  groupId: string;
+  members: { id: string; name: string; amountLabel?: string }[];
+}) {
   const t = useTranslations("training");
   const uid = useId();
   const [pending, start] = useTransition();
@@ -164,7 +170,7 @@ export function RecordPaymentForm({ groupId, members }: { groupId: string; membe
         <select id={`${uid}-a`} name="athlete_id" required defaultValue="" className={SELECT_CLS}>
           <option value="" disabled>—</option>
           {members.map((m) => (
-            <option key={m.id} value={m.id}>{m.name}</option>
+            <option key={m.id} value={m.id}>{m.amountLabel ? `${m.name} — ${m.amountLabel}` : m.name}</option>
           ))}
         </select>
       </div>

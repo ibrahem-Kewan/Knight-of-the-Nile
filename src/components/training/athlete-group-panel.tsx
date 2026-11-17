@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { ClaimButton } from "@/components/training/claim-button";
 import { DeclarePaymentForm } from "@/components/training/declare-payment-form";
 import { formatMoney, formatSchedule } from "@/lib/training/schedule";
+import { cairoDateOf, formatYmd } from "@/lib/training/dates";
 
 export type PanelBilling = {
   paid_sessions: number;
@@ -60,7 +61,10 @@ export type PanelGroup = {
   is_active: boolean;
 };
 
-export type MembershipWindow = { joined_at: string; left_at: string | null };
+/** Effective own terms from my_member_terms(): amount and sessions only (no reason / mode / base price). */
+export type PanelTerms = { fee_amount: number; currency: string; sessions_total: number };
+
+export type MembershipWindow = { joined_at: string; left_at: string | null; start_date?: string | null };
 
 export type PanelBranch = { name_ar: string; name_en: string | null; address: string | null; map_url: string | null; place?: string | null } | null;
 
@@ -84,6 +88,7 @@ export async function AthleteGroupPanel({
   cycles,
   billing,
   windows,
+  terms,
 }: {
   group: PanelGroup;
   branch: PanelBranch;
@@ -98,9 +103,14 @@ export async function AthleteGroupPanel({
   billing: PanelBilling | null;
   /** All my membership windows in this group; only sessions inside one of them are shown. */
   windows: MembershipWindow[];
+  /** My effective terms (PR-16). Null (e.g. before migration 0045) falls back to the group's price. */
+  terms?: PanelTerms | null;
 }) {
   const t = await getTranslations("training");
   const locale = await getLocale();
+  const fee = terms ? Number(terms.fee_amount) : group.monthly_fee;
+  const feeCur = terms?.currency || group.currency;
+  const cycleSessions = terms?.sessions_total ?? group.sessions_per_cycle;
   const ar = locale === "ar";
   const tag = ar ? "ar-EG" : "en-GB";
   const dateFmt = new Intl.DateTimeFormat(tag, { weekday: "long", day: "numeric", month: "long", timeZone: "Africa/Cairo" });
@@ -109,8 +119,12 @@ export async function AthleteGroupPanel({
   const now = Date.now();
   const inWindow = (iso: string) => {
     const at = new Date(iso).getTime();
-    return windows.some((w) => new Date(w.joined_at).getTime() <= at && (!w.left_at || at < new Date(w.left_at).getTime()));
+    return windows.some((w) => {
+      const okStart = w.start_date ? cairoDateOf(iso) >= w.start_date : new Date(w.joined_at).getTime() <= at;
+      return okStart && (!w.left_at || at < new Date(w.left_at).getTime());
+    });
   };
+  const myStart = windows.find((w) => !w.left_at && w.start_date)?.start_date ?? null;
   const sorted = sessions.filter((s) => inWindow(s.scheduled_at)).sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
   const upcoming = sorted.filter((s) => new Date(s.scheduled_at).getTime() > now).slice(0, UPCOMING_LIMIT);
   const pastDesc = sorted.filter((s) => new Date(s.scheduled_at).getTime() <= now).reverse();
@@ -168,6 +182,16 @@ export async function AthleteGroupPanel({
             <dt className="text-xs text-muted-foreground">{t("coachLabel")}</dt>
             <dd className="break-words">{coachName ?? "—"}</dd>
           </div>
+          <div className="min-w-0">
+            <dt className="text-xs text-muted-foreground">{t("subscription")}</dt>
+            <dd className="break-words">{t("subscriptionTerms", { amount: money(fee, feeCur), count: cycleSessions })}</dd>
+          </div>
+          {myStart && (
+            <div className="min-w-0">
+              <dt className="text-xs text-muted-foreground">{t("myStartDate")}</dt>
+              <dd className="break-words">{formatYmd(myStart, locale)}</dd>
+            </div>
+          )}
           <div className="min-w-0 sm:col-span-2">
             <dt className="text-xs text-muted-foreground">{t("branchLabel")}</dt>
             <dd className="flex min-w-0 flex-wrap items-start gap-x-2 gap-y-1">
@@ -210,13 +234,13 @@ export async function AthleteGroupPanel({
               : billing.unpaid_consumed > 0
                 ? t("youOweSessions", { count: billing.unpaid_consumed })
                 : neverPaid
-                  ? t("payFee", { amount: money(group.monthly_fee, group.currency) })
+                  ? t("payFee", { amount: money(fee, feeCur) })
                   : t("noRemaining")}
           </p>
         )}
         {openDeclaration && (
           <p className="text-sm text-muted-foreground">
-            {t("awaitingAmount", { amount: money(openDeclaration.fee_amount ?? group.monthly_fee, openDeclaration.currency || group.currency) })}
+            {t("awaitingAmount", { amount: money(openDeclaration.fee_amount ?? fee, openDeclaration.currency || feeCur) })}
           </p>
         )}
         {lastRejected && (
@@ -230,14 +254,14 @@ export async function AthleteGroupPanel({
               {t("renewEarly")}
             </summary>
             <div className="space-y-2 pt-2">
-              <p className="text-sm text-muted-foreground">{t("payFee", { amount: money(group.monthly_fee, group.currency) })}</p>
+              <p className="text-sm text-muted-foreground">{t("payFee", { amount: money(fee, feeCur) })}</p>
               <DeclarePaymentForm groupId={group.id} hasOpenDeclaration={false} />
             </div>
           </details>
         )}
         {showForm && (
           <div className="space-y-2 pt-2">
-            <p className="text-sm font-medium">{t("payNow")} · {money(group.monthly_fee, group.currency)}</p>
+            <p className="text-sm font-medium">{t("payNow")} · {money(fee, feeCur)}</p>
             <DeclarePaymentForm groupId={group.id} hasOpenDeclaration={false} />
           </div>
         )}

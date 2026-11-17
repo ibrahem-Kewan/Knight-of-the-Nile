@@ -10,6 +10,7 @@ import {
   type PanelCycle,
   type PanelGroup,
   type PanelSession,
+  type PanelTerms,
 } from "@/components/training/athlete-group-panel";
 
 export async function generateMetadata() {
@@ -29,12 +30,14 @@ export default async function AthleteTrainingPage() {
   const loc = await getLocale();
   const supabase = await createClient();
 
-  const { data: memberRows } = await supabase
+  // "*" on purpose: naming start_date explicitly fails the whole query before migration 0044.
+  const { data: memberRows, error: memberErr } = await supabase
     .from("training_group_members")
-    .select("group_id, joined_at, left_at")
+    .select("*")
     .eq("athlete_id", me.id)
     .order("joined_at", { ascending: true });
-  const allWindows = (memberRows ?? []) as { group_id: string; joined_at: string; left_at: string | null }[];
+  if (memberErr) console.error("[athlete/training] memberships query failed", { code: memberErr.code, message: memberErr.message });
+  const allWindows = (memberRows ?? []) as { group_id: string; joined_at: string; left_at: string | null; start_date?: string | null }[];
   // Groups where I am an open member; closed windows still bound which past sessions count as mine.
   const groupIds = [...new Set(allWindows.filter((m) => !m.left_at).map((m) => m.group_id))];
 
@@ -71,7 +74,7 @@ export default async function AthleteTrainingPage() {
   const from = new Date(Date.now() - 60 * DAY).toISOString();
   const to = new Date(Date.now() + 28 * DAY).toISOString();
 
-  const [{ data: branchRows }, { data: sportRows }, { data: coachRows }, { data: sessionRows }, { data: cycleRows }, billingResults] =
+  const [{ data: branchRows }, { data: sportRows }, { data: coachRows }, { data: sessionRows }, { data: cycleRows }, billingResults, termsResults] =
     await Promise.all([
       // "*" on purpose: naming `city` explicitly fails the whole query before migration 0042.
       supabase.from("coach_branches").select("*").in("id", branchIds),
@@ -91,6 +94,8 @@ export default async function AthleteTrainingPage() {
         .in("group_id", groupIds)
         .order("declared_at", { ascending: false }),
       Promise.all(groupIds.map((g) => supabase.rpc("member_billing", { p_group: g, p_athlete: me.id }))),
+      // My own effective price / sessions only (the reason and mode are never exposed to athletes).
+      Promise.all(groupIds.map((g) => supabase.rpc("my_member_terms", { p_group: g }))),
     ]);
 
   const sessions = (sessionRows ?? []) as (PanelSession & { group_id: string })[];
@@ -137,6 +142,13 @@ export default async function AthleteTrainingPage() {
     billingByGroup.set(g, row ?? null);
   });
 
+  const termsByGroup = new Map<string, PanelTerms | null>();
+  groupIds.forEach((g, i) => {
+    const r = termsResults[i];
+    if (r?.error) console.error("[athlete/training] my_member_terms failed", { code: r.error.code, message: r.error.message });
+    termsByGroup.set(g, r?.error ? null : ((r?.data as PanelTerms[] | null)?.[0] ?? null));
+  });
+
   const ordered = groupIds.map((id) => groups.find((g) => g.id === id)).filter((g): g is GroupRow => !!g);
 
   return (
@@ -159,6 +171,7 @@ export default async function AthleteTrainingPage() {
               cycles={cycles.filter((c) => c.group_id === g.id).slice(0, 6)}
               windows={allWindows.filter((w) => w.group_id === g.id)}
               billing={billingByGroup.get(g.id) ?? null}
+              terms={termsByGroup.get(g.id) ?? null}
             />
           );
         })}

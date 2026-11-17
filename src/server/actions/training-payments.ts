@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth/session";
+import { parseTermsForm } from "@/lib/training/terms";
 
 type Res = { ok?: true; error?: string };
 
@@ -17,6 +18,11 @@ const KNOWN_KEYS = new Set([
   "errGroupInactive",
   "errForbidden",
   "errInvalid",
+  "errTermsInvalid",
+  "errTermsRange",
+  "errSessions",
+  "errNoChange",
+  "errMemberNotFound",
 ]);
 
 const str = (fd: FormData, key: string) => String(fd.get(key) ?? "").trim();
@@ -36,6 +42,7 @@ function parseInput(fd: FormData): Parsed {
 }
 
 function mapError(error: { code?: string; message?: string }): string {
+  if (["PGRST202", "42883", "PGRST204", "42703"].includes(error.code ?? "")) return "errDbUpdateNeeded";
   if (error.code === "42501") return error.message && KNOWN_KEYS.has(error.message) && error.message !== "errForbidden" ? error.message : "errForbidden";
   if (error.code === "22023") return error.message && KNOWN_KEYS.has(error.message) ? error.message : "errInvalid";
   if (error.code === "23514" || error.code === "23505") return "errInvalid";
@@ -46,6 +53,52 @@ function revalidateAll() {
   revalidatePath("/coach/groups/[id]", "page");
   revalidatePath("/coach");
   revalidatePath("/athlete/training");
+}
+
+/** Coach sets a member's subscription terms (price mode / value / sessions) with a mandatory reason. */
+export async function setMemberTerms(membershipId: string, fd: FormData): Promise<Res> {
+  const me = await requireRole(["coach"]);
+  if (!UUID_RE.test(membershipId)) return { error: "errInvalid" };
+  const parsed = parseTermsForm(fd);
+  if ("error" in parsed) return { error: parsed.error };
+  const { mode, value, sessions, reason } = parsed.input;
+
+  const supabase = await createClient();
+  const { data: m, error: mErr } = await supabase
+    .from("training_group_members")
+    .select("id, group_id, left_at")
+    .eq("id", membershipId)
+    .maybeSingle();
+  if (mErr) {
+    console.error("[training-payments] membership load failed", { code: mErr.code, message: mErr.message });
+    return { error: "errGeneric" };
+  }
+  if (!m || m.left_at) return { error: "errMemberNotFound" };
+  const { data: group, error: gErr } = await supabase
+    .from("training_groups")
+    .select("id")
+    .eq("id", m.group_id)
+    .eq("coach_id", me.id)
+    .maybeSingle();
+  if (gErr) {
+    console.error("[training-payments] group load failed", { code: gErr.code, message: gErr.message });
+    return { error: "errGeneric" };
+  }
+  if (!group) return { error: "errForbidden" };
+
+  const { error } = await supabase.rpc("set_member_terms", {
+    p_member: membershipId,
+    p_mode: mode,
+    p_value: value,
+    p_sessions: sessions,
+    p_reason: reason,
+  });
+  if (error) {
+    console.error("[training-payments] set_member_terms failed", { code: error.code, message: error.message });
+    return { error: mapError(error) };
+  }
+  revalidateAll();
+  return { ok: true };
 }
 
 /** Athlete declares a payment for a group they are an open member of. Coach confirms or rejects later. */
