@@ -2,14 +2,15 @@
 
 import { useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { createGroup, updateGroup } from "@/server/actions/training";
+import { createGroup, getMyBranchSportIds, updateGroup } from "@/server/actions/training";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { weekdayOrder } from "@/lib/training/schedule";
 import { Pencil, Plus } from "lucide-react";
 
-export type BranchOption = { id: string; name_ar: string; name_en: string | null };
+// `sport_ids` = the branch's training types (0047); absent/empty = untyped legacy branch (free sport choice).
+export type BranchOption = { id: string; name_ar: string; name_en: string | null; sport_ids?: string[] };
 export type SportOption = { id: string; name_ar: string; name_en: string };
 
 export type GroupValues = {
@@ -50,14 +51,43 @@ export function GroupForm({
   const editing = !!group;
   const p = group?.id ?? "new";
   const selectedDays = group?.weekdays ?? [];
+  const [branchId, setBranchId] = useState(group?.branch_id ?? branches[0]?.id ?? "");
+  const [sportId, setSportId] = useState(group?.sport_id ?? "");
+  // Branch types fetched on open when the page passed branches without `sport_ids` (group detail page).
+  const [fetchedSports, setFetchedSports] = useState<Record<string, string[]> | null>(null);
+  const [loadingSports, setLoadingSports] = useState(false);
+  const needsFetch = branches.some((b) => b.sport_ids === undefined);
+
+  // A typed branch limits the group's sport to its own types; a single type is applied automatically.
+  const selectedBranch = branches.find((b) => b.id === branchId);
+  const branchSportIds = selectedBranch?.sport_ids ?? fetchedSports?.[branchId] ?? [];
+  const allowedSports = branchSportIds.length > 0 ? sports.filter((s) => branchSportIds.includes(s.id)) : null;
+  const lockedSport = allowedSports && allowedSports.length === 1 ? allowedSports[0] : null;
+  const shownSportId = allowedSports && !allowedSports.some((s) => s.id === sportId) ? "" : sportId;
+  const openForm = () => {
+    setBranchId(group?.branch_id ?? branches[0]?.id ?? "");
+    setSportId(group?.sport_id ?? "");
+    setErr(null);
+    setOpen(true);
+    if (needsFetch && !fetchedSports) {
+      setLoadingSports(true);
+      getMyBranchSportIds()
+        .then((res) => {
+          // On failure keep the old free choice; the server and DB still enforce the branch types.
+          if (res?.ok && res.map) setFetchedSports(res.map);
+        })
+        .catch(() => {})
+        .finally(() => setLoadingSports(false));
+    }
+  };
 
   if (!open) {
     return editing ? (
-      <Button variant="outline" size="sm" className="min-h-11" onClick={() => setOpen(true)}>
+      <Button variant="outline" size="sm" className="min-h-11" onClick={openForm}>
         <Pencil className="h-4 w-4" /> {t("editGroup")}
       </Button>
     ) : (
-      <Button className="min-h-11" onClick={() => setOpen(true)}>
+      <Button className="min-h-11" onClick={openForm}>
         <Plus className="h-4 w-4" /> {t("newGroup")}
       </Button>
     );
@@ -87,20 +117,49 @@ export function GroupForm({
         </div>
         <div className="space-y-1.5">
           <Label htmlFor={`g_branch_${p}`}>{t("branch")}</Label>
-          <select id={`g_branch_${p}`} name="branch_id" required defaultValue={group?.branch_id ?? branches[0]?.id ?? ""} className={SELECT_CLS}>
+          <select
+            id={`g_branch_${p}`}
+            name="branch_id"
+            required
+            value={branchId}
+            onChange={(e) => setBranchId(e.target.value)}
+            className={SELECT_CLS}
+          >
             {branches.map((b) => (
               <option key={b.id} value={b.id}>{ar ? b.name_ar : (b.name_en || b.name_ar)}</option>
             ))}
           </select>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor={`g_sport_${p}`}>{t("sport")}</Label>
-          <select id={`g_sport_${p}`} name="sport_id" defaultValue={group?.sport_id ?? ""} className={SELECT_CLS}>
-            <option value="">{t("noSport")}</option>
-            {sports.map((s) => (
-              <option key={s.id} value={s.id}>{ar ? s.name_ar : s.name_en}</option>
-            ))}
-          </select>
+          <Label id={`g_sport_label_${p}`} htmlFor={lockedSport ? undefined : `g_sport_${p}`}>{t("sport")}</Label>
+          {lockedSport ? (
+            <>
+              <input type="hidden" name="sport_id" value={lockedSport.id} />
+              <div
+                aria-labelledby={`g_sport_label_${p}`}
+                className="flex h-11 items-center rounded-md border border-border bg-muted/40 px-3 text-sm"
+              >
+                {ar ? lockedSport.name_ar : lockedSport.name_en}
+              </div>
+              <p className="text-xs text-muted-foreground">{t("groupSportFromBranch")}</p>
+            </>
+          ) : (
+            <select
+              id={`g_sport_${p}`}
+              name="sport_id"
+              required={!!allowedSports}
+              disabled={loadingSports}
+              aria-busy={loadingSports}
+              value={shownSportId}
+              onChange={(e) => setSportId(e.target.value)}
+              className={SELECT_CLS}
+            >
+              <option value="">{allowedSports ? t("selectSport") : t("noSport")}</option>
+              {(allowedSports ?? sports).map((s) => (
+                <option key={s.id} value={s.id}>{ar ? s.name_ar : s.name_en}</option>
+              ))}
+            </select>
+          )}
         </div>
 
         <fieldset className="min-w-0 space-y-1.5 sm:col-span-2">
@@ -146,7 +205,7 @@ export function GroupForm({
       </div>
       {err && <p role="alert" className="mt-3 text-sm text-danger">{t.has(err) ? t(err) : t("errGeneric")}</p>}
       <div className="mt-5 flex flex-wrap gap-2">
-        <Button type="submit" className="min-h-11" disabled={pending}>{t("save")}</Button>
+        <Button type="submit" className="min-h-11" disabled={pending || loadingSports}>{t("save")}</Button>
         <Button type="button" variant="outline" className="min-h-11" onClick={() => setOpen(false)}>{t("cancel")}</Button>
       </div>
     </form>

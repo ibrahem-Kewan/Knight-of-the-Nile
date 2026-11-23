@@ -4,6 +4,8 @@ import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { ROLES, type Role } from "@/config/roles";
 import { Link } from "@/lib/i18n/navigation";
+import { enumLabel } from "@/lib/i18n/labels";
+import { isStaffRole, sortSpecialties, specialtyGroup, type StaffSpecialty } from "@/lib/staff/specialties";
 import { UserActions } from "@/components/admin/user-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -42,6 +44,7 @@ export default async function AdminUsersPage({
 }) {
   const me = await requireRole(["super_admin", "admin"]);
   const t = await getTranslations("admin");
+  const te = await getTranslations("enums");
   const locale = await getLocale();
   const supabase = await createClient();
 
@@ -85,6 +88,23 @@ export default async function AdminUsersPage({
       .select("id, display_name, first_name_ar, last_name_ar")
       .in("id", approverIds);
     for (const r of rows ?? []) approvers.set(r.id, fullName(r) ?? "—");
+  }
+
+  // PR-18: specialties of the listed coaches/judges — a second, simple query (no embedding).
+  const staffIds = users.filter((u) => isStaffRole(u.role)).map((u) => u.id);
+  const specialtiesById = new Map<string, StaffSpecialty[]>();
+  if (staffIds.length) {
+    const { data: rows, error: specErr } = await supabase
+      .from("staff_specialties")
+      .select("profile_id, role, specialty")
+      .in("profile_id", staffIds);
+    if (specErr) console.error("[admin/users] specialties load failed:", specErr.code, specErr.message);
+    const raw = new Map<string, string[]>();
+    for (const r of (rows ?? []) as { profile_id: string; role: string; specialty: string }[]) {
+      const owner = users.find((u) => u.id === r.profile_id);
+      if (owner && owner.role === r.role) raw.set(r.profile_id, [...(raw.get(r.profile_id) ?? []), r.specialty]);
+    }
+    for (const [pid, list] of raw) specialtiesById.set(pid, sortSpecialties(list));
   }
 
   const viewerIsSuper = me.role === "super_admin";
@@ -169,6 +189,12 @@ export default async function AdminUsersPage({
                       )}
                       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
                         <Badge variant="secondary">{t(roleKey[u.role] ?? u.role)}</Badge>
+                        {isStaffRole(u.role) &&
+                          (specialtiesById.get(u.id) ?? []).map((sp) => (
+                            <Badge key={sp} variant="outline" title={t("specialties")}>
+                              {enumLabel(te, specialtyGroup(u.role as "coach" | "judge"), sp)}
+                            </Badge>
+                          ))}
                         <Badge variant={statusVariant[u.status] ?? "secondary"}>{t(statusKey[u.status] ?? u.status)}</Badge>
                         <span>
                           {t("joined")}: <time dateTime={u.created_at}>{dateFmt.format(new Date(u.created_at))}</time>
@@ -188,6 +214,7 @@ export default async function AdminUsersPage({
                       status={u.status}
                       isSelf={isSelf}
                       viewerIsSuper={viewerIsSuper}
+                      specialties={specialtiesById.get(u.id) ?? []}
                     />
                   </div>
                 </li>

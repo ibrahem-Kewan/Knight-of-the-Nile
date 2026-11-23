@@ -37,7 +37,8 @@ export default async function CoachGroupsPage() {
   const [{ data: branchRows }, { data: groupRows }, { data: sportRows }] = await Promise.all([
     supabase
       .from("coach_branches")
-      .select("id, name_ar, name_en, is_active")
+      // "*" on purpose: naming `sport_ids` explicitly fails the whole query before migration 0047.
+      .select("*")
       .eq("coach_id", me.id)
       .order("created_at", { ascending: true }),
     supabase
@@ -49,7 +50,9 @@ export default async function CoachGroupsPage() {
     supabase.from("sports").select("id, name_ar, name_en").eq("is_active", true).order("name_ar"),
   ]);
 
-  const branches = (branchRows ?? []) as Branch[];
+  const branches = ((branchRows ?? []) as (Omit<Branch, "sport_ids"> & { sport_ids?: string[] | null })[]).map(
+    (b) => ({ ...b, sport_ids: b.sport_ids ?? [] }),
+  ) as Branch[];
   const groups = (groupRows ?? []) as Group[];
   const sports = (sportRows ?? []) as SportOption[];
   const activeBranches = branches.filter((b) => b.is_active);

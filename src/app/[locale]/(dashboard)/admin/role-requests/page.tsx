@@ -3,22 +3,25 @@ import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { RequestActions } from "@/components/admin/request-actions";
 import { Badge } from "@/components/ui/badge";
+import { enumLabel } from "@/lib/i18n/labels";
+import { isStaffRole, sortSpecialties, specialtyGroup } from "@/lib/staff/specialties";
 
 const roleKey: Record<string, string> = { coach: "roleCoach", judge: "roleJudge" };
 
 export default async function RoleRequestsPage() {
   await requireRole(["super_admin", "admin"]);
   const t = await getTranslations("admin");
+  const te = await getTranslations("enums");
   const supabase = await createClient();
 
   const { data: reqData, error: reqsErr } = await supabase
     .from("role_requests")
-    .select("id, requested_role, note, created_at, profiles!role_requests_profile_id_fkey(display_name, email)")
+    .select("id, requested_role, requested_specialties, note, created_at, profiles!role_requests_profile_id_fkey(display_name, email)")
     .eq("status", "pending")
     .order("created_at", { ascending: true });
   if (reqsErr) console.error("[admin/role-requests]", reqsErr.code, reqsErr.message);
   type RequestRow = {
-    id: string; requested_role: string; note: string | null; created_at: string;
+    id: string; requested_role: string; requested_specialties: string[] | null; note: string | null; created_at: string;
     profiles: { display_name: string | null; email: string | null } | null;
   };
   const reqs = (reqData ?? []) as unknown as RequestRow[];
@@ -36,18 +39,36 @@ export default async function RoleRequestsPage() {
                 <th className="p-3 text-start">{t("requestedBy")}</th>
                 <th className="p-3 text-start">{t("email")}</th>
                 <th className="p-3 text-start">{t("requestedRole")}</th>
+                <th className="p-3 text-start">{t("suggestedSpecialties")}</th>
                 <th className="p-3 text-start">{t("actions")}</th>
               </tr>
             </thead>
             <tbody>
-              {reqs.map((r) => (
+              {reqs.map((r) => {
+                const staffRole = isStaffRole(r.requested_role) ? r.requested_role : null;
+                const suggested = sortSpecialties(r.requested_specialties ?? []);
+                return (
                 <tr key={r.id} className="border-t border-border">
                   <td className="p-3 font-medium">{r.profiles?.display_name ?? "—"}</td>
                   <td className="p-3 text-muted-foreground">{r.profiles?.email}</td>
                   <td className="p-3"><Badge>{t(roleKey[r.requested_role] ?? r.requested_role)}</Badge></td>
-                  <td className="p-3"><RequestActions id={r.id} /></td>
+                  <td className="p-3">
+                    {staffRole && suggested.length ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        {suggested.map((sp) => (
+                          <Badge key={sp} variant="outline">{enumLabel(te, specialtyGroup(staffRole), sp)}</Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">{t("noSuggestedSpecialties")}</span>
+                    )}
+                  </td>
+                  <td className="p-3">
+                    {staffRole && <RequestActions id={r.id} role={staffRole} suggested={suggested} />}
+                  </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

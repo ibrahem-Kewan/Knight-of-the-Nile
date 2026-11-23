@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { BranchForm, type BranchValues, type Governorate } from "@/components/training/branch-form";
 import { BranchActiveToggle } from "@/components/training/branch-active-toggle";
+import type { SportOption } from "@/components/training/group-form";
 
 export async function generateMetadata() {
   const t = await getTranslations("training");
@@ -20,7 +21,7 @@ export default async function CoachBranchesPage() {
   const ar = locale === "ar";
   const supabase = await createClient();
 
-  const [{ data: branchRows, error: branchErr }, { data: govRows, error: govErr }] = await Promise.all([
+  const [{ data: branchRows, error: branchErr }, { data: govRows, error: govErr }, { data: sportRows, error: sportErr }] = await Promise.all([
     supabase
       .from("coach_branches")
       // "*" on purpose: naming `city` explicitly fails the whole query before migration 0042.
@@ -29,14 +30,27 @@ export default async function CoachBranchesPage() {
       .order("is_active", { ascending: false })
       .order("created_at", { ascending: true }),
     supabase.from("governorates").select("id, name_ar, name_en, is_active").order("name_ar"),
+    supabase.from("sports").select("id, name_ar, name_en, is_active").order("sort_order", { ascending: true }),
   ]);
 
   if (branchErr) console.error("[coach/branches] branches query failed", branchErr);
   if (govErr) console.error("[coach/branches] governorates query failed", govErr);
-  const branches = ((branchRows ?? []) as (Omit<Branch, "city"> & { city?: string | null })[]).map((b) => ({
+  if (sportErr) console.error("[coach/branches] sports query failed", sportErr);
+  // `city` (0042) and `sport_ids` (0047) are absent until those migrations are applied.
+  const branches = ((branchRows ?? []) as (Omit<Branch, "city" | "sport_ids"> & {
+    city?: string | null;
+    sport_ids?: string[] | null;
+  })[]).map((b) => ({
     ...b,
     city: b.city ?? null,
+    sport_ids: b.sport_ids ?? [],
   })) as Branch[];
+  const allSports = (sportRows ?? []) as (SportOption & { is_active: boolean })[];
+  const activeSports: SportOption[] = allSports.filter((s) => s.is_active);
+  const sportName = new Map(allSports.map((s) => [s.id, ar ? s.name_ar : s.name_en]));
+  // Options for a branch: active ones plus the ones it already holds even if deactivated since.
+  const sportOptionsFor = (current: string[]): SportOption[] =>
+    allSports.filter((s) => s.is_active || current.includes(s.id));
   const allGovs = (govRows ?? []) as (Governorate & { is_active: boolean })[];
   const govName = new Map(allGovs.map((g) => [g.id, ar ? g.name_ar : g.name_en]));
   const activeGovs: Governorate[] = allGovs.filter((g) => g.is_active);
@@ -53,7 +67,7 @@ export default async function CoachBranchesPage() {
         <p className="text-sm text-muted-foreground">{t("branchesIntro")}</p>
       </div>
 
-      <BranchForm governorates={activeGovs} />
+      <BranchForm governorates={activeGovs} sports={activeSports} />
 
       {branches.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("noBranches")}</p>
@@ -68,6 +82,15 @@ export default async function CoachBranchesPage() {
                   <Badge variant={b.is_active ? "success" : "outline"}>
                     {b.is_active ? t("active") : t("inactive")}
                   </Badge>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {b.sport_ids.length === 0 ? (
+                    <Badge variant="outline">{t("branchSportMissing")}</Badge>
+                  ) : (
+                    b.sport_ids.map((id) => (
+                      <Badge key={id} variant="outline">{sportName.get(id) ?? "—"}</Badge>
+                    ))
+                  )}
                 </div>
                 <div className="min-w-0 space-y-1 text-sm text-muted-foreground">
                   {b.governorate_id && govName.get(b.governorate_id) && (
@@ -93,7 +116,7 @@ export default async function CoachBranchesPage() {
                 </div>
                 <div className="mt-auto flex flex-wrap items-start gap-2 pt-1">
                   <BranchActiveToggle id={b.id} active={b.is_active} />
-                  <BranchForm governorates={govOptionsFor(b.governorate_id)} branch={b} />
+                  <BranchForm governorates={govOptionsFor(b.governorate_id)} sports={sportOptionsFor(b.sport_ids)} branch={b} />
                 </div>
               </article>
             );

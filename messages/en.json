@@ -337,7 +337,18 @@
         "noResults": "No matching results.",
         "loadError": "Could not load users. Please try again.",
         "showingFirst": "Showing the first {shown} of {total}. Use search or filters to narrow the results.",
-        "errForbidden": "You are not allowed to do this"
+        "errForbidden": "You are not allowed to do this",
+        "specialties": "Specialty",
+        "specialtiesFor": "Choose the {role} specialty (you can pick more than one)",
+        "pickSpecialties": "Choose specialty",
+        "editSpecialties": "Edit specialties",
+        "specialtiesRemovedNote": "This person will become an athlete and their current specialties will be removed (the change is recorded in the audit log).",
+        "suggestedSpecialties": "Suggested specialty",
+        "noSuggestedSpecialties": "The requester did not suggest a specialty",
+        "confirmAssign": "Confirm assignment",
+        "confirmToAthleteTitle": "Change to athlete",
+        "specialtiesRequiredHint": "Pick at least one specialty. \"Comprehensive\" clears the other choices.",
+        "suggestedHint": "The requester's suggested specialty is pre-selected; you can adjust it before approving."
     },
     "roleReq": {
         "title": "Request role upgrade",
@@ -349,7 +360,9 @@
         "pending": "You have a pending request to become: ",
         "current": "Your current role: ",
         "success": "Your request was sent for admin review.",
-        "already": "You are already at this role or higher."
+        "already": "You are already at this role or higher.",
+        "specialties": "Specialty",
+        "specialtiesHint": "Pick at least one specialty; an admin will review and may adjust it. \"Comprehensive\" clears the other choices."
     },
     "tadmin": {
         "title": "Manage tournaments",
@@ -591,7 +604,10 @@
         "passwordChanged": "Password updated.",
         "passwordMismatch": "Passwords do not match.",
         "passwordShort": "Password must be at least 8 characters.",
-        "error": "Something went wrong, please try again."
+        "error": "Something went wrong, please try again.",
+        "specialtiesTitle": "My specialties",
+        "specialtiesHint": "Set by an admin; they cannot be changed here.",
+        "noSpecialties": "No specialty set yet"
     },
     "events": {
         "title": "Events",
@@ -732,6 +748,20 @@
             "tournament": "Tournament",
             "event": "Event",
             "membership": "Membership"
+        },
+        "specialtyCoach": {
+            "ground_archery": "Ground archery coach",
+            "mounted_archery": "Mounted archery coach",
+            "equestrian": "Equestrian coach",
+            "equestrian_mounted": "Mounted equestrian coach",
+            "all": "Comprehensive coach"
+        },
+        "specialtyJudge": {
+            "ground_archery": "Ground archery judge",
+            "mounted_archery": "Mounted archery judge",
+            "equestrian": "Equestrian judge",
+            "equestrian_mounted": "Mounted equestrian judge",
+            "all": "Comprehensive judge"
         }
     },
     "errors": {
@@ -762,7 +792,9 @@
         "not-branch-athlete": "This tournament is only for athletes in this branch's groups.",
         "no-judge": "Choose a judge first.",
         "errDbOutdated": "This feature needs a database update first — please contact the administration.",
-        "locked": "This item has a pending deletion request and can't be changed right now."
+        "locked": "This item has a pending deletion request and can't be changed right now.",
+        "errSpecialtyRequired": "Pick at least one specialty",
+        "errSpecialtyInvalid": "Invalid specialty selection (\"Comprehensive\" cannot be combined with others)"
     },
     "table": {
         "name": "Name",
@@ -1017,6 +1049,15 @@
         "branch": "Branch",
         "sport": "Sport",
         "noSport": "Not specified",
+        "branchSports": "Training type",
+        "branchSportsHint": "Choose one or more types trained at this branch.",
+        "branchSportMissing": "Set training type",
+        "branchSportLegacyHint": "This branch was created before training types existed — pick its type, then save.",
+        "errBranchSports": "Choose at least one training type from the list.",
+        "errBranchSportInUse": "You can't remove a type that a group in this branch uses. Change that group's type first.",
+        "errGroupSport": "A group's type must be one of its branch's types.",
+        "selectSport": "Select type",
+        "groupSportFromBranch": "Set automatically from the branch's type.",
         "weekdays": "Training days",
         "startTime": "Start time (Cairo time)",
         "duration": "Duration",

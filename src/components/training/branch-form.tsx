@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Pencil, Plus } from "lucide-react";
+import type { SportOption } from "@/components/training/group-form";
 
 export type Governorate = { id: string; name_ar: string; name_en: string };
 
@@ -18,10 +19,19 @@ export type BranchValues = {
   city: string | null;
   address: string | null;
   map_url: string | null;
+  sport_ids: string[];
 };
 
 /** One form for create (no `branch`) and edit (`branch` given). */
-export function BranchForm({ governorates, branch }: { governorates: Governorate[]; branch?: BranchValues }) {
+export function BranchForm({
+  governorates,
+  sports,
+  branch,
+}: {
+  governorates: Governorate[];
+  sports: SportOption[];
+  branch?: BranchValues;
+}) {
   const t = useTranslations("training");
   const locale = useLocale();
   const [open, setOpen] = useState(false);
@@ -29,6 +39,7 @@ export function BranchForm({ governorates, branch }: { governorates: Governorate
   const [err, setErr] = useState<string | null>(null);
   const [govId, setGovId] = useState(branch?.governorate_id ?? "");
   const [city, setCity] = useState(branch?.city ?? "");
+  const [sportIds, setSportIds] = useState<string[]>(branch?.sport_ids ?? []);
   const sortedGovs = useMemo(
     () =>
       [...governorates].sort((a, b) =>
@@ -40,6 +51,7 @@ export function BranchForm({ governorates, branch }: { governorates: Governorate
   const openForm = () => {
     setGovId(branch?.governorate_id ?? "");
     setCity(branch?.city ?? "");
+    setSportIds(branch?.sport_ids ?? []);
     setErr(null);
     setOpen(true);
   };
@@ -63,6 +75,11 @@ export function BranchForm({ governorates, branch }: { governorates: Governorate
       // fields and desynced the governorate select whenever saving failed.
       onSubmit={(e) => {
         e.preventDefault();
+        // At least one training type is required (also enforced in the Server Action and the DB).
+        if (sportIds.length === 0) {
+          setErr("errBranchSports");
+          return;
+        }
         const fd = new FormData(e.currentTarget);
         start(async () => {
           setErr(null);
@@ -79,6 +96,31 @@ export function BranchForm({ governorates, branch }: { governorates: Governorate
     >
       <h3 className="mb-4 font-semibold">{editing ? t("editBranch") : t("newBranch")}</h3>
       <div className="grid gap-4 sm:grid-cols-2">
+        <fieldset className="min-w-0 space-y-1.5 sm:col-span-2" aria-describedby={`b_sports_hint_${p}`}>
+          <legend className="mb-1.5 text-sm font-medium">{t("branchSports")}</legend>
+          <div className="flex flex-wrap gap-2">
+            {sports.map((s) => (
+              <label key={s.id} className="relative cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="sport_ids"
+                  value={s.id}
+                  checked={sportIds.includes(s.id)}
+                  onChange={(e) =>
+                    setSportIds((cur) => (e.target.checked ? [...cur, s.id] : cur.filter((x) => x !== s.id)))
+                  }
+                  className="peer sr-only"
+                />
+                <span className="inline-flex min-h-11 min-w-[4.25rem] items-center justify-center rounded-md border border-border bg-background px-3 text-sm transition-colors peer-checked:border-gold peer-checked:bg-primary/15 peer-checked:font-semibold peer-checked:text-gold-deep peer-focus-visible:ring-2 peer-focus-visible:ring-gold dark:peer-checked:text-gold">
+                  {locale === "ar" ? s.name_ar : s.name_en}
+                </span>
+              </label>
+            ))}
+          </div>
+          <p id={`b_sports_hint_${p}`} className="text-xs text-muted-foreground">
+            {editing && (branch?.sport_ids?.length ?? 0) === 0 ? t("branchSportLegacyHint") : t("branchSportsHint")}
+          </p>
+        </fieldset>
         <div className="space-y-1.5">
           <Label htmlFor={`b_name_ar_${p}`}>{t("nameAr")}</Label>
           <Input id={`b_name_ar_${p}`} name="name_ar" required minLength={2} maxLength={80} defaultValue={branch?.name_ar ?? ""} />

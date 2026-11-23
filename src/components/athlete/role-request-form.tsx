@@ -3,6 +3,9 @@
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { requestRoleUpgrade } from "@/server/actions/role-request";
+import { errorLabel } from "@/lib/i18n/labels";
+import type { StaffSpecialty } from "@/lib/staff/specialties";
+import { SpecialtyPicker } from "@/components/shared/specialty-picker";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -10,8 +13,10 @@ import { CheckCircle2 } from "lucide-react";
 
 export function RoleRequestForm() {
   const t = useTranslations("roleReq");
+  const te = useTranslations("errors");
   const [role, setRole] = useState<"coach" | "judge">("coach");
   const [note, setNote] = useState("");
+  const [specialties, setSpecialties] = useState<StaffSpecialty[]>([]);
   const [done, setDone] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -42,6 +47,14 @@ export function RoleRequestForm() {
           </button>
         ))}
       </div>
+      <SpecialtyPicker
+        role={role}
+        value={specialties}
+        onChange={setSpecialties}
+        legend={t("specialties")}
+        hint={t("specialtiesHint")}
+        disabled={pending}
+      />
       <div className="space-y-1.5">
         <Label htmlFor="note">{t("note")}</Label>
         <textarea
@@ -55,13 +68,13 @@ export function RoleRequestForm() {
       {err && <p className="text-sm text-danger">{err}</p>}
       <Button
         size="lg"
-        disabled={pending}
+        disabled={pending || specialties.length === 0}
         onClick={() =>
           start(async () => {
             setErr(null);
-            const res = await requestRoleUpgrade(role, note);
+            const res = await requestRoleUpgrade(role, specialties, note);
             if (res?.ok) setDone(true);
-            else if (res?.error === "pending-exists") setErr(t("already"));
+            else if (res?.error?.startsWith("errSpecialty") || res?.error === "errDbOutdated") setErr(errorLabel(te, res.error));
             else setErr(t("already"));
           })
         }

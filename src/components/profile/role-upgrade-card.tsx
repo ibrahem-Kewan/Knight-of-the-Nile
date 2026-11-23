@@ -3,6 +3,9 @@
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { requestRoleUpgrade } from "@/server/actions/role-request";
+import { errorLabel } from "@/lib/i18n/labels";
+import type { StaffSpecialty } from "@/lib/staff/specialties";
+import { SpecialtyPicker } from "@/components/shared/specialty-picker";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -16,9 +19,11 @@ export function RoleUpgradeCard({
   pendingRole?: string | null;
 }) {
   const t = useTranslations("roleReq");
+  const te = useTranslations("errors");
   const options: ("coach" | "judge")[] = currentRole === "athlete" ? ["coach", "judge"] : ["judge"];
   const [role, setRole] = useState<"coach" | "judge">(options[0]);
   const [note, setNote] = useState("");
+  const [specialties, setSpecialties] = useState<StaffSpecialty[]>([]);
   const [done, setDone] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -55,6 +60,14 @@ export function RoleUpgradeCard({
               </button>
             ))}
           </div>
+          <SpecialtyPicker
+            role={role}
+            value={specialties}
+            onChange={setSpecialties}
+            legend={t("specialties")}
+            hint={t("specialtiesHint")}
+            disabled={pending}
+          />
           <textarea
             rows={2}
             value={note}
@@ -64,12 +77,13 @@ export function RoleUpgradeCard({
           />
           {err && <p className="text-sm text-danger">{err}</p>}
           <Button
-            disabled={pending}
+            disabled={pending || specialties.length === 0}
             onClick={() =>
               start(async () => {
                 setErr(null);
-                const res = await requestRoleUpgrade(role, note);
+                const res = await requestRoleUpgrade(role, specialties, note);
                 if (res?.ok) setDone(true);
+                else if (res?.error?.startsWith("errSpecialty") || res?.error === "errDbOutdated") setErr(errorLabel(te, res.error));
                 else setErr(t("already"));
               })
             }

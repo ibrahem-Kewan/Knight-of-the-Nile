@@ -6,13 +6,15 @@ import { ProfileForm, type ProfileInitial } from "@/components/profile/profile-f
 import { PasswordForm } from "@/components/profile/password-form";
 import { RegistrationTypeSection } from "@/components/profile/registration-type-section";
 import { RoleUpgradeCard } from "@/components/profile/role-upgrade-card";
+import { StaffSpecialtiesCard } from "@/components/profile/staff-specialties-card";
+import { isStaffRole, sortSpecialties } from "@/lib/staff/specialties";
 
 export default async function ProfilePage() {
   const me = await requireAuth();
   const t = await getTranslations("profile");
   const supabase = await createClient();
 
-  const [{ data }, { data: pendingReq }] = await Promise.all([
+  const [{ data }, { data: pendingReq }, { data: specRows, error: specErr }] = await Promise.all([
     supabase
       .from("profiles")
       .select(
@@ -27,7 +29,11 @@ export default async function ProfilePage() {
       .eq("status", "pending")
       .limit(1)
       .maybeSingle(),
+    isStaffRole(me.role)
+      ? supabase.from("staff_specialties").select("specialty").eq("profile_id", me.id).eq("role", me.role)
+      : Promise.resolve({ data: null, error: null }),
   ]);
+  if (specErr) console.error("[profile] specialties load failed:", specErr.code, specErr.message);
 
   const initial = (data ?? {}) as ProfileInitial;
   const pendingRole = (pendingReq as { requested_role: string } | null)?.requested_role ?? null;
@@ -47,6 +53,12 @@ export default async function ProfilePage() {
             fallback={(initial.display_name ?? me.email ?? "?").slice(0, 1).toUpperCase()}
           />
         </section>
+        {isStaffRole(me.role) && (
+          <StaffSpecialtiesCard
+            role={me.role}
+            specialties={sortSpecialties(((specRows ?? []) as { specialty: string }[]).map((r) => r.specialty))}
+          />
+        )}
         <ProfileForm initial={initial} />
         {me.role === "athlete" && <RegistrationTypeSection athleteId={me.id} />}
         {canUpgrade && (

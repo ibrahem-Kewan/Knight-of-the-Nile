@@ -19,6 +19,7 @@ type BranchInput = {
   city: string | null;
   address: string | null;
   map_url: string | null;
+  sport_ids: string[];
 };
 
 function parseBranch(fd: FormData): { input?: BranchInput; error?: string } {
@@ -28,7 +29,12 @@ function parseBranch(fd: FormData): { input?: BranchInput; error?: string } {
   const map_url = str(fd, "map_url");
   const governorate_id = str(fd, "governorate_id");
   const city = str(fd, "city");
+  // Training types (sports) of the branch: multi-select, at least one (migration 0047).
+  const sport_ids = [...new Set(fd.getAll("sport_ids").map((v) => String(v).trim()))];
 
+  if (sport_ids.length < 1 || sport_ids.length > 10 || sport_ids.some((id) => !UUID_RE.test(id))) {
+    return { error: "errBranchSports" };
+  }
   if (name_ar.length < 2 || name_ar.length > 80) return { error: "errInvalid" };
   if (name_en.length > 80) return { error: "errInvalid" };
   if (address.length > 200) return { error: "errInvalid" };
@@ -45,6 +51,7 @@ function parseBranch(fd: FormData): { input?: BranchInput; error?: string } {
       city: city || null,
       address: address || null,
       map_url: map_url || null,
+      sport_ids,
     },
   };
 }
@@ -59,9 +66,33 @@ const isMissingColumn = (e: DbError | null) => !!e && (e.code === "PGRST204" || 
 function branchDbError(where: string, e: DbError): string {
   console.error(`[training] ${where} failed`, { code: e.code, message: e.message, details: e.details, hint: e.hint });
   if (e.code === "42501") return "errForbidden";
+  // Guard-trigger codes from migration 0047 (checked before the generic 22023/23514 handling).
+  if (e.message?.includes("errBranchSportInUse")) return "errBranchSportInUse";
+  if (e.message?.includes("errBranchSports")) return "errBranchSports";
   if (e.code === "23514") return "errInvalid";
-  if (isMissingColumn(e)) return "errDbOutdated";
+  if (isMissingColumn(e)) {
+    // `sport_ids` missing = 0047 not applied (types can't be saved at all); `city` missing = 0042.
+    return `${e.message ?? ""}${e.details ?? ""}`.includes("sport_ids") ? "errDbUpdateNeeded" : "errDbOutdated";
+  }
   return "errGeneric";
+}
+
+/**
+ * Every chosen sport must exist and be active; a sport the branch already holds is kept even if it was
+ * deactivated since (never silently dropped). The DB guard (0047) enforces the same rules.
+ */
+async function sportsAreValid(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  ids: string[],
+  keep: string[] = [],
+): Promise<boolean> {
+  const { data, error } = await supabase.from("sports").select("id, is_active").in("id", ids);
+  if (error) {
+    console.error("[training] sports lookup failed", error);
+    return false;
+  }
+  const rows = data ?? [];
+  return ids.every((id) => rows.some((r) => r.id === id && (r.is_active || keep.includes(id))));
 }
 
 /** The payload without `city`, for databases where migration 0042 is not applied yet. */
@@ -77,6 +108,8 @@ export async function createBranch(fd: FormData): Promise<Res> {
   if (!input) return { error: invalid ?? "errInvalid" };
 
   const supabase = await createClient();
+  if (!(await sportsAreValid(supabase, input.sport_ids))) return { error: "errBranchSports" };
+
   let { error } = await supabase.from("coach_branches").insert({ ...input, coach_id: me.id });
   // Before 0042 the column does not exist: a branch without a city must still be creatable.
   if (isMissingColumn(error) && input.city === null) {
@@ -95,13 +128,17 @@ export async function updateBranch(id: string, fd: FormData): Promise<Res> {
   if (!input) return { error: invalid ?? "errInvalid" };
 
   const supabase = await createClient();
+  // "*" on purpose: naming `sport_ids` explicitly fails the whole query before migration 0047.
   const { data: own } = await supabase
     .from("coach_branches")
-    .select("id")
+    .select("*")
     .eq("id", id)
     .eq("coach_id", me.id)
     .maybeSingle();
   if (!own) return { error: "errNotFound" };
+  if (!(await sportsAreValid(supabase, input.sport_ids, (own.sport_ids as string[] | null) ?? []))) {
+    return { error: "errBranchSports" };
+  }
 
   let { error } = await supabase.from("coach_branches").update(input).eq("id", id).eq("coach_id", me.id);
   if (isMissingColumn(error) && input.city === null) {
@@ -218,7 +255,43 @@ function parseGroup(fd: FormData): { input?: GroupInput; error?: string } {
   };
 }
 
+/**
+ * A group inside a typed branch must use one of the branch's types (auto-filled when it has one).
+ * Untyped (legacy) branches keep the free choice. The DB guard (0047) enforces the same.
+ */
+function resolveGroupSport(
+  branchSportIds: string[] | null | undefined,
+  sportId: string | null,
+): { sport_id: string | null; error?: string } {
+  const allowed = branchSportIds ?? [];
+  if (allowed.length === 0) return { sport_id: sportId };
+  if (sportId === null) {
+    return allowed.length === 1 ? { sport_id: allowed[0] } : { sport_id: null, error: "errGroupSport" };
+  }
+  return allowed.includes(sportId) ? { sport_id: sportId } : { sport_id: sportId, error: "errGroupSport" };
+}
+
+/**
+ * The training types (0047) of each of my branches, keyed by branch id. Lets `GroupForm` restrict the
+ * sport list on pages that pass branches without `sport_ids` (e.g. the group detail page).
+ * Read-only; RLS `cb_select` also limits rows to the caller's own branches.
+ */
+export async function getMyBranchSportIds(): Promise<{ ok?: true; map?: Record<string, string[]>; error?: string }> {
+  const me = await requireRole(["coach"]);
+  const supabase = await createClient();
+  // "*" on purpose: naming `sport_ids` explicitly fails the whole query before migration 0047.
+  const { data, error } = await supabase.from("coach_branches").select("*").eq("coach_id", me.id);
+  if (error) {
+    console.error("[training] getMyBranchSportIds failed", error);
+    return { error: "errGeneric" };
+  }
+  const map: Record<string, string[]> = {};
+  for (const b of (data ?? []) as { id: string; sport_ids?: string[] | null }[]) map[b.id] = b.sport_ids ?? [];
+  return { ok: true, map };
+}
+
 const dbError = (code?: string, message?: string): string => {
+  if (message && message.includes("errGroupSport")) return "errGroupSport";
   if (message && message.includes("errBranch")) return "errBranch";
   if (code === "22023") return "errBranch";
   return code === "42501" ? "errForbidden" : code === "23514" ? "errInvalid" : "errGeneric";
@@ -230,16 +303,21 @@ export async function createGroup(fd: FormData): Promise<Res> {
   if (!input) return { error };
 
   const supabase = await createClient();
+  // "*" on purpose: naming `sport_ids` explicitly fails the whole query before migration 0047.
   const { data: branch } = await supabase
     .from("coach_branches")
-    .select("id")
+    .select("*")
     .eq("id", input.branch_id)
     .eq("coach_id", me.id)
     .eq("is_active", true)
     .maybeSingle();
   if (!branch) return { error: "errBranch" };
+  const sport = resolveGroupSport(branch.sport_ids as string[] | null, input.sport_id);
+  if (sport.error) return { error: sport.error };
 
-  const { error: dbErr } = await supabase.from("training_groups").insert({ ...input, coach_id: me.id });
+  const { error: dbErr } = await supabase
+    .from("training_groups")
+    .insert({ ...input, sport_id: sport.sport_id, coach_id: me.id });
   if (dbErr) return { error: dbError(dbErr.code, dbErr.message) };
 
   revalidatePath("/coach/groups");
@@ -264,15 +342,17 @@ export async function updateGroup(id: string, fd: FormData): Promise<Res> {
   // The branch must be mine and active, unless the group already sits in it (keep an inactive current branch).
   const { data: branch } = await supabase
     .from("coach_branches")
-    .select("id, is_active")
+    .select("*")
     .eq("id", input.branch_id)
     .eq("coach_id", me.id)
     .maybeSingle();
   if (!branch || (!branch.is_active && branch.id !== own.branch_id)) return { error: "errBranch" };
+  const sport = resolveGroupSport(branch.sport_ids as string[] | null, input.sport_id);
+  if (sport.error) return { error: sport.error };
 
   const { error: dbErr } = await supabase
     .from("training_groups")
-    .update(input)
+    .update({ ...input, sport_id: sport.sport_id })
     .eq("id", id)
     .eq("coach_id", me.id);
   if (dbErr) return { error: dbError(dbErr.code, dbErr.message) };

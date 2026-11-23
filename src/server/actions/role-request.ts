@@ -3,11 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireAuth } from "@/lib/auth/session";
+import { parseSpecialties, specialtyErrorCode } from "@/lib/staff/specialties";
 
 type Res = { ok?: boolean; error?: string };
 
-export async function requestRoleUpgrade(role: "coach" | "judge", note?: string): Promise<Res> {
+// PR-18: the requester must propose at least one specialty (the admin may adjust it on approval).
+export async function requestRoleUpgrade(role: "coach" | "judge", specialties: string[], note?: string): Promise<Res> {
   const me = await requireAuth();
+  const parsed = parseSpecialties(specialties);
+  if (!parsed.ok) return { error: parsed.error };
 
   // Athlete → coach/judge; coach → judge. Judges/admins have nothing to request.
   const allowed: Record<string, ("coach" | "judge")[]> = {
@@ -28,9 +32,11 @@ export async function requestRoleUpgrade(role: "coach" | "judge", note?: string)
 
   const { error } = await supabase
     .from("role_requests")
-    .insert({ profile_id: me.id, requested_role: role, note: note || null });
-  if (error) return { error: "failed" };
+    .insert({ profile_id: me.id, requested_role: role, requested_specialties: parsed.value, note: note || null });
+  if (error) return { error: specialtyErrorCode("role-request.requestRoleUpgrade", error) };
 
   revalidatePath("/athlete/request-role");
+  revalidatePath("/profile");
+  revalidatePath("/admin/role-requests");
   return { ok: true };
 }
