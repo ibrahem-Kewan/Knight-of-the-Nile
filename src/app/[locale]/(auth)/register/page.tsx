@@ -21,13 +21,13 @@ export default async function RegisterPage() {
 
   const { data: coachRows } = await supabase
     .from("profiles")
-    .select("id, display_name, first_name_ar, last_name_ar, first_name_en, last_name_en")
+    .select("id, display_name, first_name_ar, last_name_ar, first_name_en, last_name_en, email")
     .eq("role", "coach")
     .eq("status", "active")
     .order("display_name");
   const coaches = (coachRows ?? []).map((c: any) => ({
     id: c.id,
-    name: profileName(c) || "—",
+    name: profileName(c, { emailFallback: true }) || "—",
   }));
 
   return (

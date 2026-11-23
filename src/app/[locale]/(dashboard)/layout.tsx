@@ -10,6 +10,8 @@ import { DashboardMobileNav } from "@/components/layout/dashboard-mobile-nav";
 import { dashboardNav } from "@/config/navigation";
 import { RegistrationTypeSection } from "@/components/profile/registration-type-section";
 import { enumLabel } from "@/lib/i18n/labels";
+import { redirect } from "next/navigation";
+import { hasProfileName } from "@/lib/profile/name";
 
 // Private area: keep every dashboard page out of search engines.
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -20,6 +22,10 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const profile = await requireAuth();
+
+  // Accounts without any name (e.g. created before migration 0046 lost the sign-up name) must complete it
+  // first: other users see them in pickers and lists. /profile lives outside this layout, so no loop.
+  if (!hasProfileName(profile)) redirect("/profile?complete=name");
 
   // Individual athletes get a dashboard right away; team athletes only once their coach approves.
   if (profile.role === "athlete") {

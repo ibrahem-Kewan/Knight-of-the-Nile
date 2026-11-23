@@ -10,6 +10,8 @@ export type Profile = {
   display_name: string | null;
   first_name_ar: string | null;
   last_name_ar: string | null;
+  first_name_en: string | null;
+  last_name_en: string | null;
   avatar_url: string | null;
   locale: string | null;
   email: string | null;
@@ -26,7 +28,7 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
   const { data } = await supabase
     .from("profiles")
     .select(
-      "id, role, status, display_name, first_name_ar, last_name_ar, avatar_url, locale, email",
+      "id, role, status, display_name, first_name_ar, last_name_ar, first_name_en, last_name_en, avatar_url, locale, email",
     )
     .eq("id", user.id)
     .single();

@@ -24,6 +24,9 @@ export async function updateMyProfile(formData: FormData): Promise<Res> {
   const lastAr = str(formData, "last_name_ar");
   const firstEn = str(formData, "first_name_en");
   const lastEn = str(formData, "last_name_en");
+  // A name is required (Arabic or English, first + last): it is what other users see in pickers and lists.
+  if (!((firstAr && lastAr) || (firstEn && lastEn))) return { error: "errNameRequired" };
+
   const display =
     str(formData, "display_name") ||
     [firstAr, lastAr].filter(Boolean).join(" ") ||

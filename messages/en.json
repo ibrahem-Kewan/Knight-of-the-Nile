@@ -567,6 +567,10 @@
         "st_archived": "Archived"
     },
     "profile": {
+        "nameRequiredTitle": "Complete your name to continue",
+        "nameRequiredNote": "Your account has no name, so athletes and coaches cannot see who you are. Enter your first and last name (Arabic or English) and save to open your dashboard.",
+        "nameHint": "First and last name are required, in Arabic or English.",
+        "errNameRequired": "Enter your first and last name in Arabic or English.",
         "title": "Profile",
         "personal": "Personal information",
         "firstNameAr": "First name (Arabic)",

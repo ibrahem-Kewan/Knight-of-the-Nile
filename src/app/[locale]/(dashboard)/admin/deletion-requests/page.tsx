@@ -45,12 +45,12 @@ export default async function DeletionRequestsPage() {
   );
   const peopleIds = [...new Set(all.flatMap((r) => [r.requested_by, r.resolved_by]).filter(Boolean) as string[])];
   const { data: people } = peopleIds.length
-    ? await supabase.from("profiles").select("id, display_name, first_name_ar, last_name_ar, first_name_en, last_name_en").in("id", peopleIds)
+    ? await supabase.from("profiles").select("id, display_name, first_name_ar, last_name_ar, first_name_en, last_name_en, email").in("id", peopleIds)
     : { data: [] };
   const names = Object.fromEntries(
     ((people ?? []) as ({ id: string } & Parameters<typeof profileName>[0])[]).map((p) => [
       p.id,
-      profileName(p) || "—",
+      profileName(p, { emailFallback: true }) || "—",
     ]),
   ) as Record<string, string>;
   const when = (d: string | null) => (d ? new Date(d).toLocaleString(locale) : "—");

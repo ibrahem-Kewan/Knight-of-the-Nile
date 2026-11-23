@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "@/lib/i18n/navigation";
 import { updateMyProfile } from "@/server/actions/profile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,7 @@ export type ProfileInitial = {
 
 export function ProfileForm({ initial }: { initial: ProfileInitial }) {
   const t = useTranslations("profile");
+  const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -33,13 +35,16 @@ export function ProfileForm({ initial }: { initial: ProfileInitial }) {
         start(async () => {
           setMsg(null); setErr(null);
           const res = await updateMyProfile(fd);
-          if (res?.ok) setMsg(t("saved"));
-          else setErr(t("error"));
+          if (res?.ok) {
+            setMsg(t("saved"));
+            router.refresh(); // clears the "complete your name" notice once a name is saved
+          } else setErr(res?.error === "errNameRequired" ? t("errNameRequired") : t("error"));
         })
       }
       className="space-y-6 rounded-lg border border-border bg-card p-6"
     >
       <h2 className="font-semibold">{t("personal")}</h2>
+      <p className="text-xs text-muted-foreground">{t("nameHint")}</p>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="first_name_ar">{t("firstNameAr")}</Label>

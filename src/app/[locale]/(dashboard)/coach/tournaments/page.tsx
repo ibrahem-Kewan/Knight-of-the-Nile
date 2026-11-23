@@ -25,13 +25,13 @@ export default async function CoachTournamentsPage() {
         .is("deleted_at", null)
         .order("created_at", { ascending: false }),
       supabase.from("coach_branches").select("id, name_ar, name_en").eq("coach_id", me.id).eq("is_active", true).order("created_at"),
-      supabase.from("profiles").select("id, display_name, first_name_ar, last_name_ar, first_name_en, last_name_en").eq("role", "coach").eq("status", "active").neq("id", me.id),
-      supabase.from("profiles").select("id, display_name, first_name_ar, last_name_ar, first_name_en, last_name_en").eq("role", "judge").eq("status", "active"),
+      supabase.from("profiles").select("id, display_name, first_name_ar, last_name_ar, first_name_en, last_name_en, email").eq("role", "coach").eq("status", "active").neq("id", me.id),
+      supabase.from("profiles").select("id, display_name, first_name_ar, last_name_ar, first_name_en, last_name_en, email").eq("role", "judge").eq("status", "active"),
     ]);
   const tournaments = withoutPendingDeletion(tournamentsRows);
   const branches = (branchRows ?? []) as BranchOption[];
-  const coaches = (coachRows ?? []).map((c: any) => ({ id: c.id, name: profileName(c) || "—" }));
-  const judges = (judgeRows ?? []).map((j: any) => ({ id: j.id, name: profileName(j) || "—" }));
+  const coaches = (coachRows ?? []).map((c: any) => ({ id: c.id, name: profileName(c, { emailFallback: true }) || "—" }));
+  const judges = (judgeRows ?? []).map((j: any) => ({ id: j.id, name: profileName(j, { emailFallback: true }) || "—" }));
   const disc = (disciplines ?? []) as any[];
 
   return (

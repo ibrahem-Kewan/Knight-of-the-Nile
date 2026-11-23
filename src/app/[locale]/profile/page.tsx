@@ -8,6 +8,7 @@ import { RegistrationTypeSection } from "@/components/profile/registration-type-
 import { RoleUpgradeCard } from "@/components/profile/role-upgrade-card";
 import { StaffSpecialtiesCard } from "@/components/profile/staff-specialties-card";
 import { isStaffRole, sortSpecialties } from "@/lib/staff/specialties";
+import { hasProfileName } from "@/lib/profile/name";
 
 export default async function ProfilePage() {
   const me = await requireAuth();
@@ -45,6 +46,13 @@ export default async function ProfilePage() {
         <h1 className="font-display text-2xl text-gold">{t("title")}</h1>
         <p className="text-sm text-muted-foreground">{initial.display_name ?? me.email}</p>
       </div>
+
+      {!hasProfileName(initial) && (
+        <div role="alert" className="mb-6 rounded-lg border border-gold/50 bg-gold/10 p-4">
+          <p className="font-semibold text-gold">{t("nameRequiredTitle")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("nameRequiredNote")}</p>
+        </div>
+      )}
 
       <div className="space-y-6">
         <section className="rounded-lg border border-border bg-card p-6">

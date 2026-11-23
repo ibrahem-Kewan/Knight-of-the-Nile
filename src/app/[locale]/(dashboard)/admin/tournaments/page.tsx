@@ -19,12 +19,12 @@ export default async function AdminTournamentsPage() {
       .select(TOURNAMENT_MANAGE_COLUMNS)
       .is("deleted_at", null)
       .order("created_at", { ascending: false }),
-    supabase.from("profiles").select("id, display_name, first_name_ar, last_name_ar, first_name_en, last_name_en").eq("role", "judge").eq("status", "active"),
-    supabase.from("profiles").select("id, display_name, first_name_ar, last_name_ar, first_name_en, last_name_en").eq("role", "coach").eq("status", "active"),
+    supabase.from("profiles").select("id, display_name, first_name_ar, last_name_ar, first_name_en, last_name_en, email").eq("role", "judge").eq("status", "active"),
+    supabase.from("profiles").select("id, display_name, first_name_ar, last_name_ar, first_name_en, last_name_en, email").eq("role", "coach").eq("status", "active"),
   ]);
 
-  const judgeList = (judges ?? []).map((j: any) => ({ id: j.id, name: profileName(j) || "—" }));
-  const coachList = (coachRows ?? []).map((c: any) => ({ id: c.id, name: profileName(c) || "—" }));
+  const judgeList = (judges ?? []).map((j: any) => ({ id: j.id, name: profileName(j, { emailFallback: true }) || "—" }));
+  const coachList = (coachRows ?? []).map((c: any) => ({ id: c.id, name: profileName(c, { emailFallback: true }) || "—" }));
   const disc = (disciplines ?? []) as any[];
 
   return (
