@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { CreateTournamentForm } from "@/components/tadmin/create-tournament-form";
 import { TournamentsTable, TOURNAMENT_MANAGE_COLUMNS } from "@/components/tadmin/tournaments-table";
+import { profileName } from "@/lib/profile/name";
 
 export default async function AdminTournamentsPage() {
   await requireRole(["super_admin", "admin"]);
@@ -18,12 +19,12 @@ export default async function AdminTournamentsPage() {
       .select(TOURNAMENT_MANAGE_COLUMNS)
       .is("deleted_at", null)
       .order("created_at", { ascending: false }),
-    supabase.from("profiles").select("id, display_name, first_name_ar").eq("role", "judge").eq("status", "active"),
-    supabase.from("profiles").select("id, display_name, first_name_ar").eq("role", "coach").eq("status", "active"),
+    supabase.from("profiles").select("id, display_name, first_name_ar, last_name_ar, first_name_en, last_name_en").eq("role", "judge").eq("status", "active"),
+    supabase.from("profiles").select("id, display_name, first_name_ar, last_name_ar, first_name_en, last_name_en").eq("role", "coach").eq("status", "active"),
   ]);
 
-  const judgeList = (judges ?? []).map((j: any) => ({ id: j.id, name: j.display_name ?? j.first_name_ar ?? "—" }));
-  const coachList = (coachRows ?? []).map((c: any) => ({ id: c.id, name: c.display_name ?? c.first_name_ar ?? "—" }));
+  const judgeList = (judges ?? []).map((j: any) => ({ id: j.id, name: profileName(j) || "—" }));
+  const coachList = (coachRows ?? []).map((c: any) => ({ id: c.id, name: profileName(c) || "—" }));
   const disc = (disciplines ?? []) as any[];
 
   return (

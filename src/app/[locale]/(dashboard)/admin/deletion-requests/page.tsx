@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { DeletionRequestActions } from "@/components/admin/deletion-request-actions";
+import { profileName } from "@/lib/profile/name";
 
 type Req = {
   id: string; entity_type: "tournament" | "event" | "course" | "post"; entity_id: string;
@@ -44,12 +45,12 @@ export default async function DeletionRequestsPage() {
   );
   const peopleIds = [...new Set(all.flatMap((r) => [r.requested_by, r.resolved_by]).filter(Boolean) as string[])];
   const { data: people } = peopleIds.length
-    ? await supabase.from("profiles").select("id, display_name, first_name_ar").in("id", peopleIds)
+    ? await supabase.from("profiles").select("id, display_name, first_name_ar, last_name_ar, first_name_en, last_name_en").in("id", peopleIds)
     : { data: [] };
   const names = Object.fromEntries(
-    ((people ?? []) as { id: string; display_name: string | null; first_name_ar: string | null }[]).map((p) => [
+    ((people ?? []) as ({ id: string } & Parameters<typeof profileName>[0])[]).map((p) => [
       p.id,
-      p.display_name ?? p.first_name_ar ?? "—",
+      profileName(p) || "—",
     ]),
   ) as Record<string, string>;
   const when = (d: string | null) => (d ? new Date(d).toLocaleString(locale) : "—");

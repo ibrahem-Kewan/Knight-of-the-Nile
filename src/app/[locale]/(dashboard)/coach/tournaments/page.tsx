@@ -5,6 +5,7 @@ import { withoutPendingDeletion } from "@/lib/content/state";
 import { Link } from "@/lib/i18n/navigation";
 import { CreateTournamentForm, type BranchOption } from "@/components/tadmin/create-tournament-form";
 import { TournamentsTable, TOURNAMENT_MANAGE_COLUMNS } from "@/components/tadmin/tournaments-table";
+import { profileName } from "@/lib/profile/name";
 
 export default async function CoachTournamentsPage() {
   const me = await requireRole(["coach"]);
@@ -24,13 +25,13 @@ export default async function CoachTournamentsPage() {
         .is("deleted_at", null)
         .order("created_at", { ascending: false }),
       supabase.from("coach_branches").select("id, name_ar, name_en").eq("coach_id", me.id).eq("is_active", true).order("created_at"),
-      supabase.from("profiles").select("id, display_name, first_name_ar").eq("role", "coach").eq("status", "active").neq("id", me.id),
-      supabase.from("profiles").select("id, display_name, first_name_ar").eq("role", "judge").eq("status", "active"),
+      supabase.from("profiles").select("id, display_name, first_name_ar, last_name_ar, first_name_en, last_name_en").eq("role", "coach").eq("status", "active").neq("id", me.id),
+      supabase.from("profiles").select("id, display_name, first_name_ar, last_name_ar, first_name_en, last_name_en").eq("role", "judge").eq("status", "active"),
     ]);
   const tournaments = withoutPendingDeletion(tournamentsRows);
   const branches = (branchRows ?? []) as BranchOption[];
-  const coaches = (coachRows ?? []).map((c: any) => ({ id: c.id, name: c.display_name ?? c.first_name_ar ?? "—" }));
-  const judges = (judgeRows ?? []).map((j: any) => ({ id: j.id, name: j.display_name ?? j.first_name_ar ?? "—" }));
+  const coaches = (coachRows ?? []).map((c: any) => ({ id: c.id, name: profileName(c) || "—" }));
+  const judges = (judgeRows ?? []).map((j: any) => ({ id: j.id, name: profileName(j) || "—" }));
   const disc = (disciplines ?? []) as any[];
 
   return (

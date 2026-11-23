@@ -4,6 +4,7 @@ import { Link } from "@/lib/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { RegisterForm } from "@/components/auth/register-form";
 import { roleHome } from "@/config/roles";
+import { profileName } from "@/lib/profile/name";
 
 export default async function RegisterPage() {
   const t = await getTranslations("auth");
@@ -20,13 +21,13 @@ export default async function RegisterPage() {
 
   const { data: coachRows } = await supabase
     .from("profiles")
-    .select("id, display_name, first_name_ar, last_name_ar")
+    .select("id, display_name, first_name_ar, last_name_ar, first_name_en, last_name_en")
     .eq("role", "coach")
     .eq("status", "active")
     .order("display_name");
   const coaches = (coachRows ?? []).map((c: any) => ({
     id: c.id,
-    name: c.display_name ?? [c.first_name_ar, c.last_name_ar].filter(Boolean).join(" ") ?? "—",
+    name: profileName(c) || "—",
   }));
 
   return (

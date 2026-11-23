@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { RegistrationTypeCard } from "./registration-type-card";
+import { profileName } from "@/lib/profile/name";
 
 /** Loads current registration type + coaches, renders the editable card (athletes only). */
 export async function RegistrationTypeSection({ athleteId }: { athleteId: string }) {
@@ -8,7 +9,7 @@ export async function RegistrationTypeSection({ athleteId }: { athleteId: string
     supabase.from("profiles").select("registration_type, primary_coach_id").eq("id", athleteId).single(),
     supabase
       .from("profiles")
-      .select("id, display_name, first_name_ar, last_name_ar")
+      .select("id, display_name, first_name_ar, last_name_ar, first_name_en, last_name_en")
       .eq("role", "coach")
       .eq("status", "active")
       .order("display_name"),
@@ -24,7 +25,7 @@ export async function RegistrationTypeSection({ athleteId }: { athleteId: string
 
   const coaches = (coachRows ?? []).map((c: any) => ({
     id: c.id as string,
-    name: (c.display_name ?? [c.first_name_ar, c.last_name_ar].filter(Boolean).join(" ")) || "—",
+    name: profileName(c) || "—",
   }));
   const regType = (me as any)?.registration_type === "team" ? "team" : "individual";
   const coachId = ((link as any)?.coach_id ?? (me as any)?.primary_coach_id ?? "") as string;
