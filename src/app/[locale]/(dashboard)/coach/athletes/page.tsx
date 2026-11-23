@@ -195,7 +195,7 @@ export default async function CoachAthletesPage({ searchParams }: Props) {
             {!visible.length ? (
               <p className="text-sm text-muted-foreground">{t("noMatches")}</p>
             ) : (
-              <ul className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <ul className="grid min-w-0 grid-cols-[repeat(auto-fill,minmax(min(100%,20rem),1fr))] gap-3">
                 {visible.map((a) => (
                   <AthleteGroupCard
                     key={a.id}

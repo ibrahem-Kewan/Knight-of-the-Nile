@@ -106,10 +106,9 @@ export function AthleteGroupCard({
       </div>
 
       {addable.length > 0 ? (
-        <div className="space-y-1">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-          <div className="min-w-0 flex-1 space-y-1">
-            <Label htmlFor={selectId} className="text-xs text-muted-foreground">{c("addToGroup")}</Label>
+        <div className="min-w-0 space-y-2">
+          <div className="min-w-0 space-y-1">
+            <Label htmlFor={selectId} className="block text-xs text-muted-foreground">{c("addToGroup")}</Label>
             <select
               id={selectId}
               value={groupId}
@@ -119,7 +118,7 @@ export function AthleteGroupCard({
                 setStartDate(g?.startsOn && g.startsOn > today ? g.startsOn : today);
               }}
               disabled={pending}
-              className="h-11 w-full min-w-0 rounded-md border border-border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+              className="h-11 w-full min-w-0 max-w-full truncate rounded-md border border-border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
             >
               <option value="">{c("chooseGroup")}</option>
               {addable.map((g) => (
@@ -127,25 +126,32 @@ export function AthleteGroupCard({
               ))}
             </select>
           </div>
-          <div className="min-w-0 space-y-1">
-            <Label htmlFor={dateId} className="text-xs text-muted-foreground">{t("startDate")}</Label>
-            <Input
-              id={dateId}
-              type="date"
-              dir="ltr"
-              value={startDate}
-              min={bounds.min}
-              max={bounds.max}
-              onChange={(e) => setStartDate(e.target.value)}
-              disabled={pending}
-              className="h-11 w-full sm:w-44"
-            />
+          {/* flex-wrap: يتكيّف مع عرض البطاقة نفسها (لا مع عرض الشاشة) فلا يتداخل الحقل مع الزر */}
+          <div className="flex min-w-0 flex-wrap items-end gap-2">
+            <div className="min-w-0 flex-[1_1_9.5rem] space-y-1">
+              <Label htmlFor={dateId} className="block text-xs text-muted-foreground">{t("startDate")}</Label>
+              <Input
+                id={dateId}
+                type="date"
+                dir="ltr"
+                value={startDate}
+                min={bounds.min}
+                max={bounds.max}
+                onChange={(e) => setStartDate(e.target.value)}
+                disabled={pending}
+                className="h-11 w-full min-w-0 max-w-full"
+              />
+            </div>
+            <Button
+              type="button"
+              className="h-auto min-h-11 min-w-0 flex-[1_1_7rem] whitespace-normal text-center"
+              disabled={pending || !groupId || !startDate}
+              onClick={add}
+            >
+              {c("addToGroup")}
+            </Button>
           </div>
-          <Button type="button" className="min-h-11" disabled={pending || !groupId || !startDate} onClick={add}>
-            {c("addToGroup")}
-          </Button>
-        </div>
-        <p className="text-xs text-muted-foreground">{t("startDateHint")}</p>
+          <p className="break-words text-xs text-muted-foreground">{t("startDateHint")}</p>
         </div>
       ) : (
         <p className="text-xs text-muted-foreground">{c("noGroupToAdd")}</p>

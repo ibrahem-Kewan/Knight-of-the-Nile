@@ -4,8 +4,9 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { loginSchema, registerSchema } from "@/lib/validations/auth";
 import { roleHome } from "@/config/roles";
+import { confirmRedirectTo } from "@/server/actions/email-confirmation";
 
-export type ActionState = { error?: string } | undefined;
+export type ActionState = { error?: string; confirmEmail?: string } | undefined;
 
 export async function loginAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = loginSchema.safeParse({
@@ -16,7 +17,11 @@ export async function loginAction(_prev: ActionState, formData: FormData): Promi
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
-  if (error) return { error: "errLoginFailed" };
+  if (error) {
+    // Registered but the confirmation link was never opened → tell the user, don't fail silently.
+    if (error.code === "email_not_confirmed") return { error: "errEmailNotConfirmed" };
+    return { error: "errLoginFailed" };
+  }
 
   const {
     data: { user },
@@ -74,6 +79,17 @@ export async function registerAction(_prev: ActionState, formData: FormData): Pr
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
+    options: {
+      emailRedirectTo: await confirmRedirectTo(),
+      // Saved by the handle_new_user() trigger (migration 0046) — works even without a session.
+      data: {
+        first_name: parsed.data.firstName,
+        last_name: parsed.data.lastName,
+        phone: parsed.data.phone,
+        registration_type: parsed.data.registrationType,
+        coach_id: coachId,
+      },
+    },
   });
   if (error) {
     // The email already has an account (pending coach approval or not): no second registration.
@@ -85,7 +101,11 @@ export async function registerAction(_prev: ActionState, formData: FormData): Pr
   // With email confirmation on, Supabase hides duplicates by returning a user with no identities.
   if (data.user && (data.user.identities?.length ?? 0) === 0) return { error: "errEmailTaken" };
 
-  // Update the auto-created profile with name + optional chosen coach
+  // Email confirmation is on: no session yet. The profile + coach request were created by the
+  // trigger from the metadata above; the user must open the link we e-mailed before logging in.
+  if (!data.session) return { confirmEmail: parsed.data.email };
+
+  // Signed in immediately (confirmation off): fallback update for databases without migration 0046.
   if (data.user) {
     const { error: profErr } = await supabase
       .from("profiles")
@@ -101,8 +121,16 @@ export async function registerAction(_prev: ActionState, formData: FormData): Pr
       .eq("id", data.user.id);
     if (profErr) console.error("[register] profile update failed", profErr.code, profErr.message);
 
-    // If a coach was chosen, create a pending link the coach must approve.
-    if (coachId) {
+    // If a coach was chosen and the trigger did not already create the pending link.
+    const { data: existingLink } = coachId
+      ? await supabase
+          .from("coach_athletes")
+          .select("athlete_id")
+          .eq("athlete_id", data.user.id)
+          .eq("coach_id", coachId)
+          .maybeSingle()
+      : { data: null };
+    if (coachId && !existingLink) {
       const { error: linkErr } = await supabase.from("coach_athletes").insert({
         coach_id: coachId,
         athlete_id: data.user.id,

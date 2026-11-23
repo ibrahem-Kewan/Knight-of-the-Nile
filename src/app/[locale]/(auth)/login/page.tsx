@@ -5,10 +5,10 @@ import { LoginForm } from "@/components/auth/login-form";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ reset?: string }>;
+  searchParams: Promise<{ reset?: string; confirm?: string }>;
 }) {
   const t = await getTranslations("auth");
-  const { reset } = await searchParams;
+  const { reset, confirm } = await searchParams;
   return (
     <div>
       <h1 className="font-display text-3xl text-gold">{t("welcomeBack")}</h1>
@@ -16,6 +16,11 @@ export default async function LoginPage({
       {reset === "1" && (
         <p role="status" className="mt-6 rounded-md border border-success/40 bg-success/10 p-3 text-sm text-success">
           {t("passwordResetDone")}
+        </p>
+      )}
+      {confirm === "error" && (
+        <p role="alert" className="mt-6 rounded-md border border-danger/40 bg-danger/10 p-3 text-sm text-danger">
+          {t("confirmLinkInvalid")}
         </p>
       )}
       <div className="mt-8">

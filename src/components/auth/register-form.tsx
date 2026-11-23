@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
+import { ResendConfirmation } from "@/components/auth/resend-confirmation";
 
 type Coach = { id: string; name: string };
 type RegType = "individual" | "team";
@@ -23,6 +24,23 @@ export function RegisterForm({ coaches = [] }: { coaches?: Coach[] }) {
     { value: "team", label: t("typeTeam") },
   ];
   const errorText = state?.error ? (t.has(state.error) ? t(state.error) : t("errSignupFailed")) : null;
+
+  if (state?.confirmEmail) {
+    const email = state.confirmEmail;
+    return (
+      <div role="status" className="space-y-4">
+        <h2 className="font-display text-2xl text-gold">{t("checkEmailTitle")}</h2>
+        <p className="text-sm text-muted-foreground">
+          {t("checkEmailBody")} <span dir="ltr" className="font-medium text-foreground">{email}</span>
+        </p>
+        <p className="text-xs text-muted-foreground">{t("checkEmailHint")}</p>
+        <ResendConfirmation getEmail={() => email} />
+        <p className="text-center text-sm">
+          <Link href="/login" className="font-medium text-nile hover:underline">{t("login")}</Link>
+        </p>
+      </div>
+    );
+  }
 
   return (
     <form action={action} className="space-y-4">

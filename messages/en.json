@@ -232,7 +232,16 @@
         "requestNewLink": "Request a new link",
         "passwordResetDone": "Your password has been changed. Log in with your new password.",
         "errDbOutdated": "Saving failed because the database needs an update. Please contact the site admin.",
-        "errForbidden": "You are not allowed to do this"
+        "errForbidden": "You are not allowed to do this",
+        "errEmailNotConfirmed": "Your email address is not confirmed yet. Open the confirmation email we sent you, or request it again.",
+        "resendConfirmation": "Resend confirmation email",
+        "confirmationResent": "We sent the confirmation email again. Check your inbox (and your spam folder).",
+        "errResendRateLimit": "An email was just sent. Wait a minute and try again.",
+        "errResendFailed": "Could not send the confirmation email right now. Please try later.",
+        "checkEmailTitle": "Check your email",
+        "checkEmailBody": "We sent a confirmation email to",
+        "checkEmailHint": "Open the link in the email to activate your account, then log in. If you can't find it, check your spam folder.",
+        "confirmLinkInvalid": "The confirmation link is invalid or expired. Log in with your account and request a new confirmation email."
     },
     "footer": {
         "tagline": "The Arabic and global reference for archery, horseback archery and equestrian.",
